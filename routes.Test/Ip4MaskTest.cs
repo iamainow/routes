@@ -45,4 +45,43 @@ public class Ip4MaskTest
 
         Assert.Equal(subnet, mask.ToFullString());
     }
+
+    [Theory]
+    [InlineData(32)]
+    [InlineData(31)]
+    [InlineData(30)]
+    [InlineData(29)]
+    [InlineData(28)]
+    [InlineData(27)]
+    [InlineData(26)]
+    [InlineData(25)]
+    [InlineData(24)]
+    [InlineData(23)]
+    [InlineData(22)]
+    [InlineData(21)]
+    [InlineData(20)]
+    [InlineData(19)]
+    [InlineData(18)]
+    [InlineData(17)]
+    [InlineData(16)]
+    [InlineData(15)]
+    [InlineData(14)]
+    [InlineData(13)]
+    [InlineData(12)]
+    [InlineData(11)]
+    [InlineData(10)]
+    [InlineData(9)]
+    [InlineData(8)]
+    [InlineData(7)]
+    [InlineData(6)]
+    [InlineData(5)]
+    [InlineData(4)]
+    [InlineData(3)]
+    [InlineData(2)]
+    [InlineData(1)]
+    [InlineData(0)]
+    public void AsUInt32_AsCidr_EqualsTo_JustCidr(int cidr)
+    {
+        Assert.Equal(new Ip4Mask(new Ip4Mask(cidr).AsUInt32()).AsCidr(), cidr);
+    }
 }

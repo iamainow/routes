@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="routes.Test/routes.Test.csproj" />
+  <Project Path="routes/routes.csproj" />
+</Solution>

@@ -5,12 +5,13 @@ namespace routes.core;
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Ip4Address
 {
+    /// <exception cref="FormatException"></exception>
     public static Ip4Address Parse(string text)
     {
         var step1 = text.Split('.');
         if (step1.Length != 4)
         {
-            throw new ArgumentException("Invalid argument");
+            throw new FormatException();
         }
 
         var step2 = step1.Select(byte.Parse).ToArray();
