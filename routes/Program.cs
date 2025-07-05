@@ -1,13 +1,41 @@
 ﻿using routes;
+using routes.core;
 using System.Net;
 using System.Net.NetworkInformation;
+
+static void AdaptersPrint()
+{
+    var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
+        .Where(x => x.IsIpv4())
+        .OrderBy(x => x.GetInterfaceIndex())
+        .ToList();
+
+    Console.WriteLine("{0, 40} {1, 20} {2, 20}", "Name", "InterfaceIndex", "PrimaryGateway");
+    foreach (var networkInterface in networkInterfaces)
+    {
+        Console.WriteLine("{0, 40} {1, 20} {2, 20}", networkInterface.Name, networkInterface.GetInterfaceIndex(), networkInterface.GetPrimaryGateway());
+    }
+    Console.WriteLine();
+}
+
+static void RoutePrint()
+{
+    List<Ip4RouteEntry> routeTable = Ip4RouteTable.GetRouteTable();
+
+    Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,8} ", "DestinationIP", "NetMask", "Gateway", "IF", "Metric");
+    foreach (Ip4RouteEntry entry in routeTable)
+    {
+        Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,8} ", entry.DestinationIP, entry.SubnetMask, entry.GatewayIP, entry.InterfaceIndex, entry.Metric);
+    }
+    Console.WriteLine();
+}
 
 AdaptersPrint();
 
 RoutePrint();
 
 var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
-    .Where(x => x.Name.Contains("ForcePoint", StringComparison.OrdinalIgnoreCase))
+    .Where(x => x.Name.Contains("AmneziaVPN", StringComparison.OrdinalIgnoreCase))
     .First();
 
 List<Ip4RouteEntry> routeTable = Ip4RouteTable.GetRouteTable();
@@ -40,35 +68,35 @@ if (route is not null)
     });
     Console.WriteLine("route deleted");
 }
-
-Ip4RouteTable.CreateRoute(exampleRoute);
-Console.WriteLine("route created");
-
-static void AdaptersPrint()
+try
 {
-    var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
-        .Where(x => x.IsIpv4())
-        .OrderBy(x => x.GetInterfaceIndex())
-        .ToList();
-
-    Console.WriteLine("{0, 40} {1, 20} {2, 20}", "Name", "InterfaceIndex", "PrimaryGateway");
-    foreach (var networkInterface in networkInterfaces)
-    {
-        Console.WriteLine("{0, 40} {1, 20} {2, 20}", networkInterface.Name, networkInterface.GetInterfaceIndex(), networkInterface.GetPrimaryGateway());
-    }
-    Console.WriteLine();
+    Ip4RouteTable.CreateRoute(exampleRoute);
+    Console.WriteLine("route created");
+}
+catch (Exception exception)
+{
+    Console.WriteLine(exception.ToString());
 }
 
-static void RoutePrint()
-{
-    List<Ip4RouteEntry> routeTable = Ip4RouteTable.GetRouteTable();
 
-    Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,8} ", "DestinationIP", "NetMask", "Gateway", "IF", "Metric");
-    foreach (Ip4RouteEntry entry in routeTable)
+
+Console.WriteLine("------------------------------");
+Console.ReadKey();
+
+var lines = await File.ReadAllLinesAsync("ru.txt");
+foreach (string line in lines)
+{
+    if (!string.IsNullOrEmpty(line))
     {
-        Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,8} ", entry.DestinationIP, entry.SubnetMask, entry.GatewayIP, entry.InterfaceIndex, entry.Metric);
+        string[] stringArray = line.Split('/');
+        var ip = Ip4Address.Parse(stringArray[0]);
+        var mask = new Ip4Mask(int.Parse(stringArray[1]));
+
+        var subnet = new Ip4Subnet(ip, mask);
+
+        Console.WriteLine($"{line,18} => {subnet.FirstAddress,15} {subnet.Mask.ToFullString(),15} or {subnet.FirstAddress,15}-{subnet.LastAddress,15}");
     }
-    Console.WriteLine();
 }
 
+Console.WriteLine("------------------------------");
 Console.ReadKey();

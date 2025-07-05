@@ -10,13 +10,27 @@ namespace routes
         /// <exception cref="NetworkInformationException"></exception>
         public static bool IsIpv4(this NetworkInterface networkInterface)
         {
-            return networkInterface.GetIPProperties().GetIPv4Properties() is not null;
+            try
+            {
+                return networkInterface.GetIPProperties().GetIPv4Properties() is not null;
+            }
+            catch (NetworkInformationException)
+            {
+                return false;
+            }
         }
 
         /// <exception cref="NetworkInformationException"></exception>
         public static int GetInterfaceIndex(this NetworkInterface networkInterface)
         {
-            return networkInterface.GetIPProperties().GetIPv4Properties().Index;
+            try
+            {
+                return networkInterface.GetIPProperties().GetIPv4Properties().Index;
+            }
+            catch (NetworkInformationException)
+            {
+                return -1;
+            }
         }
 
         private static IPAddress? GetPrimaryGatewayViaGatewayAddresses(IPInterfaceProperties properties)

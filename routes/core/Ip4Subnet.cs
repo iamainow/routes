@@ -22,4 +22,9 @@ public readonly struct Ip4Subnet
     public Ip4Address LastAddress => _address | ~_mask;
 
     public Ip4Mask Mask => _mask;
+
+    public override string ToString()
+    {
+        return $"{FirstAddress} {Mask}";
+    }
 }

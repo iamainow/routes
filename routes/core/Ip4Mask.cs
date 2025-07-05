@@ -44,24 +44,23 @@ public readonly struct Ip4Mask
 
     public static Ip4Mask ParseCidrString(string text)
     {
-        if (!text.StartsWith('/'))
+        if (text.StartsWith('/'))
         {
-            throw new ArgumentException("Invalid argument");
+            text = text[1..];
         }
 
-        int cidr = int.Parse(text[1..]);
+        int cidr = int.Parse(text);
 
         return new Ip4Mask(cidr);
     }
     public static bool TryParseCidrString(string text, out Ip4Mask result)
     {
-        if (!text.StartsWith('/'))
+        if (text.StartsWith('/'))
         {
-            result = default;
-            return false;
+            text = text[1..];
         }
 
-        if (!int.TryParse(text[1..], out int cidr))
+        if (!int.TryParse(text, out int cidr))
         {
             result = default;
             return false;
@@ -73,7 +72,11 @@ public readonly struct Ip4Mask
 
     private static uint GetMaskByCidr(int cidr)
     {
-        return 0xFFFFFFFF >> cidr << cidr;
+        if (cidr == 0)
+        {
+            return 0;
+        }
+        return (0xFFFFFFFF >> (32 - cidr)) << (32 - cidr);
     }
     private static int GetCidrByMask(uint mask)
     {
@@ -180,6 +183,7 @@ public readonly struct Ip4Mask
     {
         return $"/{AsCidr()}";
     }
+
     public override string ToString() => ToCidrString();
 
     public static Ip4Mask operator ~(Ip4Mask mask)
