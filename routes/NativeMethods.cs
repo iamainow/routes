@@ -6,8 +6,6 @@ namespace routes
     {
         //https://docs.microsoft.com/en-us/windows/win32/iphlp/managing-routing
         //https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-rrasm/5dca234b-bea4-4e67-958e-5459a32a7b71
-
-
         [ComVisible(false), StructLayout(LayoutKind.Sequential)]
         public struct IPForwardTable
         {
@@ -44,8 +42,6 @@ namespace routes
             MIB_IPROUTE_TYPE_INDIRECT = 4
         }
 
-
-
         public enum MIB_IPFORWARD_PROTO : uint
         {
             MIB_IPPROTO_OTHER = 1,
@@ -67,7 +63,6 @@ namespace routes
             MIB_IPPROTO_NT_STATIC_NON_DOD = 10007
         }
 
-
         public static IPForwardTable ReadIPForwardTable(nint tablePtr)
         {
             var result = (IPForwardTable)Marshal.PtrToStructure(tablePtr, typeof(IPForwardTable));
@@ -84,7 +79,6 @@ namespace routes
             return result;
         }
 
-
         [DllImport("iphlpapi", CharSet = CharSet.Auto)]
         public extern static int GetIpForwardTable(nint /*PMIB_IPFORWARDTABLE*/ pIpForwardTable, ref int /*PULONG*/ pdwSize, bool bOrder);
 
@@ -97,6 +91,5 @@ namespace routes
 
         [DllImport("iphlpapi", CharSet = CharSet.Auto)]
         public extern static int SetIpForwardEntry(nint /*PMIB_IPFORWARDROW*/ pRoute);
-
     }
 }

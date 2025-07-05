@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "routes", "routes\routes.csproj", "{0A50B774-6EB9-468E-B3DB-A58967A76DCD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "routes.Test", "routes.Test\routes.Test.csproj", "{A784CF16-EE0A-4E40-917A-0AB0643499D4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{0A50B774-6EB9-468E-B3DB-A58967A76DCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A50B774-6EB9-468E-B3DB-A58967A76DCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A50B774-6EB9-468E-B3DB-A58967A76DCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A784CF16-EE0A-4E40-917A-0AB0643499D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A784CF16-EE0A-4E40-917A-0AB0643499D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A784CF16-EE0A-4E40-917A-0AB0643499D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A784CF16-EE0A-4E40-917A-0AB0643499D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
