@@ -3,7 +3,7 @@
 namespace routes.core;
 
 [StructLayout(LayoutKind.Explicit)]
-public readonly struct Ip4Address
+public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Address>
 {
     /// <exception cref="FormatException"></exception>
     public static Ip4Address Parse(string text)
@@ -81,6 +81,78 @@ public readonly struct Ip4Address
     public override string ToString()
     {
         return $"{_byte1}.{_byte2}.{_byte3}.{_byte4}";
+    }
+
+    public int CompareTo(Ip4Address other)
+    {
+        return this._address.CompareTo(other._address);
+    }
+
+    public bool Equals(Ip4Address other)
+    {
+        return this._address.Equals(other._address);
+    }
+
+    public static bool operator <=(Ip4Address left, Ip4Address right)
+    {
+        return left.CompareTo(right) <= 0;
+    }
+
+    public static bool operator >=(Ip4Address left, Ip4Address right)
+    {
+        return left.CompareTo(right) >= 0;
+    }
+
+    public static bool operator <(Ip4Address left, Ip4Address right)
+    {
+        return left.CompareTo(right) < 0;
+    }
+
+    public static bool operator >(Ip4Address left, Ip4Address right)
+    {
+        return left.CompareTo(right) > 0;
+    }
+
+    // implement ==, != operators and all nessesary interfaces
+    public static bool operator ==(Ip4Address left, Ip4Address right)
+    {
+        return left.Equals(right);
+    }
+    public static bool operator !=(Ip4Address left, Ip4Address right)
+    {
+        return !left.Equals(right);
+    }
+    public override bool Equals(object? obj)
+    {
+        if (obj is Ip4Address address)
+        {
+            return this.Equals(address);
+        }
+        return false;
+    }
+    public override int GetHashCode()
+    {
+        return _address.GetHashCode();
+    }
+
+    public static Ip4Address operator +(Ip4Address left, uint count)
+    {
+        checked
+        {
+            return new Ip4Address(left.AsUInt32() + count);
+        }
+    }
+    public static Ip4Address operator -(Ip4Address left, uint count)
+    {
+        checked
+        {
+            return new Ip4Address(left.AsUInt32() - count);
+        }
+    }
+
+    public static implicit operator uint(Ip4Address address)
+    {
+        return address.AsUInt32();
     }
 
     public static Ip4Address operator |(Ip4Address address, Ip4Mask mask)

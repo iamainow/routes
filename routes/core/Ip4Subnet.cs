@@ -2,26 +2,33 @@
 
 public readonly struct Ip4Subnet
 {
-    private readonly Ip4Address _address;
-    private readonly Ip4Mask _mask;
+    public readonly Ip4Address FirstAddress;
+    public readonly Ip4Mask Mask;
 
     public Ip4Subnet(Ip4Address address, Ip4Mask mask)
     {
-        _address = address;
-        _mask = mask;
+        FirstAddress = address;
+        Mask = mask;
     }
 
-    public Ip4Subnet(Ip4Address firstAddress, Ip4Address lastAddress)
+    public Ip4Subnet(Ip4Address firstAddress, int cidr)
     {
-        _address = firstAddress;
-        _mask = new Ip4Mask(~(firstAddress.AsUInt32() ^ lastAddress.AsUInt32()));
+        FirstAddress = firstAddress;
+        Mask = new Ip4Mask(cidr);
     }
 
-    public Ip4Address FirstAddress => _address;
+    public Ip4Subnet(Ip4Address firstAddress, uint mask)
+    {
+        FirstAddress = firstAddress;
+        Mask = new Ip4Mask(mask);
+    }
 
-    public Ip4Address LastAddress => _address | ~_mask;
+    public Ip4Address LastAddress => FirstAddress | ~Mask;
 
-    public Ip4Mask Mask => _mask;
+    public Ip4Range ToIpRange()
+    {
+        return new Ip4Range(FirstAddress, LastAddress);
+    }
 
     public override string ToString()
     {

@@ -19,16 +19,4 @@ public class Ip4SubnetTest
 
         Assert.Equal($"{firstIp}-{lastIp}", actualResult);
     }
-
-    [Fact]
-    public void Create()
-    {
-        var ip1 = new Ip4Address(0xCDE00000);
-        var ip2 = new Ip4Address(0xCDE0FFFF);
-        var subnet = new Ip4Subnet(ip1, ip2);
-
-        Assert.Equal(ip1, subnet.FirstAddress);
-        Assert.Equal(0xFFFF0000.ToString("x2"), subnet.Mask.AsUInt32().ToString("x2"));
-        Assert.Equal(ip2, subnet.LastAddress);
-    }
 }
