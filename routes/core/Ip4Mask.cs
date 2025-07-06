@@ -85,50 +85,44 @@ public readonly struct Ip4Mask
     }
     private static int GetCidrByDifferentBits(uint differentBits)
     {
-        // TODO: optimize to binary search or asm command
-        if (differentBits == 0x00000000) return 32;
-
-        if (differentBits == 0x00000001) return 31;
-        if (differentBits == 0x00000003) return 30;
-        if (differentBits == 0x00000007) return 29;
-        if (differentBits == 0x0000000F) return 28;
-
-        if (differentBits == 0x0000001F) return 27;
-        if (differentBits == 0x0000003F) return 26;
-        if (differentBits == 0x0000007F) return 25;
-        if (differentBits == 0x000000FF) return 24;
-
-        if (differentBits == 0x000001FF) return 23;
-        if (differentBits == 0x000003FF) return 22;
-        if (differentBits == 0x000007FF) return 21;
-        if (differentBits == 0x00000FFF) return 20;
-
-        if (differentBits == 0x00001FFF) return 19;
-        if (differentBits == 0x00003FFF) return 18;
-        if (differentBits == 0x00007FFF) return 17;
-        if (differentBits == 0x0000FFFF) return 16;
-
-        if (differentBits == 0x0001FFFF) return 15;
-        if (differentBits == 0x0003FFFF) return 14;
-        if (differentBits == 0x0007FFFF) return 13;
-        if (differentBits == 0x000FFFFF) return 12;
-
-        if (differentBits == 0x001FFFFF) return 11;
-        if (differentBits == 0x003FFFFF) return 10;
-        if (differentBits == 0x007FFFFF) return 9;
-        if (differentBits == 0x00FFFFFF) return 8;
-
-        if (differentBits == 0x01FFFFFF) return 7;
-        if (differentBits == 0x03FFFFFF) return 6;
-        if (differentBits == 0x07FFFFFF) return 5;
-        if (differentBits == 0x0FFFFFFF) return 4;
-
-        if (differentBits == 0x1FFFFFFF) return 3;
-        if (differentBits == 0x3FFFFFFF) return 2;
-        if (differentBits == 0x7FFFFFFF) return 1;
-        if (differentBits == 0xFFFFFFFF) return 0;
-
-        throw new ArgumentException($"differentBits invalid value:  {differentBits:x2}", nameof(differentBits));
+        return differentBits switch
+        {
+            // TODO: optimize to binary search or asm command
+            0x00000000 => 32,
+            0x00000001 => 31,
+            0x00000003 => 30,
+            0x00000007 => 29,
+            0x0000000F => 28,
+            0x0000001F => 27,
+            0x0000003F => 26,
+            0x0000007F => 25,
+            0x000000FF => 24,
+            0x000001FF => 23,
+            0x000003FF => 22,
+            0x000007FF => 21,
+            0x00000FFF => 20,
+            0x00001FFF => 19,
+            0x00003FFF => 18,
+            0x00007FFF => 17,
+            0x0000FFFF => 16,
+            0x0001FFFF => 15,
+            0x0003FFFF => 14,
+            0x0007FFFF => 13,
+            0x000FFFFF => 12,
+            0x001FFFFF => 11,
+            0x003FFFFF => 10,
+            0x007FFFFF => 9,
+            0x00FFFFFF => 8,
+            0x01FFFFFF => 7,
+            0x03FFFFFF => 6,
+            0x07FFFFFF => 5,
+            0x0FFFFFFF => 4,
+            0x1FFFFFFF => 3,
+            0x3FFFFFFF => 2,
+            0x7FFFFFFF => 1,
+            0xFFFFFFFF => 0,
+            _ => throw new ArgumentException($"differentBits invalid value:  {differentBits:x2}", nameof(differentBits))
+        };
     }
 
     [FieldOffset(0)]
