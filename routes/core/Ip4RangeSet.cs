@@ -4,9 +4,9 @@ using System.Text;
 
 namespace routes.core;
 
-public readonly struct Ip4RangeSet : IEnumerable<Ip4Range>
+public readonly ref struct Ip4RangeSet : IEnumerable<Ip4Range>
 {
-    private readonly IImmutableList<Ip4Range> _list;
+    public readonly IImmutableList<Ip4Range> _list;
 
     public Ip4RangeSet()
     {

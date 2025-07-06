@@ -1,5 +1,6 @@
 ﻿using routes;
 using routes.core;
+using System.Collections.Immutable;
 using System.Net;
 using System.Net.NetworkInformation;
 
@@ -44,46 +45,55 @@ static void RoutePrint(int interfaceIndex)
 
 static Ip4RangeSet Simplify(Ip4RangeSet set, uint delta)
 {
-    LinkedList<Ip4Range> internalResult = new LinkedList<Ip4Range>(set);
+    var internalResult = set._list;
+    List<Ip4Range> simplifiedList = new List<Ip4Range>();
 
-    bool shouldIterate = false;
-    do
+    bool shouldIterate = true;
+    while (shouldIterate)
     {
         shouldIterate = false;
-        LinkedListNode<Ip4Range>? current = internalResult.First;
-        while (current is not null && current.Next is not null)
+        simplifiedList.Clear();
+
+        if (internalResult.Count == 0)
+            break;
+
+        simplifiedList.Add(internalResult[0]);
+
+        for (int i = 1; i < internalResult.Count; i++)
         {
-            var next = current.Next;
-            if ((uint)current.Value.LastAddress + delta >= (uint)next.Value.FirstAddress)
+            Ip4Range currentRange = internalResult[i];
+            Ip4Range lastSimplifiedRange = simplifiedList.Last();
+
+            if ((uint)lastSimplifiedRange.LastAddress + delta >= (uint)currentRange.FirstAddress)
             {
-                current.Value = new Ip4Range(current.Value.FirstAddress, next.Value.LastAddress);
-                internalResult.Remove(next);
+                simplifiedList[^1] = new Ip4Range(lastSimplifiedRange.FirstAddress, currentRange.LastAddress);
                 shouldIterate = true;
             }
             else
             {
-                current = current.Next;
+                simplifiedList.Add(currentRange);
             }
         }
 
-        current = internalResult.First;
-        while (current is not null)
+        internalResult = simplifiedList.ToImmutableList();
+
+        simplifiedList.Clear();
+        foreach (var range in internalResult)
         {
-            if (current.Value.Count <= delta)
+            if (range.Count > delta)
             {
-                var prevCurrent = current;
-                current = current.Next;
-                internalResult.Remove(prevCurrent);
-                shouldIterate = true;
+                simplifiedList.Add(range);
             }
             else
             {
-                current = current.Next;
+                shouldIterate = true;
             }
         }
-    } while (shouldIterate);
 
-    Ip4RangeSet result = new();
+        internalResult = simplifiedList.ToImmutableList();
+    }
+
+    Ip4RangeSet result = new Ip4RangeSet();
     foreach (var item in internalResult)
     {
         result = result.Union(item);
@@ -137,6 +147,8 @@ var nonRuIps = new Ip4RangeSet()
     .Union(new Ip4Range(new Ip4Address(0x00000000), new Ip4Address(0xFFFFFFFF)))
     .Except(ruIps);
 
+nonRuIps = Simplify(nonRuIps, 100000);
+
 foreach (var item in nonRuIps)
 {
     Console.WriteLine($"{item.FirstAddress,15} - {item.LastAddress,15} {item.Count,10} => {string.Join(", ", item.ToSubnets())}");
@@ -161,22 +173,25 @@ catch (Exception exception)
     Console.WriteLine($"error deleting route 0.0.0.0/0: {exception.GetBaseException().Message}");
 }
 
-foreach (var subnet in nonRuIps.SelectMany(x => x.ToSubnets()))
+foreach (var range in nonRuIps)
 {
-    try
+    foreach (var subnet in range.ToSubnets())
     {
-        Ip4RouteTable.CreateRoute(new Ip4RouteCreateDto
+        try
         {
-            DestinationIP = new IPAddress(subnet.FirstAddress.AsByteArray()),
-            SubnetMask = new IPAddress(subnet.Mask.AsByteArray()),
-            InterfaceIndex = networkInterfaceIndex,
-            GatewayIP = gatewayIp,
-            Metric = 5,
-        });
-        Console.WriteLine($"route created: {subnet}");
-    }
-    catch (Exception exception)
-    {
-        Console.WriteLine($"error creating route {subnet}: {exception.GetBaseException().Message}");
+            Ip4RouteTable.CreateRoute(new Ip4RouteCreateDto
+            {
+                DestinationIP = new IPAddress(subnet.FirstAddress.AsByteArray()),
+                SubnetMask = new IPAddress(subnet.Mask.AsByteArray()),
+                InterfaceIndex = networkInterfaceIndex,
+                GatewayIP = gatewayIp,
+                Metric = 5,
+            });
+            Console.WriteLine($"route created: {subnet}");
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine($"error creating route {subnet}: {exception.GetBaseException().Message}");
+        }
     }
 }
