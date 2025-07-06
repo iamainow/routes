@@ -51,16 +51,17 @@ public class Ip4RangeTest
     {
         Ip4Range range = new Ip4Range(Ip4Address.Parse(start), Ip4Address.Parse(end));
 
-        Assert.Equal(expectedResult, string.Join(",", range.ToSubnets().OrderBy(x => x.FirstAddress)));
+        Assert.Equal(expectedResult, string.Join(", ", range.ToSubnets().OrderBy(x => x.FirstAddress)));
     }
 
     [Theory]
-    [InlineData("0.0.0.0", "2.255.255.255", "0.0.0.0/7,2.0.0.0/8")]
-    [InlineData("0.0.0.10", "0.0.0.42", "0.0.0.10/31,0.0.0.12/30,0.0.0.16/28,0.0.0.32/29,0.0.0.40/31,0.0.0.42/32")]
+    [InlineData("0.0.0.0", "2.255.255.255", "0.0.0.0/7, 2.0.0.0/8")]
+    [InlineData("0.0.0.10", "0.0.0.42", "0.0.0.10/31, 0.0.0.12/30, 0.0.0.16/28, 0.0.0.32/29, 0.0.0.40/31, 0.0.0.42/32")]
+    [InlineData("81.3.192.0", "81.4.191.255", "81.3.192.0/18, 81.4.0.0/17, 81.4.128.0/18")]
     public void ToSubsets_MultipleSubsets(string start, string end, string expectedResult)
     {
         Ip4Range range = new Ip4Range(Ip4Address.Parse(start), Ip4Address.Parse(end));
 
-        Assert.Equal(expectedResult, string.Join(",", range.ToSubnets().OrderBy(x => x.FirstAddress)));
+        Assert.Equal(expectedResult, string.Join(", ", range.ToSubnets().OrderBy(x => x.FirstAddress)));
     }
 }

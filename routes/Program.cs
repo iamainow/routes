@@ -103,7 +103,7 @@ foreach (string line in lines)
 }
 
 Console.WriteLine("------------------------------");
-Console.ReadKey();
+//Console.ReadKey();
 
 var allIpRangeSet = new Ip4RangeSet().Union(new Ip4Range(new Ip4Address(0x00000000), new Ip4Address(0xFFFFFFFF)));
 var nonRuIpRangeSet = allIpRangeSet.Except(ruRangeSet);
@@ -115,7 +115,7 @@ var nonRuIpRangeSet = allIpRangeSet.Except(ruRangeSet);
 
 //Console.WriteLine(nonRuIpRangeSet);
 Console.WriteLine("------------------------------");
-Console.ReadKey();
+//Console.ReadKey();
 
 const uint delta = 10000;
 
@@ -166,13 +166,5 @@ foreach (var item in ips)
 
 foreach (var item in lessNonRuIpRangeSet)
 {
-    Console.WriteLine($"{item.FirstAddress,15} - {item.LastAddress,15} {item.Count}");
-}
-
-foreach (var item in lessNonRuIpRangeSet)
-{
-    foreach (var item2 in item.ToSubnets())
-    {
-        Console.WriteLine(item2);
-    }
+    Console.WriteLine($"{item.FirstAddress,15} - {item.LastAddress,15} {item.Count,10} => {string.Join(", ", item.ToSubnets())}");
 }
