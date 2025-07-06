@@ -2,21 +2,21 @@
 
 namespace routes.core;
 
-public readonly struct Ip4RangeCollection
+public readonly struct Ip4RangeSet
 {
     private readonly IImmutableList<Ip4Range> _list;
 
-    public Ip4RangeCollection()
+    public Ip4RangeSet()
     {
         _list = [];
     }
 
-    private Ip4RangeCollection(IImmutableList<Ip4Range> list)
+    private Ip4RangeSet(IImmutableList<Ip4Range> list)
     {
         _list = list;
     }
 
-    public Ip4RangeCollection Union(Ip4Range other)
+    public Ip4RangeSet Union(Ip4Range other)
     {
         List<Ip4Range> result = [];
         Ip4Range newItem = other;
@@ -34,7 +34,7 @@ public readonly struct Ip4RangeCollection
 
         result.Add(newItem);
 
-        return new Ip4RangeCollection(result.ToImmutableList());
+        return new Ip4RangeSet(result.ToImmutableList());
     }
 
     public void Except(Ip4Subnet subnet)
