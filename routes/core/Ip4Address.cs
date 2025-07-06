@@ -113,15 +113,16 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return left.CompareTo(right) > 0;
     }
 
-    // implement ==, != operators and all nessesary interfaces
     public static bool operator ==(Ip4Address left, Ip4Address right)
     {
         return left.Equals(right);
     }
+
     public static bool operator !=(Ip4Address left, Ip4Address right)
     {
         return !left.Equals(right);
     }
+
     public override bool Equals(object? obj)
     {
         if (obj is Ip4Address address)
@@ -130,27 +131,13 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         }
         return false;
     }
+
     public override int GetHashCode()
     {
         return _address.GetHashCode();
     }
 
-    public static Ip4Address operator +(Ip4Address left, uint count)
-    {
-        checked
-        {
-            return new Ip4Address(left.AsUInt32() + count);
-        }
-    }
-    public static Ip4Address operator -(Ip4Address left, uint count)
-    {
-        checked
-        {
-            return new Ip4Address(left.AsUInt32() - count);
-        }
-    }
-
-    public static implicit operator uint(Ip4Address address)
+    public static explicit operator uint(Ip4Address address)
     {
         return address.AsUInt32();
     }

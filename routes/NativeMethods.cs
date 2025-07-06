@@ -65,13 +65,13 @@ namespace routes
 
         public static IPForwardTable ReadIPForwardTable(nint tablePtr)
         {
-            var result = (IPForwardTable)Marshal.PtrToStructure(tablePtr, typeof(IPForwardTable));
+            var result = Marshal.PtrToStructure<IPForwardTable>(tablePtr);
 
             MIB_IPFORWARDROW[] table = new MIB_IPFORWARDROW[result.Size];
             nint p = new nint(tablePtr.ToInt64() + Marshal.SizeOf(result.Size));
             for (int i = 0; i < result.Size; ++i)
             {
-                table[i] = (MIB_IPFORWARDROW)Marshal.PtrToStructure(p, typeof(MIB_IPFORWARDROW));
+                table[i] = Marshal.PtrToStructure<MIB_IPFORWARDROW>(p);
                 p = new nint(p.ToInt64() + Marshal.SizeOf(typeof(MIB_IPFORWARDROW)));
             }
             result.Table = table;
@@ -80,16 +80,16 @@ namespace routes
         }
 
         [DllImport("iphlpapi", CharSet = CharSet.Auto)]
-        public extern static int GetIpForwardTable(nint /*PMIB_IPFORWARDTABLE*/ pIpForwardTable, ref int /*PULONG*/ pdwSize, bool bOrder);
+        public static extern int GetIpForwardTable(nint /*PMIB_IPFORWARDTABLE*/ pIpForwardTable, ref int /*PULONG*/ pdwSize, bool bOrder);
 
         [DllImport("iphlpapi", CharSet = CharSet.Auto)]
         //public extern static int CreateIpForwardEntry(ref /*PMIB_IPFORWARDROW*/ Ip4RouteTable.PMIB_IPFORWARDROW pRoute);  Can do by reference or by Pointer
-        public extern static int CreateIpForwardEntry(nint /*PMIB_IPFORWARDROW*/ pRoute);
+        public static extern int CreateIpForwardEntry(nint /*PMIB_IPFORWARDROW*/ pRoute);
 
         [DllImport("iphlpapi", CharSet = CharSet.Auto)]
-        public extern static int DeleteIpForwardEntry(nint /*PMIB_IPFORWARDROW*/ pRoute);
+        public static extern int DeleteIpForwardEntry(nint /*PMIB_IPFORWARDROW*/ pRoute);
 
         [DllImport("iphlpapi", CharSet = CharSet.Auto)]
-        public extern static int SetIpForwardEntry(nint /*PMIB_IPFORWARDROW*/ pRoute);
+        public static extern int SetIpForwardEntry(nint /*PMIB_IPFORWARDROW*/ pRoute);
     }
 }
