@@ -32,6 +32,6 @@ public readonly struct Ip4Subnet
 
     public override string ToString()
     {
-        return $"{FirstAddress} {Mask}";
+        return $"{FirstAddress}{Mask}";
     }
 }

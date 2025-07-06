@@ -113,12 +113,14 @@ public readonly struct Ip4Range
                 {
                     result.Add(new Ip4Subnet(ipRange.FirstAddress, 32 - position));
                 }
+                else
+                {
+                    Ip4Address end1 = new Ip4Address(ipRange.FirstAddress.AsUInt32() | GetLastBits(0xFFFFFFFF, position - 1));
+                    SearchForBiggestSubnetWithin(new Ip4Range(ipRange.FirstAddress, end1), result, position - 1);
 
-                Ip4Address end1 = new Ip4Address(ipRange.FirstAddress.AsUInt32() | GetLastBits(0xFFFFFFFF, position - 1));
-                SearchForBiggestSubnetWithin(new Ip4Range(ipRange.LastAddress, end1), result, position - 1);
-
-                Ip4Address start2 = new Ip4Address(GetFirstBits(ipRange.LastAddress.AsUInt32(), position));
-                SearchForBiggestSubnetWithin(new Ip4Range(start2, ipRange.LastAddress), result, position - 1);
+                    Ip4Address start2 = new Ip4Address(GetFirstBits(ipRange.LastAddress.AsUInt32(), 32 - position + 1));
+                    SearchForBiggestSubnetWithin(new Ip4Range(start2, ipRange.LastAddress), result, position - 1);
+                }
             }
             else
             {

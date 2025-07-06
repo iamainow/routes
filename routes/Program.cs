@@ -168,3 +168,11 @@ foreach (var item in lessNonRuIpRangeSet)
 {
     Console.WriteLine($"{item.FirstAddress,15} - {item.LastAddress,15} {item.Count}");
 }
+
+foreach (var item in lessNonRuIpRangeSet)
+{
+    foreach (var item2 in item.ToSubnets())
+    {
+        Console.WriteLine(item2);
+    }
+}
