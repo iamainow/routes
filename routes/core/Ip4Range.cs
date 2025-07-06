@@ -4,6 +4,9 @@ public readonly struct Ip4Range
 {
     public readonly Ip4Address FirstAddress;
     public readonly Ip4Address LastAddress;
+
+    public uint Count => LastAddress.AsUInt32() - FirstAddress.AsUInt32() + 1;
+
     public Ip4Range(Ip4Address start, Ip4Address end)
     {
         FirstAddress = start;
@@ -31,6 +34,59 @@ public readonly struct Ip4Range
         }
 
         return [IntersectableUnion(other)];
+    }
+
+    public Ip4Range IntersectableIntersect(Ip4Range other)
+    {
+        Ip4Address start = Ip4Address.Max(this.FirstAddress, other.FirstAddress);
+        Ip4Address end = Ip4Address.Min(this.LastAddress, other.LastAddress);
+        return new Ip4Range(start, end);
+    }
+
+    public Ip4Range? Intersect(Ip4Range other)
+    {
+        if (!IsIntersects(other))
+        {
+            return null;
+        }
+
+        return IntersectableIntersect(other);
+    }
+
+    public Ip4Range[] IntersectableExcept(Ip4Range other)
+    {
+        if (other.FirstAddress <= this.FirstAddress)
+        {
+            if (other.LastAddress < this.LastAddress)
+            {
+                return [new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), this.LastAddress)];
+            }
+            else
+            {
+                return [];
+            }
+        }
+        else
+        {
+            if (other.LastAddress < this.LastAddress)
+            {
+                return [new Ip4Range(this.FirstAddress, new Ip4Address((uint)other.FirstAddress - 1)), new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), this.LastAddress)];
+            }
+            else
+            {
+                return [new Ip4Range(this.FirstAddress, new Ip4Address((uint)other.FirstAddress - 1))];
+            }
+        }
+    }
+
+    public Ip4Range[] Except(Ip4Range other)
+    {
+        if (IsIntersects(other))
+        {
+            return IntersectableExcept(other);
+        }
+
+        return [this];
     }
 
     public Ip4Subnet[] ToSubnets()
@@ -99,5 +155,10 @@ public readonly struct Ip4Range
         }
 
         return (number >> (32 - count)) << (32 - count);
+    }
+
+    public override string ToString()
+    {
+        return $"{FirstAddress}-{LastAddress}";
     }
 }

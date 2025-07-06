@@ -84,6 +84,8 @@ Console.WriteLine("------------------------------");
 Console.ReadKey();
 
 var lines = await File.ReadAllLinesAsync("ru.txt");
+List<Ip4Subnet> ruSubnets = new List<Ip4Subnet>();
+Ip4RangeSet ruRangeSet = new Ip4RangeSet();
 foreach (string line in lines)
 {
     if (!string.IsNullOrEmpty(line))
@@ -93,10 +95,76 @@ foreach (string line in lines)
         var mask = new Ip4Mask(int.Parse(stringArray[1]));
 
         var subnet = new Ip4Subnet(ip, mask);
+        ruSubnets.Add(subnet);
+        ruRangeSet = ruRangeSet.Union(subnet.ToIp4Range());
 
-        Console.WriteLine($"{line,18} => {subnet.FirstAddress,15} {subnet.Mask.ToFullString(),15} or {subnet.FirstAddress,15}-{subnet.LastAddress,15}");
+        //Console.WriteLine($"{line,18} => {subnet.FirstAddress,15} {subnet.Mask.ToFullString(),15} or {subnet.FirstAddress,15}-{subnet.LastAddress,15}");
     }
 }
 
 Console.WriteLine("------------------------------");
 Console.ReadKey();
+
+var allIpRangeSet = new Ip4RangeSet().Union(new Ip4Range(new Ip4Address(0x00000000), new Ip4Address(0xFFFFFFFF)));
+var nonRuIpRangeSet = allIpRangeSet.Except(ruRangeSet);
+
+//foreach (var item in nonRuIpRangeSet)
+//{
+//    Console.WriteLine($"{item.FirstAddress,15} - {item.LastAddress,15} {item.Count}");
+//}
+
+//Console.WriteLine(nonRuIpRangeSet);
+Console.WriteLine("------------------------------");
+Console.ReadKey();
+
+const uint delta = 10000;
+
+LinkedList<Ip4Range> ips = new LinkedList<Ip4Range>(nonRuIpRangeSet);
+
+bool shouldShrink = false;
+do
+{
+    shouldShrink = false;
+    LinkedListNode<Ip4Range>? current = ips.First;
+    while (current is not null && current.Next is not null)
+    {
+        var next = current.Next;
+        if ((uint)current.Value.LastAddress + delta >= (uint)next.Value.FirstAddress)
+        {
+            current.Value = new Ip4Range(current.Value.FirstAddress, next.Value.LastAddress);
+            ips.Remove(next);
+            shouldShrink = true;
+        }
+        else
+        {
+            current = current.Next;
+        }
+    }
+
+    current = ips.First;
+    while (current is not null)
+    {
+        if (current.Value.Count <= delta)
+        {
+            var prevCurrent = current;
+            current = current.Next;
+            ips.Remove(prevCurrent);
+            shouldShrink = true;
+        }
+        else
+        {
+            current = current.Next;
+        }
+    }
+} while (shouldShrink);
+
+var lessNonRuIpRangeSet = new Ip4RangeSet();
+foreach (var item in ips)
+{
+    lessNonRuIpRangeSet = lessNonRuIpRangeSet.Union(item);
+}
+
+foreach (var item in lessNonRuIpRangeSet)
+{
+    Console.WriteLine($"{item.FirstAddress,15} - {item.LastAddress,15} {item.Count}");
+}

@@ -25,7 +25,7 @@ public readonly struct Ip4Subnet
 
     public Ip4Address LastAddress => FirstAddress | ~Mask;
 
-    public Ip4Range ToIpRange()
+    public Ip4Range ToIp4Range()
     {
         return new Ip4Range(FirstAddress, LastAddress);
     }

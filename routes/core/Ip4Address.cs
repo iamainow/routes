@@ -43,6 +43,16 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return true;
     }
 
+    public static Ip4Address Min(Ip4Address left, Ip4Address right)
+    {
+        return left < right ? left : right;
+    }
+
+    public static Ip4Address Max(Ip4Address left, Ip4Address right)
+    {
+        return left > right ? left : right;
+    }
+
     [FieldOffset(0)]
     private readonly uint _address;
 
