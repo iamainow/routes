@@ -37,8 +37,22 @@ public readonly struct Ip4RangeSet
         return new Ip4RangeSet(result.ToImmutableList());
     }
 
-    public void Except(Ip4Subnet subnet)
+    public Ip4RangeSet Except(Ip4Range subnet)
     {
         throw new NotImplementedException("This method is not implemented yet.");
+    }
+
+    public Ip4RangeSet Intersect(Ip4Range other)
+    {
+        List<Ip4Range> result = [];
+        foreach (var item in _list)
+        {
+            if (other.IsIntersects(item))
+            {
+                result.Add();
+            }
+        }
+
+        return new Ip4RangeSet(result.ToImmutableList());
     }
 }
