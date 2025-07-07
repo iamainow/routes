@@ -48,7 +48,7 @@ public readonly struct Ip4Mask
         return true;
     }
 
-    /// <param name="text">/xx format</param>
+    /// <param name="text">/xx or xx format</param>
     public static Ip4Mask ParseCidrString(string text)
     {
         if (!TryParseCidrString(text, out var mask))
@@ -59,7 +59,7 @@ public readonly struct Ip4Mask
         return mask;
     }
 
-    /// <param name="text">/xx format</param>
+    /// <param name="text">/xx or xx format</param>
     public static bool TryParseCidrString(string text, out Ip4Mask result)
     {
         if (text.StartsWith('/'))
@@ -81,6 +81,36 @@ public readonly struct Ip4Mask
 
         result = new Ip4Mask(cidr);
         return true;
+    }
+
+    /// <param name="text">/xx, xx or x.x.x.x</param>
+    public static Ip4Mask Parse(string text)
+    {
+        if (!TryParse(text, out var result))
+        {
+            throw new FormatException();
+        }
+
+        return result;
+    }
+
+    /// <param name="text">/xx, xx or x.x.x.x</param>
+    public static bool TryParse(string text, out Ip4Mask result)
+    {
+        if (TryParseFullString(text, out var result1))
+        {
+            result = result1;
+            return true;
+        }
+
+        if (TryParseCidrString(text, out var result2))
+        {
+            result = result2;
+            return true;
+        }
+
+        result = default;
+        return false;
     }
 
     private static uint GetMaskByCidr(int cidr)
@@ -133,7 +163,7 @@ public readonly struct Ip4Mask
             0x3FFFFFFF => 2,
             0x7FFFFFFF => 1,
             0xFFFFFFFF => 0,
-            _ => throw new ArgumentException($"differentBits invalid value:  {differentBits:x2}", nameof(differentBits))
+            _ => throw new ArgumentException($"differentBits invalid value: {differentBits:x2}", nameof(differentBits))
         };
     }
 
@@ -149,13 +179,21 @@ public readonly struct Ip4Mask
     [FieldOffset(0)]
     private readonly byte _byte4;
 
+    public int Cidr => GetCidrByMask(_mask);
+
     public Ip4Mask(uint mask)
     {
         _mask = mask;
     }
 
+    /// <exception cref="ArgumentException"></exception>
     public Ip4Mask(int cidr)
     {
+        if (cidr < 0 || cidr > 32)
+        {
+            throw new ArgumentException();
+        }
+
         _mask = GetMaskByCidr(cidr);
     }
 
@@ -177,18 +215,13 @@ public readonly struct Ip4Mask
         return [_byte1, _byte2, _byte3, _byte4];
     }
 
-    public int AsCidr()
-    {
-        return GetCidrByMask(_mask);
-    }
-
     public string ToFullString()
     {
         return $"{_byte1}.{_byte2}.{_byte3}.{_byte4}";
     }
     public string ToCidrString()
     {
-        return $"/{AsCidr()}";
+        return $"/{Cidr}";
     }
 
     public override string ToString() => ToCidrString();

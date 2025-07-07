@@ -40,10 +40,12 @@ public readonly struct Ip4Range
         return new Ip4RangeSet(range);
     }
 
+    public static readonly Ip4Range All = new Ip4Range(new Ip4Address(0x00000000), new Ip4Address(0xFFFFFFFF));
+
     public readonly Ip4Address FirstAddress;
     public readonly Ip4Address LastAddress;
 
-    public uint Count => LastAddress.AsUInt32() - FirstAddress.AsUInt32() + 1;
+    public ulong Count => 1UL + LastAddress.AsUInt32() - FirstAddress.AsUInt32();
 
     public Ip4Range(Ip4Address start, Ip4Address end)
     {

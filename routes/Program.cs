@@ -112,15 +112,9 @@ static async Task<Ip4RangeSet> TryGetGoogleIps()
 
     foreach (var ipRange in googleIpRanges)
     {
-        try
+        if (Ip4Subnet.TryParse(ipRange, out Ip4Subnet subnet))
         {
-            var parts = ipRange.Split('/');
-            Ip4Subnet subnet = new Ip4Subnet(Ip4Address.Parse(parts[0]), new Ip4Mask(int.Parse(parts[1])));
-            result = result.Union(subnet.ToIp4Range());
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error parsing IP range '{ipRange}': {ex.GetBaseException().Message}");
+            result = result.Union(subnet);
         }
     }
 
@@ -151,13 +145,8 @@ List<Ip4Subnet> ruSubnets = new List<Ip4Subnet>();
 
 foreach (string line in lines)
 {
-    if (!string.IsNullOrEmpty(line))
+    if (!string.IsNullOrEmpty(line) && Ip4Subnet.TryParse(line, out var subnet))
     {
-        string[] stringArray = line.Split('/');
-        var ip = Ip4Address.Parse(stringArray[0]);
-        var mask = new Ip4Mask(int.Parse(stringArray[1]));
-
-        var subnet = new Ip4Subnet(ip, mask);
         ruSubnets.Add(subnet);
     }
 }
@@ -165,21 +154,20 @@ foreach (string line in lines)
 Ip4RangeSet ruIps = new Ip4RangeSet();
 foreach (var subnet in ruSubnets)
 {
-    ruIps = ruIps.Union(subnet.ToIp4Range());
+    ruIps = ruIps.Union(subnet);
 }
 
 var googleIps = await TryGetGoogleIps();
 
-var nonRuIps = new Ip4RangeSet()
-    .Union(new Ip4Range(new Ip4Address(0x00000000), new Ip4Address(0xFFFFFFFF)))
+var nonRuIps = new Ip4RangeSet(Ip4Range.All)
     .Except(ruIps)
     .Except(googleIps)
-    .Except(new Ip4Subnet(Ip4Address.Parse("10.0.0.0"), 8))
-    .Except(new Ip4Subnet(Ip4Address.Parse("100.64.0.0"), 10))
-    .Except(new Ip4Subnet(Ip4Address.Parse("127.0.0.0"), 8))
-    .Except(new Ip4Subnet(Ip4Address.Parse("169.254.0.0"), 16))
-    .Except(new Ip4Subnet(Ip4Address.Parse("172.16.0.0"), 12))
-    .Except(new Ip4Subnet(Ip4Address.Parse("192.168.0.0"), 16));
+    .Except(Ip4Subnet.Parse("10.0.0.0/8"))
+    .Except(Ip4Subnet.Parse("100.64.0.0/10"))
+    .Except(Ip4Subnet.Parse("127.0.0.0/8"))
+    .Except(Ip4Subnet.Parse("169.254.0.0/16"))
+    .Except(Ip4Subnet.Parse("172.16.0.0/12"))
+    .Except(Ip4Subnet.Parse("192.168.0.0/16"));
 
 foreach (var item in nonRuIps)
 {

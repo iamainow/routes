@@ -15,6 +15,31 @@ public readonly struct Ip4Subnet
         return subnet.ToIp4RangeSet();
     }
 
+    /// <param name="text">x.x.x.x/yy or x.x.x.x y.y.y.y</param>
+    public static Ip4Subnet Parse(string text)
+    {
+        if (!TryParse(text, out var result))
+        {
+            throw new FormatException();
+        }
+
+        return result;
+    }
+
+    /// <param name="text">x.x.x.x/yy or x.x.x.x y.y.y.y</param>
+    public static bool TryParse(string text, out Ip4Subnet result)
+    {
+        var step1 = text.Split('/', ' ');
+        if (step1.Length == 2 && Ip4Address.TryParse(step1[0], out var address) && Ip4Mask.TryParse(step1[1], out var mask))
+        {
+            result = new Ip4Subnet(address, mask);
+            return true;
+        }
+
+        result = default;
+        return false;
+    }
+
     public readonly Ip4Address FirstAddress;
     public readonly Ip4Mask Mask;
 
@@ -50,6 +75,6 @@ public readonly struct Ip4Subnet
 
     public override string ToString()
     {
-        return $"{FirstAddress}{Mask.ToCidrString()}";
+        return $"{FirstAddress}/{Mask.Cidr}";
     }
 }

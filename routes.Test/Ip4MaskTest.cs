@@ -82,6 +82,6 @@ public class Ip4MaskTest
     [InlineData(0)]
     public void AsUInt32_AsCidr_EqualsTo_JustCidr(int cidr)
     {
-        Assert.Equal(new Ip4Mask(new Ip4Mask(cidr).AsUInt32()).AsCidr(), cidr);
+        Assert.Equal(new Ip4Mask(new Ip4Mask(cidr).AsUInt32()).Cidr, cidr);
     }
 }
