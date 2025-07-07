@@ -177,20 +177,29 @@ foreach (var item in nonRuIps)
 Console.WriteLine("------------------------------");
 Console.ReadKey();
 
-try
+var routesToRemove = Ip4RouteTable.GetRouteTable()
+    .Where(x => x.InterfaceIndex == networkInterfaceIndex)
+    .Where(x => x.Metric == metric)
+    .ToArray();
+
+foreach (var routeToRemove in routesToRemove)
 {
-    Ip4RouteTable.DeleteRoute(new Ip4RouteDeleteDto
+    var subnet = new Ip4Subnet(Ip4Address.Parse(routeToRemove.DestinationIP.ToString()), Ip4Mask.Parse(routeToRemove.SubnetMask.ToString()));
+    try
     {
-        DestinationIP = IPAddress.Parse("0.0.0.0"),
-        SubnetMask = IPAddress.Parse("0.0.0.0"),
-        InterfaceIndex = networkInterfaceIndex,
-        GatewayIP = gatewayIp,
-    });
-    Console.WriteLine("route deleted: 0.0.0.0/0");
-}
-catch (Exception exception)
-{
-    Console.WriteLine($"error deleting route 0.0.0.0/0: {exception.GetBaseException().Message}");
+        Ip4RouteTable.DeleteRoute(new Ip4RouteDeleteDto
+        {
+            DestinationIP = routeToRemove.DestinationIP,
+            SubnetMask = routeToRemove.SubnetMask,
+            InterfaceIndex = routeToRemove.InterfaceIndex,
+            GatewayIP = routeToRemove.GatewayIP,
+        });
+        Console.WriteLine($"route deleted: {subnet}");
+    }
+    catch (Exception exception)
+    {
+        Console.WriteLine($"error deleting route {subnet}: {exception.GetBaseException().Message}");
+    }
 }
 
 foreach (var subnet in nonRuIps.SelectMany(x => x.ToSubnets()))
