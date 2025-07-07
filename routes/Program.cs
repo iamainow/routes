@@ -2,6 +2,7 @@
 using routes.core;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Text.Json;
 
 static void AdaptersPrint()
 {
@@ -92,6 +93,40 @@ static Ip4RangeSet Simplify(Ip4RangeSet set, uint delta)
     return result;
 }
 
+static async Task<Ip4RangeSet> TryGetGoogleIps()
+{
+    using HttpClient client = new HttpClient();
+    var response = await client.GetAsync("https://www.gstatic.com/ipranges/goog.json");
+    if (!response.IsSuccessStatusCode)
+    {
+        return [];
+    }
+    var responseJson = await response.Content.ReadAsStringAsync();
+    var googleIpRanges = JsonSerializer.Deserialize<Root>(responseJson)
+        .prefixes
+        .Select(x => x.ipv4Prefix)
+        .Where(x => !string.IsNullOrEmpty(x))
+        .ToArray();
+
+    Ip4RangeSet result = new Ip4RangeSet();
+
+    foreach (var ipRange in googleIpRanges)
+    {
+        try
+        {
+            var parts = ipRange.Split('/');
+            Ip4Subnet subnet = new Ip4Subnet(Ip4Address.Parse(parts[0]), new Ip4Mask(int.Parse(parts[1])));
+            result = result.Union(subnet.ToIp4Range());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing IP range '{ipRange}': {ex.GetBaseException().Message}");
+        }
+    }
+
+    return result;
+}
+
 AdaptersPrint();
 
 var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
@@ -133,9 +168,18 @@ foreach (var subnet in ruSubnets)
     ruIps = ruIps.Union(subnet.ToIp4Range());
 }
 
+var googleIps = await TryGetGoogleIps();
+
 var nonRuIps = new Ip4RangeSet()
     .Union(new Ip4Range(new Ip4Address(0x00000000), new Ip4Address(0xFFFFFFFF)))
-    .Except(ruIps);
+    .Except(ruIps)
+    .Except(googleIps)
+    .Except(new Ip4Subnet(Ip4Address.Parse("10.0.0.0"), 8))
+    .Except(new Ip4Subnet(Ip4Address.Parse("100.64.0.0"), 10))
+    .Except(new Ip4Subnet(Ip4Address.Parse("127.0.0.0"), 8))
+    .Except(new Ip4Subnet(Ip4Address.Parse("169.254.0.0"), 16))
+    .Except(new Ip4Subnet(Ip4Address.Parse("172.16.0.0"), 12))
+    .Except(new Ip4Subnet(Ip4Address.Parse("192.168.0.0"), 16));
 
 foreach (var item in nonRuIps)
 {
@@ -180,3 +224,7 @@ foreach (var subnet in nonRuIps.SelectMany(x => x.ToSubnets()))
         Console.WriteLine($"error creating route {subnet}: {exception.GetBaseException().Message}");
     }
 }
+
+internal record Root(Prefix[] prefixes);
+
+internal record Prefix(string ipv4Prefix);

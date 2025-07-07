@@ -1,7 +1,45 @@
-﻿namespace routes.core;
+﻿using System.Diagnostics;
 
+namespace routes.core;
+
+[DebuggerDisplay("{ToString(),nq}")]
 public readonly struct Ip4Range
 {
+    private static uint GetNthBit(uint number, int position)
+    {
+        if (position == 0)
+        {
+            return number & 1;
+        }
+
+        return (number >> (position - 1)) & 1;
+    }
+
+    private static uint GetLastBits(uint number, int count)
+    {
+        if (count == 0)
+        {
+            return 0;
+        }
+
+        return (number << (32 - count)) >> (32 - count);
+    }
+
+    private static uint GetFirstBits(uint number, int count)
+    {
+        if (count == 0)
+        {
+            return 0;
+        }
+
+        return (number >> (32 - count)) << (32 - count);
+    }
+
+    public static implicit operator Ip4RangeSet(Ip4Range range)
+    {
+        return new Ip4RangeSet(range);
+    }
+
     public readonly Ip4Address FirstAddress;
     public readonly Ip4Address LastAddress;
 
@@ -129,34 +167,9 @@ public readonly struct Ip4Range
         }
     }
 
-    private static uint GetNthBit(uint number, int position)
+    public Ip4RangeSet ToIp4RangeSet()
     {
-        if (position == 0)
-        {
-            return number & 1;
-        }
-
-        return (number >> (position - 1)) & 1;
-    }
-
-    private static uint GetLastBits(uint number, int count)
-    {
-        if (count == 0)
-        {
-            return 0;
-        }
-
-        return (number << (32 - count)) >> (32 - count);
-    }
-
-    private static uint GetFirstBits(uint number, int count)
-    {
-        if (count == 0)
-        {
-            return 0;
-        }
-
-        return (number >> (32 - count)) << (32 - count);
+        return new Ip4RangeSet(this);
     }
 
     public override string ToString()

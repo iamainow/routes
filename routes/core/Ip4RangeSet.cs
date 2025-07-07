@@ -1,9 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 
 namespace routes.core;
 
+[DebuggerDisplay("{_list.Count,nq} ip ranges")]
 public readonly struct Ip4RangeSet : IEnumerable<Ip4Range>
 {
     private readonly IImmutableList<Ip4Range> _list;
@@ -11,6 +13,16 @@ public readonly struct Ip4RangeSet : IEnumerable<Ip4Range>
     public Ip4RangeSet()
     {
         _list = [];
+    }
+
+    public Ip4RangeSet(Ip4Range ip4Range)
+    {
+        _list = [ip4Range];
+    }
+
+    public Ip4RangeSet(Ip4Subnet subnet)
+    {
+        _list = [subnet];
     }
 
     private Ip4RangeSet(IImmutableList<Ip4Range> list)

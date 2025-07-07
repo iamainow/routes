@@ -1,10 +1,13 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace routes.core;
 
+[DebuggerDisplay("{ToString(),nq}")]
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Address>
 {
+    /// <param name="text">x.x.x.x format</param>
     /// <exception cref="FormatException"></exception>
     public static Ip4Address Parse(string text)
     {
@@ -18,6 +21,8 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
 
         return new Ip4Address(step2[0], step2[1], step2[2], step2[3]);
     }
+
+    /// <param name="text">x.x.x.x format</param>
     public static bool TryParse(string text, out Ip4Address result)
     {
         var step1 = text.Split('.');
@@ -51,6 +56,61 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public static Ip4Address Max(Ip4Address left, Ip4Address right)
     {
         return left > right ? left : right;
+    }
+
+    public static bool operator <=(Ip4Address left, Ip4Address right)
+    {
+        return left.CompareTo(right) <= 0;
+    }
+
+    public static bool operator >=(Ip4Address left, Ip4Address right)
+    {
+        return left.CompareTo(right) >= 0;
+    }
+
+    public static bool operator <(Ip4Address left, Ip4Address right)
+    {
+        return left.CompareTo(right) < 0;
+    }
+
+    public static bool operator >(Ip4Address left, Ip4Address right)
+    {
+        return left.CompareTo(right) > 0;
+    }
+
+    public static bool operator ==(Ip4Address left, Ip4Address right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Ip4Address left, Ip4Address right)
+    {
+        return !left.Equals(right);
+    }
+
+    public static explicit operator uint(Ip4Address address)
+    {
+        return address.AsUInt32();
+    }
+
+    public static Ip4Address operator |(Ip4Address address, Ip4Mask mask)
+    {
+        return new Ip4Address(address.AsUInt32() | mask.AsUInt32());
+    }
+
+    public static implicit operator Ip4Range(Ip4Address address)
+    {
+        return address.ToIp4Range();
+    }
+
+    public static implicit operator Ip4Subnet(Ip4Address address)
+    {
+        return address.ToIp4Subnet();
+    }
+
+    public static implicit operator Ip4RangeSet(Ip4Address address)
+    {
+        return address.ToIp4RangeSet();
     }
 
     [FieldOffset(0)]
@@ -88,11 +148,6 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return [_byte1, _byte2, _byte3, _byte4];
     }
 
-    public override string ToString()
-    {
-        return $"{_byte1}.{_byte2}.{_byte3}.{_byte4}";
-    }
-
     public int CompareTo(Ip4Address other)
     {
         return this._address.CompareTo(other._address);
@@ -101,36 +156,6 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public bool Equals(Ip4Address other)
     {
         return this._address.Equals(other._address);
-    }
-
-    public static bool operator <=(Ip4Address left, Ip4Address right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
-
-    public static bool operator >=(Ip4Address left, Ip4Address right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
-
-    public static bool operator <(Ip4Address left, Ip4Address right)
-    {
-        return left.CompareTo(right) < 0;
-    }
-
-    public static bool operator >(Ip4Address left, Ip4Address right)
-    {
-        return left.CompareTo(right) > 0;
-    }
-
-    public static bool operator ==(Ip4Address left, Ip4Address right)
-    {
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(Ip4Address left, Ip4Address right)
-    {
-        return !left.Equals(right);
     }
 
     public override bool Equals(object? obj)
@@ -147,13 +172,23 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return _address.GetHashCode();
     }
 
-    public static explicit operator uint(Ip4Address address)
+    public Ip4Range ToIp4Range()
     {
-        return address.AsUInt32();
+        return new Ip4Range(this, this);
     }
 
-    public static Ip4Address operator |(Ip4Address address, Ip4Mask mask)
+    public Ip4Subnet ToIp4Subnet()
     {
-        return new Ip4Address(address.AsUInt32() | mask.AsUInt32());
+        return new Ip4Subnet(this, Ip4Mask.SingleAddress);
+    }
+
+    public Ip4RangeSet ToIp4RangeSet()
+    {
+        return new Ip4RangeSet(this);
+    }
+
+    public override string ToString()
+    {
+        return $"{_byte1}.{_byte2}.{_byte3}.{_byte4}";
     }
 }

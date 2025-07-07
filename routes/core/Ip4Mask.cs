@@ -1,23 +1,28 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace routes.core;
 
+[DebuggerDisplay("{ToString(),nq}")]
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Ip4Mask
 {
+    public static readonly Ip4Mask Full = new Ip4Mask(0xFFFFFFFF);
+    public static readonly Ip4Mask SingleAddress = new Ip4Mask(0xFFFFFFFF);
+
+    /// <param name="text">x.x.x.x format</param>
     /// <exception cref="FormatException"></exception>
     public static Ip4Mask ParseFullString(string text)
     {
-        var step1 = text.Split('.');
-        if (step1.Length != 4)
+        if (!TryParseFullString(text, out var result))
         {
             throw new FormatException();
         }
 
-        var step2 = step1.Select(byte.Parse).ToArray();
-
-        return new Ip4Mask(step2[0], step2[1], step2[2], step2[3]);
+        return result;
     }
+
+    /// <param name="text">x.x.x.x format</param>
     public static bool TryParseFullString(string text, out Ip4Mask result)
     {
         var step1 = text.Split('.');
@@ -43,17 +48,18 @@ public readonly struct Ip4Mask
         return true;
     }
 
+    /// <param name="text">/xx format</param>
     public static Ip4Mask ParseCidrString(string text)
     {
-        if (text.StartsWith('/'))
+        if (!TryParseCidrString(text, out var mask))
         {
-            text = text[1..];
+            throw new FormatException();
         }
 
-        int cidr = int.Parse(text);
-
-        return new Ip4Mask(cidr);
+        return mask;
     }
+
+    /// <param name="text">/xx format</param>
     public static bool TryParseCidrString(string text, out Ip4Mask result)
     {
         if (text.StartsWith('/'))
@@ -62,6 +68,12 @@ public readonly struct Ip4Mask
         }
 
         if (!int.TryParse(text, out int cidr))
+        {
+            result = default;
+            return false;
+        }
+
+        if (cidr < 0 || cidr > 32)
         {
             result = default;
             return false;
@@ -77,6 +89,7 @@ public readonly struct Ip4Mask
         {
             return 0;
         }
+
         return (0xFFFFFFFF >> (32 - cidr)) << (32 - cidr);
     }
     private static int GetCidrByMask(uint mask)
@@ -87,7 +100,6 @@ public readonly struct Ip4Mask
     {
         return differentBits switch
         {
-            // TODO: optimize to binary search or asm command
             0x00000000 => 32,
             0x00000001 => 31,
             0x00000003 => 30,
@@ -180,9 +192,4 @@ public readonly struct Ip4Mask
     }
 
     public override string ToString() => ToCidrString();
-
-    public static Ip4Mask operator ~(Ip4Mask mask)
-    {
-        return new Ip4Mask(~mask._mask);
-    }
 }
