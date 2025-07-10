@@ -31,7 +31,18 @@ static void RoutePrintAll()
     Console.WriteLine();
 }
 
-static void RoutePrint(int interfaceIndex)
+static void RoutePrintByName(string name)
+{
+    var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
+        .Where(x => x.Name == name)
+        .First();
+
+    int interfaceIndex = networkInterface.GetInterfaceIndex();
+
+    RoutePrintByIndex(interfaceIndex);
+}
+
+static void RoutePrintByIndex(int interfaceIndex)
 {
     List<Ip4RouteEntry> routeTable = Ip4RouteTable.GetRouteTable();
 
@@ -55,6 +66,7 @@ static Ip4RangeSet Simplify(Ip4RangeSet set, uint delta)
         while (current is not null && current.Next is not null)
         {
             var next = current.Next;
+            // if gap between neighbors is more than delta, remove it
             if ((uint)current.Value.LastAddress + delta >= (uint)next.Value.FirstAddress)
             {
                 current.Value = new Ip4Range(current.Value.FirstAddress, next.Value.LastAddress);
@@ -70,6 +82,7 @@ static Ip4RangeSet Simplify(Ip4RangeSet set, uint delta)
         current = internalResult.First;
         while (current is not null)
         {
+            // if current range is smaller than delta, remove it
             if (current.Value.Count <= delta)
             {
                 var prevCurrent = current;
@@ -93,7 +106,7 @@ static Ip4RangeSet Simplify(Ip4RangeSet set, uint delta)
     return result;
 }
 
-static async Task<Ip4RangeSet> TryGetGoogleIps()
+static async Task<Ip4RangeSet> TryGetGoogleIpsAsync()
 {
     using HttpClient client = new HttpClient();
     var response = await client.GetAsync("https://www.gstatic.com/ipranges/goog.json");
@@ -102,7 +115,7 @@ static async Task<Ip4RangeSet> TryGetGoogleIps()
         return [];
     }
     var responseJson = await response.Content.ReadAsStringAsync();
-    var googleIpRanges = JsonSerializer.Deserialize<Root>(responseJson)
+    var googleIpRanges = JsonSerializer.Deserialize<GoogleIpsResponseRoot>(responseJson)
         .prefixes
         .Select(x => x.ipv4Prefix)
         .Where(x => !string.IsNullOrEmpty(x))
@@ -121,107 +134,171 @@ static async Task<Ip4RangeSet> TryGetGoogleIps()
     return result;
 }
 
-AdaptersPrint();
-
-var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
-    .Where(x => x.Name.Contains("AmneziaVPN", StringComparison.OrdinalIgnoreCase))
-    .First();
-
-int networkInterfaceIndex = networkInterface.GetInterfaceIndex();
-
-IPAddress gatewayIp = networkInterface.GetPrimaryGateway() ?? throw new Exception("PrimaryGateway is null");
-
-RoutePrint(networkInterface.GetInterfaceIndex());
-
-List<Ip4RouteEntry> routeTable = Ip4RouteTable.GetRouteTable();
-
-int metric = 5;
-
-Console.WriteLine("------------------------------");
-Console.ReadKey();
-
-var lines = await File.ReadAllLinesAsync("ru.txt");
-List<Ip4Subnet> ruSubnets = new List<Ip4Subnet>();
-
-foreach (string line in lines)
+static async Task<Ip4RangeSet> GetNonRuSubnetsAsync(string ruFilePath)
 {
-    if (!string.IsNullOrEmpty(line) && Ip4Subnet.TryParse(line, out var subnet))
+    var lines = await File.ReadAllLinesAsync(ruFilePath);
+    List<Ip4Subnet> ruSubnets = new List<Ip4Subnet>();
+
+    foreach (string line in lines)
     {
-        ruSubnets.Add(subnet);
-    }
-}
-
-Ip4RangeSet ruIps = new Ip4RangeSet();
-foreach (var subnet in ruSubnets)
-{
-    ruIps = ruIps.Union(subnet);
-}
-
-var googleIps = await TryGetGoogleIps();
-
-var nonRuIps = new Ip4RangeSet(Ip4Range.All)
-    .Except(ruIps)
-    .Except(googleIps)
-    .Except(Ip4Subnet.Parse("10.0.0.0/8"))
-    .Except(Ip4Subnet.Parse("100.64.0.0/10"))
-    .Except(Ip4Subnet.Parse("127.0.0.0/8"))
-    .Except(Ip4Subnet.Parse("169.254.0.0/16"))
-    .Except(Ip4Subnet.Parse("172.16.0.0/12"))
-    .Except(Ip4Subnet.Parse("192.168.0.0/16"));
-
-foreach (var item in nonRuIps)
-{
-    Console.WriteLine($"{item.FirstAddress,15} - {item.LastAddress,15} {item.Count,10} => {string.Join(", ", item.ToSubnets())}");
-}
-
-Console.WriteLine("------------------------------");
-Console.ReadKey();
-
-var routesToRemove = Ip4RouteTable.GetRouteTable()
-    .Where(x => x.InterfaceIndex == networkInterfaceIndex)
-    .Where(x => x.Metric == metric)
-    .ToArray();
-
-foreach (var routeToRemove in routesToRemove)
-{
-    var subnet = new Ip4Subnet(Ip4Address.Parse(routeToRemove.DestinationIP.ToString()), Ip4Mask.Parse(routeToRemove.SubnetMask.ToString()));
-    try
-    {
-        Ip4RouteTable.DeleteRoute(new Ip4RouteDeleteDto
+        if (!string.IsNullOrEmpty(line) && Ip4Subnet.TryParse(line, out var subnet))
         {
-            DestinationIP = routeToRemove.DestinationIP,
-            SubnetMask = routeToRemove.SubnetMask,
-            InterfaceIndex = routeToRemove.InterfaceIndex,
-            GatewayIP = routeToRemove.GatewayIP,
-        });
-        Console.WriteLine($"route deleted: {subnet}");
+            ruSubnets.Add(subnet);
+        }
     }
-    catch (Exception exception)
+
+    Ip4RangeSet ru = new Ip4RangeSet();
+    foreach (var subnet in ruSubnets)
     {
-        Console.WriteLine($"error deleting route {subnet}: {exception.GetBaseException().Message}");
+        ru = ru.Union(subnet);
     }
+
+    var googleIps = await TryGetGoogleIpsAsync();
+
+    var nonRuIps = new Ip4RangeSet(Ip4Range.All)
+        .Except(ru)
+        .Except(googleIps)
+        .Except(Ip4Subnet.Parse("10.0.0.0/8"))
+        .Except(Ip4Subnet.Parse("100.64.0.0/10"))
+        .Except(Ip4Subnet.Parse("127.0.0.0/8"))
+        .Except(Ip4Subnet.Parse("169.254.0.0/16"))
+        .Except(Ip4Subnet.Parse("172.16.0.0/12"))
+        .Except(Ip4Subnet.Parse("192.168.0.0/16"));
+
+    return nonRuIps;
 }
 
-foreach (var subnet in nonRuIps.SelectMany(x => x.ToSubnets()))
+static void ChangeRoutes(Ip4RangeSet nonRuIps, string interfaceName, int metric)
 {
-    try
+    var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
+        .Where(x => x.Name == interfaceName)
+        .Single();
+
+    int interfaceIndex = networkInterface.GetInterfaceIndex();
+
+    IPAddress gatewayIp = networkInterface.GetPrimaryGateway() ?? throw new Exception("PrimaryGateway is null");
+
+    var routesToRemove = Ip4RouteTable.GetRouteTable()
+        .Where(x => x.InterfaceIndex == interfaceIndex)
+        .Where(x => x.Metric == metric)
+        .ToArray();
+
+    foreach (var routeToRemove in routesToRemove)
     {
-        Ip4RouteTable.CreateRoute(new Ip4RouteCreateDto
+        var subnet = new Ip4Subnet(Ip4Address.Parse(routeToRemove.DestinationIP.ToString()), Ip4Mask.Parse(routeToRemove.SubnetMask.ToString()));
+        try
         {
-            DestinationIP = new IPAddress(subnet.FirstAddress.AsByteArray()),
-            SubnetMask = new IPAddress(subnet.Mask.AsByteArray()),
-            InterfaceIndex = networkInterfaceIndex,
-            GatewayIP = gatewayIp,
-            Metric = 5,
-        });
-        Console.WriteLine($"route created: {subnet}");
+            Ip4RouteTable.DeleteRoute(new Ip4RouteDeleteDto
+            {
+                DestinationIP = routeToRemove.DestinationIP,
+                SubnetMask = routeToRemove.SubnetMask,
+                InterfaceIndex = routeToRemove.InterfaceIndex,
+                GatewayIP = routeToRemove.GatewayIP,
+            });
+            Console.WriteLine($"route deleted: {subnet}");
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine($"error deleting route {subnet}: {exception.GetBaseException().Message}");
+        }
     }
-    catch (Exception exception)
+
+    foreach (var subnet in nonRuIps.SelectMany(x => x.ToSubnets()))
     {
-        Console.WriteLine($"error creating route {subnet}: {exception.GetBaseException().Message}");
+        try
+        {
+            Ip4RouteTable.CreateRoute(new Ip4RouteCreateDto
+            {
+                DestinationIP = new IPAddress(subnet.FirstAddress.AsByteArray()),
+                SubnetMask = new IPAddress(subnet.Mask.AsByteArray()),
+                InterfaceIndex = interfaceIndex,
+                GatewayIP = gatewayIp,
+                Metric = 5,
+            });
+            Console.WriteLine($"route created: {subnet}");
+        }
+        catch (Exception exception)
+        {
+            // write to standart error
+            Console.Error.WriteLine($"error creating route {subnet}: {exception.GetBaseException().Message}");
+        }
     }
 }
 
-internal record Root(Prefix[] prefixes);
+static async Task SerializeToAmneziaJsonAsync(Ip4RangeSet set, string filePath)
+{
+    var objectToSerialize = set.SelectMany(x => x.ToSubnets())
+        .Select(x => new AmneziaItem(x.FirstAddress.ToString() + "/" + x.Mask.Cidr))
+        .ToArray();
 
-internal record Prefix(string ipv4Prefix);
+    await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(objectToSerialize));
+}
+
+Lazy<Task<Ip4RangeSet>> nonRu = new Lazy<Task<Ip4RangeSet>>(async () => await GetNonRuSubnetsAsync("ru.txt"));
+while (true)
+{
+    Console.WriteLine("1 - Print Adapters");
+    Console.WriteLine("2 - Print all route table");
+    Console.WriteLine("3 - Print AmneziaVPN route table");
+    Console.WriteLine("4 - Change AmneziaVPN route table");
+    Console.WriteLine("5 - Create json for Amnezia");
+    Console.WriteLine("6 - Create simplyfied json for Amnezia");
+    Console.WriteLine("(esc) - Exit");
+
+    var key = Console.ReadKey(true);
+    if (key.Key == ConsoleKey.Escape)
+    {
+        return;
+    }
+
+    switch (key.Key)
+    {
+        case ConsoleKey.D1:
+            AdaptersPrint();
+            break;
+
+        case ConsoleKey.D2:
+            RoutePrintAll();
+            break;
+
+        case ConsoleKey.D3:
+            RoutePrintByName("AmneziaVPN");
+            break;
+
+        case ConsoleKey.D4:
+            foreach (var item in await nonRu.Value)
+            {
+                Console.WriteLine($"{item.FirstAddress,15} - {item.LastAddress,15} {item.Count,10} => {string.Join(", ", item.ToSubnets())}");
+            }
+            ChangeRoutes(await nonRu.Value, "AmneziaVPN", 5);
+            break;
+
+        case ConsoleKey.D5:
+            await SerializeToAmneziaJsonAsync(await nonRu.Value, "amnezia-nonru.json");
+            break;
+
+        case ConsoleKey.D6:
+            Console.Write("simplifiing ip range: ");
+            string? input = Console.ReadLine();
+            if (!uint.TryParse(input, out uint delta))
+            {
+                Console.Error.WriteLine("wrong imput, expected a number");
+                break;
+            }
+            Ip4RangeSet simplifiedSet = Simplify(await nonRu.Value, delta);
+            await SerializeToAmneziaJsonAsync(simplifiedSet, $"amnezia-nonru-smpl-{delta}.json");
+            break;
+
+        default:
+            Console.WriteLine("Invalid option, please try again.");
+            break;
+    }
+}
+
+internal record GoogleIpsResponseRoot(GoogleIpsResponseItem[] prefixes);
+
+internal record GoogleIpsResponseItem(string ipv4Prefix);
+
+internal record AmneziaRoot(AmneziaItem[] items);
+
+internal record AmneziaItem(string hostname);
