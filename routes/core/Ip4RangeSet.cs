@@ -1,13 +1,15 @@
-﻿using System.Collections;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text;
 
 namespace routes.core;
 
 [DebuggerDisplay("{_list.Count,nq} ip ranges")]
-public readonly struct Ip4RangeSet : IEnumerable<Ip4Range>
+public readonly struct Ip4RangeSet
 {
+    public static readonly Ip4RangeSet Empty = new Ip4RangeSet();
+    public static readonly Ip4RangeSet All = new Ip4RangeSet(Ip4Range.All);
+
     private readonly IImmutableList<Ip4Range> _list;
 
     public Ip4RangeSet()
@@ -23,6 +25,28 @@ public readonly struct Ip4RangeSet : IEnumerable<Ip4Range>
     public Ip4RangeSet(Ip4Subnet subnet)
     {
         _list = [subnet];
+    }
+
+    public Ip4RangeSet(IEnumerable<Ip4Range> ranges)
+    {
+        var current = new Ip4RangeSet();
+        foreach (var range in ranges)
+        {
+            current = current.Union(range);
+        }
+
+        this._list = current._list;
+    }
+
+    public Ip4RangeSet(IEnumerable<Ip4Subnet> subnets)
+    {
+        var current = new Ip4RangeSet();
+        foreach (var subnet in subnets)
+        {
+            current = current.Union(subnet);
+        }
+
+        this._list = current._list;
     }
 
     private Ip4RangeSet(IImmutableList<Ip4Range> list)
@@ -107,6 +131,16 @@ public readonly struct Ip4RangeSet : IEnumerable<Ip4Range>
         return result;
     }
 
+    public Ip4Range[] ToIp4Ranges()
+    {
+        return _list.ToArray();
+    }
+
+    public Ip4Subnet[] ToIp4Subnets()
+    {
+        return _list.SelectMany(x => x.ToSubnets()).ToArray();
+    }
+
     public override string ToString()
     {
         StringBuilder result = new StringBuilder();
@@ -116,15 +150,5 @@ public readonly struct Ip4RangeSet : IEnumerable<Ip4Range>
         }
 
         return result.ToString();
-    }
-
-    public IEnumerator<Ip4Range> GetEnumerator()
-    {
-        return _list.GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
     }
 }

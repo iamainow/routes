@@ -40,6 +40,19 @@ public readonly struct Ip4Subnet
         return false;
     }
 
+    public static bool IsValid(Ip4Mask mask, Ip4Address firstAddress)
+    {
+        return (firstAddress.AsUInt32() & ~mask.AsUInt32()) == 0;
+    }
+
+    public static void Validate(Ip4Mask mask, Ip4Address firstAddress)
+    {
+        if (!IsValid(mask, firstAddress))
+        {
+            throw new ArgumentException($"The first address {firstAddress} is not valid for the mask {mask}.", nameof(firstAddress));
+        }
+    }
+
     public readonly Ip4Address FirstAddress;
     public readonly Ip4Mask Mask;
 
@@ -47,18 +60,24 @@ public readonly struct Ip4Subnet
     {
         FirstAddress = address;
         Mask = mask;
+
+        Validate(Mask, FirstAddress);
     }
 
     public Ip4Subnet(Ip4Address firstAddress, int cidr)
     {
         FirstAddress = firstAddress;
         Mask = new Ip4Mask(cidr);
+
+        Validate(Mask, FirstAddress);
     }
 
     public Ip4Subnet(Ip4Address firstAddress, uint mask)
     {
         FirstAddress = firstAddress;
         Mask = new Ip4Mask(mask);
+
+        Validate(Mask, FirstAddress);
     }
 
     public Ip4Address LastAddress => new Ip4Address(FirstAddress.AsUInt32() | ~Mask.AsUInt32());

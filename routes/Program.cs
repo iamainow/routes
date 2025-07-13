@@ -54,20 +54,79 @@ static void RoutePrintByIndex(int interfaceIndex)
     Console.WriteLine();
 }
 
-static Ip4RangeSet Simplify(Ip4RangeSet set, uint delta)
+static bool SimplifyLinkedListExpand(LinkedList<Ip4Range> sortedLinkedList, uint delta)
 {
-    LinkedList<Ip4Range> internalResult = new LinkedList<Ip4Range>(set);
+    bool wasListChanged = false;
+    LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
+    while (current is not null && current.Next is not null)
+    {
+        var next = current.Next;
+        // if gap between neighbors equals or more than delta, remove it
+        if ((ulong)(uint)current.Value.LastAddress + delta + 1 >= (uint)next.Value.FirstAddress)
+        {
+            current.Value = new Ip4Range(current.Value.FirstAddress, next.Value.LastAddress);
+            sortedLinkedList.Remove(next);
+            wasListChanged = true;
+        }
+        else
+        {
+            current = current.Next;
+        }
+    }
+
+    return wasListChanged;
+}
+
+static bool SimplifySetExpand(Ip4RangeSet set, uint delta)
+{
+    return SimplifyLinkedListExpand(new LinkedList<Ip4Range>(set.ToIp4Ranges().OrderBy(x => x.FirstAddress)), delta);
+}
+
+static bool SimplifyLinkedListShrink(LinkedList<Ip4Range> sortedLinkedList, uint delta)
+{
+    bool wasElementRemoved = false;
+    LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
+    while (current is not null)
+    {
+        // if current range is equals or smaller than delta, remove it
+        if (current.Value.Count <= delta)
+        {
+            var toDelete = current;
+            current = current.Next;
+            sortedLinkedList.Remove(toDelete);
+            wasElementRemoved = true;
+        }
+        else
+        {
+            current = current.Next;
+        }
+    }
+
+    return wasElementRemoved;
+}
+
+static bool SimplifySetShrink(Ip4RangeSet set, uint delta)
+{
+    return SimplifyLinkedListShrink(new LinkedList<Ip4Range>(set.ToIp4Ranges().OrderBy(x => x.FirstAddress)), delta);
+}
+
+[Obsolete]
+static Ip4RangeSet Simplify_old(Ip4RangeSet set, uint delta)
+{
+    LinkedList<Ip4Range> internalResult = new LinkedList<Ip4Range>(set.ToIp4Ranges());
 
     bool shouldIterate = false;
     do
     {
         shouldIterate = false;
-        LinkedListNode<Ip4Range>? current = internalResult.First;
+        LinkedListNode<Ip4Range>? current = null;
+
+        current = internalResult.First;
         while (current is not null && current.Next is not null)
         {
             var next = current.Next;
             // if gap between neighbors is more than delta, remove it
-            if ((uint)current.Value.LastAddress + delta >= (uint)next.Value.FirstAddress)
+            if ((uint)current.Value.LastAddress + delta + 1 >= (uint)next.Value.FirstAddress)
             {
                 current.Value = new Ip4Range(current.Value.FirstAddress, next.Value.LastAddress);
                 internalResult.Remove(next);
@@ -106,17 +165,66 @@ static Ip4RangeSet Simplify(Ip4RangeSet set, uint delta)
     return result;
 }
 
+[Obsolete]
+static Ip4RangeSet Simplify_stupid(Ip4RangeSet set, uint delta)
+{
+    LinkedList<Ip4Range> internalResult = new LinkedList<Ip4Range>(set.ToIp4Ranges());
+
+    bool shouldIterate = false;
+    do
+    {
+        shouldIterate = false;
+        shouldIterate |= SimplifyLinkedListExpand(internalResult, delta);
+        shouldIterate |= SimplifyLinkedListShrink(internalResult, delta);
+    } while (shouldIterate);
+
+    Ip4RangeSet result = new();
+    foreach (var item in internalResult)
+    {
+        result = result.Union(item);
+    }
+
+    return result;
+}
+
+static Ip4RangeSet Simplify_graduate(Ip4RangeSet set, uint delta)
+{
+    var result = set;
+
+    while (true)
+    {
+        ulong minSize = set.ToIp4Ranges().Min(x => x.Count);
+        ulong minGap = Ip4RangeSet.All.Except(set).ToIp4Ranges().Min(x => x.Count);
+
+        if (minSize <= minGap && minSize <= delta && minSize <= uint.MaxValue)
+        {
+            SimplifySetShrink(set, (uint)minSize);
+            continue;
+        }
+        else if (minGap <= minSize && minGap <= delta && minGap <= uint.MaxValue)
+        {
+            SimplifySetExpand(set, (uint)minGap);
+            continue;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return result;
+}
+
 static async Task<Ip4RangeSet> TryGetGoogleIpsAsync()
 {
     using HttpClient client = new HttpClient();
     var response = await client.GetAsync("https://www.gstatic.com/ipranges/goog.json");
     if (!response.IsSuccessStatusCode)
     {
-        return [];
+        return Ip4RangeSet.Empty;
     }
     var responseJson = await response.Content.ReadAsStringAsync();
-    var googleIpRanges = JsonSerializer.Deserialize<GoogleIpsResponseRoot>(responseJson)
-        .prefixes
+    var googleIpRanges = JsonSerializer.Deserialize<GoogleIpsResponseRoot>(responseJson).prefixes
         .Select(x => x.ipv4Prefix)
         .Where(x => !string.IsNullOrEmpty(x))
         .ToArray();
@@ -147,15 +255,11 @@ static async Task<Ip4RangeSet> GetNonRuSubnetsAsync(string ruFilePath)
         }
     }
 
-    Ip4RangeSet ru = new Ip4RangeSet();
-    foreach (var subnet in ruSubnets)
-    {
-        ru = ru.Union(subnet);
-    }
+    Ip4RangeSet ru = new Ip4RangeSet(ruSubnets);
 
     var googleIps = await TryGetGoogleIpsAsync();
 
-    var nonRuIps = new Ip4RangeSet(Ip4Range.All)
+    return new Ip4RangeSet(Ip4Range.All)
         .Except(ru)
         .Except(googleIps)
         .Except(Ip4Subnet.Parse("10.0.0.0/8"))
@@ -164,8 +268,6 @@ static async Task<Ip4RangeSet> GetNonRuSubnetsAsync(string ruFilePath)
         .Except(Ip4Subnet.Parse("169.254.0.0/16"))
         .Except(Ip4Subnet.Parse("172.16.0.0/12"))
         .Except(Ip4Subnet.Parse("192.168.0.0/16"));
-
-    return nonRuIps;
 }
 
 static void ChangeRoutes(Ip4RangeSet nonRuIps, string interfaceName, int metric)
@@ -203,7 +305,7 @@ static void ChangeRoutes(Ip4RangeSet nonRuIps, string interfaceName, int metric)
         }
     }
 
-    foreach (var subnet in nonRuIps.SelectMany(x => x.ToSubnets()))
+    foreach (var subnet in nonRuIps.ToIp4Subnets())
     {
         try
         {
@@ -227,7 +329,7 @@ static void ChangeRoutes(Ip4RangeSet nonRuIps, string interfaceName, int metric)
 
 static async Task SerializeToAmneziaJsonAsync(Ip4RangeSet set, string filePath)
 {
-    var objectToSerialize = set.SelectMany(x => x.ToSubnets())
+    var objectToSerialize = set.ToIp4Subnets()
         .Select(x => new AmneziaItem(x.FirstAddress.ToString() + "/" + x.Mask.Cidr))
         .ToArray();
 
@@ -266,7 +368,7 @@ while (true)
             break;
 
         case ConsoleKey.D4:
-            foreach (var item in await nonRu.Value)
+            foreach (var item in (await nonRu.Value).ToIp4Ranges())
             {
                 Console.WriteLine($"{item.FirstAddress,15} - {item.LastAddress,15} {item.Count,10} => {string.Join(", ", item.ToSubnets())}");
             }
@@ -285,7 +387,7 @@ while (true)
                 Console.Error.WriteLine("wrong imput, expected a number");
                 break;
             }
-            Ip4RangeSet simplifiedSet = Simplify(await nonRu.Value, delta);
+            Ip4RangeSet simplifiedSet = Simplify_graduate(await nonRu.Value, delta);
             await SerializeToAmneziaJsonAsync(simplifiedSet, $"amnezia-nonru-smpl-{delta}.json");
             break;
 

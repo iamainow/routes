@@ -7,7 +7,7 @@ namespace routes.core;
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Ip4Mask
 {
-    public static readonly Ip4Mask Full = new Ip4Mask(0xFFFFFFFF);
+    public static readonly Ip4Mask Full = new Ip4Mask(0x00000000);
     public static readonly Ip4Mask SingleAddress = new Ip4Mask(0xFFFFFFFF);
 
     /// <param name="text">x.x.x.x format</param>
@@ -115,55 +115,82 @@ public readonly struct Ip4Mask
 
     private static uint GetMaskByCidr(int cidr)
     {
-        if (cidr == 0)
+        return cidr switch
         {
-            return 0;
-        }
-
-        return (0xFFFFFFFF >> (32 - cidr)) << (32 - cidr);
+            0 => 0x00000000,
+            1 => 0x80000000,
+            2 => 0xC0000000,
+            3 => 0xE0000000,
+            4 => 0xF0000000,
+            5 => 0xF8000000,
+            6 => 0xFC000000,
+            7 => 0xFE000000,
+            8 => 0xFF000000,
+            9 => 0xFF800000,
+            10 => 0xFFC00000,
+            11 => 0xFFE00000,
+            12 => 0xFFF00000,
+            13 => 0xFFF80000,
+            14 => 0xFFFC0000,
+            15 => 0xFFFE0000,
+            16 => 0xFFFF0000,
+            17 => 0xFFFF8000,
+            18 => 0xFFFFC000,
+            19 => 0xFFFFE000,
+            20 => 0xFFFFF000,
+            21 => 0xFFFFF800,
+            22 => 0xFFFFFC00,
+            23 => 0xFFFFFE00,
+            24 => 0xFFFFFF00,
+            25 => 0xFFFFFF80,
+            26 => 0xFFFFFFC0,
+            27 => 0xFFFFFFE0,
+            28 => 0xFFFFFFF0,
+            29 => 0xFFFFFFF8,
+            30 => 0xFFFFFFFC,
+            31 => 0xFFFFFFFE,
+            32 => 0xFFFFFFFF,
+            _ => throw new ArgumentException($"cidr invalid value: {cidr}", nameof(cidr))
+        };
     }
     private static int GetCidrByMask(uint mask)
     {
-        return GetCidrByDifferentBits(~mask);
-    }
-    private static int GetCidrByDifferentBits(uint differentBits)
-    {
-        return differentBits switch
+        return mask switch
         {
-            0x00000000 => 32,
-            0x00000001 => 31,
-            0x00000003 => 30,
-            0x00000007 => 29,
-            0x0000000F => 28,
-            0x0000001F => 27,
-            0x0000003F => 26,
-            0x0000007F => 25,
-            0x000000FF => 24,
-            0x000001FF => 23,
-            0x000003FF => 22,
-            0x000007FF => 21,
-            0x00000FFF => 20,
-            0x00001FFF => 19,
-            0x00003FFF => 18,
-            0x00007FFF => 17,
-            0x0000FFFF => 16,
-            0x0001FFFF => 15,
-            0x0003FFFF => 14,
-            0x0007FFFF => 13,
-            0x000FFFFF => 12,
-            0x001FFFFF => 11,
-            0x003FFFFF => 10,
-            0x007FFFFF => 9,
-            0x00FFFFFF => 8,
-            0x01FFFFFF => 7,
-            0x03FFFFFF => 6,
-            0x07FFFFFF => 5,
-            0x0FFFFFFF => 4,
-            0x1FFFFFFF => 3,
-            0x3FFFFFFF => 2,
-            0x7FFFFFFF => 1,
-            0xFFFFFFFF => 0,
-            _ => throw new ArgumentException($"differentBits invalid value: {differentBits:x2}", nameof(differentBits))
+            0x00000000 => 0,
+            0x80000000 => 1,
+            0xC0000000 => 2,
+            0xE0000000 => 3,
+            0xF0000000 => 4,
+            0xF8000000 => 5,
+            0xFC000000 => 6,
+            0xFE000000 => 7,
+            0xFF000000 => 8,
+            0xFF800000 => 9,
+            0xFFC00000 => 10,
+            0xFFE00000 => 11,
+            0xFFF00000 => 12,
+            0xFFF80000 => 13,
+            0xFFFC0000 => 14,
+            0xFFFE0000 => 15,
+            0xFFFF0000 => 16,
+            0xFFFF8000 => 17,
+            0xFFFFC000 => 18,
+            0xFFFFE000 => 19,
+            0xFFFFF000 => 20,
+            0xFFFFF800 => 21,
+            0xFFFFFC00 => 22,
+            0xFFFFFE00 => 23,
+            0xFFFFFF00 => 24,
+            0xFFFFFF80 => 25,
+            0xFFFFFFC0 => 26,
+            0xFFFFFFE0 => 27,
+            0xFFFFFFF0 => 28,
+            0xFFFFFFF8 => 29,
+            0xFFFFFFFC => 30,
+            0xFFFFFFFE => 31,
+            0xFFFFFFFF => 32,
+            _ => throw new ArgumentException($"mask invalid value: {mask:x2}", nameof(mask))
         };
     }
 
@@ -184,16 +211,12 @@ public readonly struct Ip4Mask
     public Ip4Mask(uint mask)
     {
         _mask = mask;
+        _ = GetCidrByMask(_mask); // validation
     }
 
     /// <exception cref="ArgumentException"></exception>
     public Ip4Mask(int cidr)
     {
-        if (cidr < 0 || cidr > 32)
-        {
-            throw new ArgumentException();
-        }
-
         _mask = GetMaskByCidr(cidr);
     }
 
@@ -203,6 +226,7 @@ public readonly struct Ip4Mask
         _byte2 = byte2;
         _byte3 = byte3;
         _byte4 = byte4;
+        _ = GetCidrByMask(_mask); // validation
     }
 
     public uint AsUInt32()

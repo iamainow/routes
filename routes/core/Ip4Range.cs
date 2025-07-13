@@ -49,6 +49,11 @@ public readonly struct Ip4Range
 
     public Ip4Range(Ip4Address start, Ip4Address end)
     {
+        if (end < start)
+        {
+            throw new ArgumentException("End address must be greater than or equal to start address.");
+        }
+
         FirstAddress = start;
         LastAddress = end;
     }
