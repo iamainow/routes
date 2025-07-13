@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.Versioning;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 static void AdaptersPrint()
 {
@@ -260,3 +261,190 @@ internal record GoogleIpsResponseItem(string ipv4Prefix);
 internal record AmneziaRoot(AmneziaItem[] items);
 
 internal record AmneziaItem(string hostname);
+
+public class Parameters
+{
+    public required int Quality { get; set; }
+    public required string Source { get; set; }
+    public required string Destination { get; set; }
+    public required string SourceExtension { get; set; }
+    public required string ConverterExe { get; set; }
+}
+
+internal class InternalParameters
+{
+    public int? Quality { get; set; }
+    public string? Source { get; set; }
+    public string? Destination { get; set; }
+    public string? SourceExtension { get; set; }
+    public string? ConverterExe { get; set; }
+    public Parameters ToParameters()
+    {
+        ArgumentNullException.ThrowIfNull(Quality);
+        ArgumentNullException.ThrowIfNull(Source);
+        ArgumentNullException.ThrowIfNull(Destination);
+        ArgumentNullException.ThrowIfNull(SourceExtension);
+        ArgumentNullException.ThrowIfNull(ConverterExe);
+
+        return new Parameters
+        {
+            Quality = Quality.Value,
+            Source = Source,
+            Destination = Destination,
+            SourceExtension = SourceExtension,
+            ConverterExe = ConverterExe,
+        };
+    }
+}
+
+public static partial class Ip4AddressParser
+{
+    [GeneratedRegex(@"(?<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})")]
+    public static partial Regex RegEx();
+
+    public static IEnumerable<Ip4Address> GetAddresses(string text)
+    {
+        foreach (Match match in RegEx().Matches(text))
+        {
+            if (match.Success && match.Groups["ip"].Success)
+            {
+                if (Ip4Address.TryParse(match.Groups["ip"].Value, out Ip4Address address))
+                {
+                    yield return address;
+                }
+            }
+        }
+    }
+}
+
+public static partial class Ip4SubnetParser
+{
+    [GeneratedRegex(@"\b(?<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})\/(?<mask>3[0-2]|([1-2]|)\d)\b")]
+    public static partial Regex CidrRegEx();
+
+    [GeneratedRegex(@"\b(?<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}) (?<mask>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})\b")]
+    public static partial Regex FullRegEx();
+
+    public static IEnumerable<Ip4Subnet> GetSubnets(string text)
+    {
+        var matches = Enumerable.Concat(CidrRegEx().Matches(text), FullRegEx().Matches(text)).OrderBy(x => x.Index);
+        foreach (Match match in matches)
+        {
+            if (match.Success && match.Groups["ip"].Success && match.Groups["mask"].Success)
+            {
+                if (Ip4Address.TryParse(match.Groups["ip"].Value, out Ip4Address address) && Ip4Mask.TryParse(match.Groups["mask"].Value, out Ip4Mask mask))
+                {
+                    yield return new Ip4Subnet(address, mask);
+                }
+            }
+        }
+    }
+}
+
+
+public static partial class ParametersBuilder
+{
+    public static Parameters? Parse(ReadOnlySpan<string> args)
+    {
+        var enumerator = args.GetEnumerator();
+        if (!enumerator.MoveNext())
+        {
+            Console.Write("""
+                    -quality x : where x = [0, 10] - quality of converted audio files
+                    -source-directory <path> : source directory
+                    -dest-directory <path> : destination directory
+                    -source-ext <ext> : source extension e.g. .flac, .wav
+                    -ffmpeg <path> : path to ffmpeg executable
+                    """);
+
+            return null;
+        }
+
+        InternalParameters result = new();
+        do
+        {
+            switch (enumerator.Current)
+            {
+                case "-quality":
+                    if (!enumerator.MoveNext())
+                    {
+                        throw new ArgumentException("missing -quality value, should use -quality [0, 10]");
+                    }
+
+                    if (!int.TryParse(enumerator.Current, out int quality))
+                    {
+                        throw new ArgumentException("-quality should be a number [0, 10]");
+                    }
+
+                    result.Quality = quality;
+                    break;
+
+                case "-source-directory":
+                    if (!enumerator.MoveNext())
+                    {
+                        throw new ArgumentException("missing -source-directory value, should use -source-directory <path>");
+                    }
+
+                    if (string.IsNullOrEmpty(enumerator.Current))
+                    {
+                        throw new ArgumentException("missing -source-directory value, should use -source-directory <path>");
+                    }
+
+                    result.Source = enumerator.Current;
+                    break;
+
+                case "-dest-directory":
+                    if (!enumerator.MoveNext())
+                    {
+                        throw new ArgumentException("missing -dest-directory value, should use -dest-directory <path>");
+                    }
+
+                    if (string.IsNullOrEmpty(enumerator.Current))
+                    {
+                        throw new ArgumentException("missing -dest-directory value, should use -dest-directory <path>");
+                    }
+
+                    result.Destination = enumerator.Current;
+                    break;
+
+                case "-source-ext":
+                    if (!enumerator.MoveNext())
+                    {
+                        throw new ArgumentException("missing -source-ext value, should use -source-ext <ext>");
+                    }
+
+                    if (string.IsNullOrEmpty(enumerator.Current))
+                    {
+                        throw new ArgumentException("missing -source-ext value, should use -source-ext <ext>");
+                    }
+
+                    if (!enumerator.Current.StartsWith("."))
+                    {
+                        throw new ArgumentException("-source-ext value should start with '.'");
+                    }
+
+                    result.SourceExtension = enumerator.Current;
+                    break;
+
+                case "-ffmpeg":
+                    if (!enumerator.MoveNext())
+                    {
+                        throw new ArgumentException("missing -ffmpeg value, should use -ffmpeg <path>");
+                    }
+
+                    if (string.IsNullOrEmpty(enumerator.Current))
+                    {
+                        throw new ArgumentException("missing -ffmpeg value, should use -ffmpeg <path>");
+                    }
+
+                    result.ConverterExe = enumerator.Current;
+                    break;
+
+                default:
+                    throw new ArgumentException($"unknown argument '{enumerator.Current}'");
+            }
+        } while (enumerator.MoveNext());
+
+        return result.ToParameters();
+    }
+}
