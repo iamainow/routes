@@ -191,8 +191,8 @@ while (true)
     Console.WriteLine("2 - Print all route table");
     Console.WriteLine($"3 - Print {AmneziaVPN} route table");
     Console.WriteLine($"4 - Change {AmneziaVPN} route table");
-    Console.WriteLine("5 - Create json for Amnezia");
-    Console.WriteLine("6 - Create simplyfied json for Amnezia");
+    Console.WriteLine("5 - Create simplified json for Amnezia");
+    Console.WriteLine("6 - Print simplified routes for AmneziaWG conf file");
     Console.WriteLine("(esc) - Exit");
 
     var key = Console.ReadKey(true);
@@ -224,19 +224,27 @@ while (true)
             break;
 
         case ConsoleKey.D5:
-            await SerializeToAmneziaJsonAsync(await nonRu.Value, "amnezia-nonru.json");
-            break;
-
-        case ConsoleKey.D6:
-            Console.Write("simplifiing ip range: ");
-            string? input = Console.ReadLine();
-            if (!uint.TryParse(input, out uint delta))
+            Console.Write("simplifying ip range: ");
+            string? input1 = Console.ReadLine();
+            if (!uint.TryParse(input1, out uint delta1))
             {
                 Console.Error.WriteLine("wrong input, expected a number");
                 break;
             }
-            Ip4RangeSet simplifiedSet = (await nonRu.Value).Simplify(delta);
-            await SerializeToAmneziaJsonAsync(simplifiedSet, $"amnezia-nonru-smpl-{delta}.json");
+            Ip4RangeSet simplifiedSet1 = (await nonRu.Value).Simplify(delta1);
+            await SerializeToAmneziaJsonAsync(simplifiedSet1, $"amnezia-nonru-smpl-{delta1}.json");
+            break;
+
+        case ConsoleKey.D6:
+            Console.Write("simplifying ip range: ");
+            string? input2 = Console.ReadLine();
+            if (!uint.TryParse(input2, out uint delta2))
+            {
+                Console.Error.WriteLine("wrong input, expected a number");
+                break;
+            }
+            Ip4RangeSet simplifiedSet2 = (await nonRu.Value).Simplify(delta2);
+            await File.WriteAllTextAsync("AllowedIPs.txt", string.Join(", ", simplifiedSet2.ToIp4Subnets().Select(x => x.ToCidrString())));
             break;
 
         default:
