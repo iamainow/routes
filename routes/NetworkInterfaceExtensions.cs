@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using routeTable;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.Versioning;
@@ -42,10 +43,11 @@ namespace routes
                 .FirstOrDefault();
         }
 
-        private static IPAddress? GetPrimaryGatewayViaRouteTable(int interfaceIndex)
+        private static IPAddress? GetPrimaryGatewayViaRouteTable(List<Ip4RouteEntry> table, int interfaceIndex)
         {
-            return Ip4RouteTable.GetRouteTable()
+            return table
                 .Where(i => i.InterfaceIndex == interfaceIndex)
+                .Where(i => i.GatewayIP is not null)
                 .Select(x => x.GatewayIP)
                 .FirstOrDefault();
         }
@@ -60,10 +62,10 @@ namespace routes
         /// <exception cref="NetworkInformationException"></exception>
         [UnsupportedOSPlatform("macOS")]
         [UnsupportedOSPlatform("OSX")]
-        public static IPAddress? GetPrimaryGateway(this NetworkInterface networkInterface)
+        public static IPAddress? GetPrimaryGateway(this NetworkInterface networkInterface, Func<List<Ip4RouteEntry>> tableFunc)
         {
             return GetPrimaryGatewayViaGatewayAddresses(networkInterface.GetIPProperties())
-                ?? GetPrimaryGatewayViaRouteTable(networkInterface.GetInterfaceIndex())
+                ?? GetPrimaryGatewayViaRouteTable(tableFunc(), networkInterface.GetInterfaceIndex())
                 ?? GetPrimaryGatewayViaDhcpServerAddresses(networkInterface.GetIPProperties());
         }
     }

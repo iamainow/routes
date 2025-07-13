@@ -131,6 +131,96 @@ public readonly struct Ip4RangeSet
         return result;
     }
 
+    private bool ExpandSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
+    {
+        bool wasListChanged = false;
+        LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
+        while (current is not null && current.Next is not null)
+        {
+            var next = current.Next;
+            // if gap between neighbors equals or more than delta, remove it
+            if ((ulong)(uint)current.Value.LastAddress + delta + 1 >= (uint)next.Value.FirstAddress)
+            {
+                current.Value = new Ip4Range(current.Value.FirstAddress, next.Value.LastAddress);
+                sortedLinkedList.Remove(next);
+                wasListChanged = true;
+            }
+            else
+            {
+                current = current.Next;
+            }
+        }
+
+        return wasListChanged;
+    }
+
+    public Ip4RangeSet ExpandSet(Ip4RangeSet set, uint delta, out bool wasListChanged)
+    {
+        LinkedList<Ip4Range> list = new(set.ToIp4Ranges().OrderBy(x => x.FirstAddress));
+
+        wasListChanged = ExpandSortedLinkedList(list, delta);
+        return new Ip4RangeSet(list);
+    }
+
+    private bool ShrinkSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
+    {
+        bool wasElementRemoved = false;
+        LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
+        while (current is not null)
+        {
+            // if current range is equals or smaller than delta, remove it
+            if (current.Value.Count <= delta)
+            {
+                var toDelete = current;
+                current = current.Next;
+                sortedLinkedList.Remove(toDelete);
+                wasElementRemoved = true;
+            }
+            else
+            {
+                current = current.Next;
+            }
+        }
+
+        return wasElementRemoved;
+    }
+
+    public Ip4RangeSet ShrinkSet(Ip4RangeSet set, uint delta, out bool wasListChanged)
+    {
+        LinkedList<Ip4Range> list = new(set.ToIp4Ranges().OrderBy(x => x.FirstAddress));
+
+        wasListChanged = ShrinkSortedLinkedList(list, delta);
+        return new Ip4RangeSet(list);
+    }
+
+    public Ip4RangeSet Simplify(uint delta)
+    {
+        Ip4RangeSet result = this;
+
+        while (true)
+        {
+            ulong minSize = result.ToIp4Ranges().Min(x => x.Count);
+            ulong minGap = All.Except(result).ToIp4Ranges().Min(x => x.Count);
+
+            if (minSize <= minGap && minSize <= delta && minSize <= uint.MaxValue)
+            {
+                result = ShrinkSet(result, (uint)minSize, out _);
+                continue;
+            }
+            else if (minGap <= minSize && minGap <= delta && minGap <= uint.MaxValue)
+            {
+                result = ExpandSet(result, (uint)minGap, out _);
+                continue;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return result;
+    }
+
     public Ip4Range[] ToIp4Ranges()
     {
         return _list.ToArray();

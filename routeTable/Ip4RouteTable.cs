@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Runtime.InteropServices;
 
-namespace routes
+namespace routeTable
 {
     public class Ip4RouteTable
     {
@@ -53,9 +53,9 @@ namespace routes
         {
             var route = new NativeMethods.MIB_IPFORWARDROW
             {
-                dwForwardDest = BitConverter.ToUInt32(routeEntry.DestinationIP.GetAddressBytes(), 0),
-                dwForwardMask = BitConverter.ToUInt32(routeEntry.SubnetMask.GetAddressBytes(), 0),
-                dwForwardNextHop = BitConverter.ToUInt32(routeEntry.GatewayIP.GetAddressBytes(), 0),
+                dwForwardDest = BitConverter.ToUInt32(routeEntry.DestinationIP.GetAddressBytes()),
+                dwForwardMask = BitConverter.ToUInt32(routeEntry.SubnetMask.GetAddressBytes()),
+                dwForwardNextHop = BitConverter.ToUInt32(routeEntry.GatewayIP.GetAddressBytes()),
                 dwForwardMetric1 = Convert.ToUInt32(routeEntry.Metric),
                 dwForwardType = Convert.ToUInt32(3), //Default to 3
                 dwForwardProto = Convert.ToUInt32(3), //Default to 3
@@ -87,9 +87,9 @@ namespace routes
         {
             var route = new NativeMethods.MIB_IPFORWARDROW
             {
-                dwForwardDest = BitConverter.ToUInt32(routeEntry.DestinationIP.GetAddressBytes(), 0),
-                dwForwardMask = BitConverter.ToUInt32(routeEntry.SubnetMask.GetAddressBytes(), 0),
-                dwForwardNextHop = BitConverter.ToUInt32(routeEntry.GatewayIP.GetAddressBytes(), 0),
+                dwForwardDest = BitConverter.ToUInt32(routeEntry.DestinationIP.GetAddressBytes()),
+                dwForwardMask = BitConverter.ToUInt32(routeEntry.SubnetMask.GetAddressBytes()),
+                dwForwardNextHop = BitConverter.ToUInt32(routeEntry.GatewayIP.GetAddressBytes()),
                 dwForwardMetric1 = 99,
                 dwForwardType = Convert.ToUInt32(3), //Default to 3
                 dwForwardProto = Convert.ToUInt32(3), //Default to 3

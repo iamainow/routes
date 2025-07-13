@@ -92,8 +92,15 @@ public readonly struct Ip4Subnet
         return new Ip4RangeSet(this);
     }
 
-    public override string ToString()
+    public string ToFullString()
+    {
+        return $"{FirstAddress} {Mask.ToFullString()}";
+    }
+
+    public string ToCidrString()
     {
         return $"{FirstAddress}/{Mask.Cidr}";
     }
+
+    public override string ToString() => ToCidrString();
 }

@@ -11,4 +11,8 @@
     <PackageReference Include="System.Net.NetworkInformation" Version="4.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\routeTable\routeTable.csproj" />
+  </ItemGroup>
+
 </Project>

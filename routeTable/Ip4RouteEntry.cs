@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace routes
+namespace routeTable
 {
     public class Ip4RouteEntry
     {

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Runtime.InteropServices;
 
 namespace routes.core;
@@ -192,6 +193,16 @@ public readonly struct Ip4Mask
             0xFFFFFFFF => 32,
             _ => throw new ArgumentException($"mask invalid value: {mask:x2}", nameof(mask))
         };
+    }
+
+    public static implicit operator IPAddress(Ip4Mask address)
+    {
+        return new IPAddress(address.AsUInt32());
+    }
+
+    public static implicit operator Ip4Mask(IPAddress address)
+    {
+        return new Ip4Mask(Convert.ToUInt32(address.GetAddressBytes()));
     }
 
     [FieldOffset(0)]

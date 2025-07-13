@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Runtime.InteropServices;
 
 namespace routes.core;
@@ -111,6 +112,16 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public static implicit operator Ip4RangeSet(Ip4Address address)
     {
         return address.ToIp4RangeSet();
+    }
+
+    public static implicit operator IPAddress(Ip4Address address)
+    {
+        return new IPAddress(address.AsUInt32());
+    }
+
+    public static implicit operator Ip4Address(IPAddress address)
+    {
+        return new Ip4Address(Convert.ToUInt32(address.GetAddressBytes()));
     }
 
     [FieldOffset(0)]
