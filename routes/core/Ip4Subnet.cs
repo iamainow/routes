@@ -56,6 +56,9 @@ public readonly struct Ip4Subnet
     public readonly Ip4Address FirstAddress;
     public readonly Ip4Mask Mask;
 
+    public Ip4Address LastAddress => new Ip4Address(FirstAddress.AsUInt32() | ~Mask.AsUInt32());
+    public ulong Count => Mask.Count;
+
     public Ip4Subnet(Ip4Address address, Ip4Mask mask)
     {
         FirstAddress = address;
@@ -79,8 +82,6 @@ public readonly struct Ip4Subnet
 
         Validate(Mask, FirstAddress);
     }
-
-    public Ip4Address LastAddress => new Ip4Address(FirstAddress.AsUInt32() | ~Mask.AsUInt32());
 
     public Ip4Range ToIp4Range()
     {

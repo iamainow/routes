@@ -195,14 +195,14 @@ public readonly struct Ip4Mask
         };
     }
 
-    public static implicit operator IPAddress(Ip4Mask address)
+    public static implicit operator IPAddress(Ip4Mask mask)
     {
-        return new IPAddress(address.AsUInt32());
+        return new IPAddress([mask._byte1, mask._byte2, mask._byte3, mask._byte4]);
     }
 
     public static implicit operator Ip4Mask(IPAddress address)
     {
-        return new Ip4Mask(Convert.ToUInt32(address.GetAddressBytes()));
+        return new Ip4Mask(address.GetAddressBytes());
     }
 
     [FieldOffset(0)]
@@ -218,6 +218,8 @@ public readonly struct Ip4Mask
     private readonly byte _byte4;
 
     public int Cidr => GetCidrByMask(_mask);
+
+    public ulong Count => 0x100000000UL - _mask;
 
     public Ip4Mask(uint mask)
     {
@@ -238,6 +240,24 @@ public readonly struct Ip4Mask
         _byte3 = byte3;
         _byte4 = byte4;
         _ = GetCidrByMask(_mask); // validation
+    }
+
+    public Ip4Mask(byte[] bytes)
+    {
+        if (bytes is null)
+        {
+            throw new ArgumentNullException(nameof(bytes), "Byte array cannot be null");
+        }
+
+        if (bytes.Length != 4)
+        {
+            throw new ArgumentException("Byte array must contain exactly 4 bytes", nameof(bytes));
+        }
+
+        _byte1 = bytes[0];
+        _byte2 = bytes[1];
+        _byte3 = bytes[2];
+        _byte4 = bytes[3];
     }
 
     public uint AsUInt32()

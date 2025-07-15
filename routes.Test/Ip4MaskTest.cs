@@ -1,4 +1,5 @@
 ﻿using routes.core;
+using System.Net;
 
 namespace routes.Test;
 
@@ -83,5 +84,29 @@ public class Ip4MaskTest
     public void AsUInt32_AsCidr_EqualsTo_JustCidr(int cidr)
     {
         Assert.Equal(new Ip4Mask(new Ip4Mask(cidr).AsUInt32()).Cidr, cidr);
+    }
+
+    [Theory]
+    [InlineData("255.192.0.0")]
+    public void ToIPAddress(string address)
+    {
+        var ip4mask = Ip4Mask.Parse(address);
+        var ipAddress = (IPAddress)ip4mask;
+
+        string actualValue = ipAddress.ToString();
+
+        Assert.Equal(address, actualValue);
+    }
+
+    [Theory]
+    [InlineData("255.192.0.0")]
+    public void FromIPAddress(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        var ip4mask = (Ip4Mask)ipAddress;
+
+        string actualValue = ip4mask.ToFullString();
+
+        Assert.Equal(address, actualValue);
     }
 }

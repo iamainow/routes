@@ -221,6 +221,11 @@ public readonly struct Ip4RangeSet
         return result;
     }
 
+    public Ip4RangeSet MinimizeSubnets(uint delta)
+    {
+        return new Ip4RangeSet(this.ToIp4Subnets().Where(x => x.Count > delta));
+    }
+
     public Ip4Range[] ToIp4Ranges()
     {
         return _list.ToArray();

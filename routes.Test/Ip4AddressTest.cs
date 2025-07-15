@@ -1,4 +1,5 @@
 ﻿using routes.core;
+using System.Net;
 
 namespace routes.Test;
 
@@ -31,5 +32,29 @@ public class Ip4AddressTest
         var ip = new Ip4Address(part1, part2, part3, part4);
 
         Assert.Equal(address, ip.AsUInt32());
+    }
+
+    [Theory]
+    [InlineData("192.168.1.1")]
+    public void ToIPAddress(string address)
+    {
+        var ip4Address = Ip4Address.Parse(address);
+        var ipAddress = (IPAddress)ip4Address;
+
+        string actualValue = ipAddress.ToString();
+
+        Assert.Equal(address, actualValue);
+    }
+
+    [Theory]
+    [InlineData("192.168.1.1")]
+    public void FromIPAddress(string address)
+    {
+        var ipAddress = IPAddress.Parse(address);
+        var ip4Address = (Ip4Address)ipAddress;
+
+        string actualValue = ip4Address.ToString();
+
+        Assert.Equal(address, actualValue);
     }
 }

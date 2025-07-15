@@ -89,7 +89,7 @@ static async Task<Ip4RangeSet> TryGetGoogleIpsAsync()
 static async Task<Ip4RangeSet> GetNonRuSubnetsAsync(string ruFilePath)
 {
     var lines = await File.ReadAllLinesAsync(ruFilePath);
-    List<Ip4Subnet> ruSubnets = new List<Ip4Subnet>();
+    List<Ip4Subnet> ruSubnets = [];
 
     foreach (string line in lines)
     {
@@ -106,12 +106,19 @@ static async Task<Ip4RangeSet> GetNonRuSubnetsAsync(string ruFilePath)
     return new Ip4RangeSet(Ip4Range.All)
         .Except(ru)
         .Except(googleIps)
-        .Except(Ip4Subnet.Parse("10.0.0.0/8"))
-        .Except(Ip4Subnet.Parse("100.64.0.0/10"))
-        .Except(Ip4Subnet.Parse("127.0.0.0/8"))
-        .Except(Ip4Subnet.Parse("169.254.0.0/16"))
-        .Except(Ip4Subnet.Parse("172.16.0.0/12"))
-        .Except(Ip4Subnet.Parse("192.168.0.0/16"));
+        .Except(GetLocalIps());
+}
+
+static Ip4RangeSet GetLocalIps()
+{
+    return new Ip4RangeSet([
+        Ip4Subnet.Parse("10.0.0.0/8"),
+        Ip4Subnet.Parse("100.64.0.0/10"),
+        Ip4Subnet.Parse("127.0.0.0/8"),
+        Ip4Subnet.Parse("169.254.0.0/16"),
+        Ip4Subnet.Parse("172.16.0.0/12"),
+        Ip4Subnet.Parse("192.168.0.0/16"),
+    ]);
 }
 
 [UnsupportedOSPlatform("macOS")]
@@ -178,7 +185,7 @@ static void ChangeRoutes(Ip4RangeSet nonRuIps, string interfaceName, int metric)
 static async Task SerializeToAmneziaJsonAsync(Ip4RangeSet set, string filePath)
 {
     var objectToSerialize = set.ToIp4Subnets()
-        .Select(x => new AmneziaItem(x.FirstAddress.ToString() + "/" + x.Mask.Cidr))
+        .Select(x => new AmneziaItem(x.ToCidrString()))
         .ToArray();
 
     await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(objectToSerialize));
@@ -192,8 +199,9 @@ while (true)
     Console.WriteLine("2 - Print all route table");
     Console.WriteLine($"3 - Print {AmneziaVPN} route table");
     Console.WriteLine($"4 - Change {AmneziaVPN} route table");
-    Console.WriteLine("5 - Create simplified json for Amnezia");
-    Console.WriteLine("6 - Print simplified routes for AmneziaWG conf file");
+    Console.WriteLine("5 - Simplify & save Amnezia routes json");
+    Console.WriteLine("6 - Simplify & save AmneziaWG conf file");
+    Console.WriteLine("7 - Minimize subnets & save AmneziaWG conf file");
     Console.WriteLine("(esc) - Exit");
 
     var key = Console.ReadKey(true);
@@ -244,8 +252,20 @@ while (true)
                 Console.Error.WriteLine("wrong input, expected a number");
                 break;
             }
-            Ip4RangeSet simplifiedSet2 = (await nonRu.Value).Simplify(delta2);
-            await File.WriteAllTextAsync("AllowedIPs.txt", string.Join(", ", simplifiedSet2.ToIp4Subnets().Select(x => x.ToCidrString())));
+            Ip4RangeSet simplifiedSet2 = (await nonRu.Value).Simplify(delta2).Except(GetLocalIps());
+            await File.WriteAllTextAsync($"AllowedIPs-smpl-{delta2}.txt", string.Join(", ", simplifiedSet2.ToIp4Subnets().Select(x => x.ToCidrString())));
+            break;
+
+        case ConsoleKey.D7:
+            Console.Write("simplifying ip range: ");
+            string? input3 = Console.ReadLine();
+            if (!uint.TryParse(input3, out uint delta3))
+            {
+                Console.Error.WriteLine("wrong input, expected a number");
+                break;
+            }
+            Ip4RangeSet simplifiedSet3 = (await nonRu.Value).MinimizeSubnets(delta3).Except(GetLocalIps());
+            await File.WriteAllTextAsync($"AllowedIPs-mnmz-{delta3}.txt", string.Join(", ", simplifiedSet3.ToIp4Subnets().Select(x => x.ToCidrString())));
             break;
 
         default:

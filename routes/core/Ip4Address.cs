@@ -116,12 +116,12 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
 
     public static implicit operator IPAddress(Ip4Address address)
     {
-        return new IPAddress(address.AsUInt32());
+        return new IPAddress([address._byte1, address._byte2, address._byte3, address._byte4]);
     }
 
     public static implicit operator Ip4Address(IPAddress address)
     {
-        return new Ip4Address(Convert.ToUInt32(address.GetAddressBytes()));
+        return new Ip4Address(address.GetAddressBytes());
     }
 
     [FieldOffset(0)]
@@ -147,6 +147,24 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         _byte2 = byte2;
         _byte3 = byte3;
         _byte4 = byte4;
+    }
+
+    public Ip4Address(byte[] bytes)
+    {
+        if (bytes is null)
+        {
+            throw new ArgumentNullException(nameof(bytes), "Byte array cannot be null");
+        }
+
+        if (bytes.Length != 4)
+        {
+            throw new ArgumentException("Byte array must contain exactly 4 bytes", nameof(bytes));
+        }
+
+        _byte1 = bytes[0];
+        _byte2 = bytes[1];
+        _byte3 = bytes[2];
+        _byte4 = bytes[3];
     }
 
     public uint AsUInt32()
