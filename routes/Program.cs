@@ -202,6 +202,7 @@ while (true)
     Console.WriteLine("5 - Simplify & save Amnezia routes json");
     Console.WriteLine("6 - Simplify & save AmneziaWG conf file");
     Console.WriteLine("7 - Minimize subnets & save AmneziaWG conf file");
+    Console.WriteLine("8 - Save as route add X.X.X.X mask Y.Y.Y.Y Z.Z.Z.Z");
     Console.WriteLine("(esc) - Exit");
 
     var key = Console.ReadKey(true);
@@ -266,6 +267,31 @@ while (true)
             }
             Ip4RangeSet simplifiedSet3 = (await nonRu.Value).MinimizeSubnets(delta3).Except(GetLocalIps());
             await File.WriteAllTextAsync($"AllowedIPs-mnmz-{delta3}.txt", string.Join(", ", simplifiedSet3.ToIp4Subnets().Select(x => x.ToCidrString())));
+            break;
+
+        case ConsoleKey.D8:
+            Console.Write("simplifying ip range: ");
+            string? input4 = Console.ReadLine();
+            Console.WriteLine();
+            if (!uint.TryParse(input4, out uint delta4))
+            {
+                Console.Error.WriteLine("wrong input, expected a number");
+                break;
+            }
+
+            Console.Write("gateway: ");
+            string? input44 = Console.ReadLine();
+            Console.WriteLine();
+
+            Ip4RangeSet simplifiedSet4 = (await nonRu.Value).MinimizeSubnets(delta4).Except(GetLocalIps());
+
+            string[] lines4 = simplifiedSet4.ToIp4Subnets().Select(x => $"route add {x.FirstAddress} mask {x.Mask.ToFullString()} {input44}").ToArray();
+            int part = 1;
+            foreach (var lines44 in lines4.Chunk(1024))
+            {
+                await File.WriteAllTextAsync($"route-mnmz-{delta4}-part{part++}.txt", string.Join("\r\n", lines44));
+            }
+
             break;
 
         default:
