@@ -108,6 +108,7 @@ static async Task<Ip4RangeSet> GetNonRuSubnetsAsync(string ruFilePath)
         .Except(googleIps)
         .Except(GetLocalIps());
 }
+// routes -ip4all | routes -except -file "ru.txt" | routes -except -google | routes -except -local | interface -set-routes -name "AmneziaVPN" -metric 5 -gateway default
 
 static Ip4RangeSet GetLocalIps()
 {
@@ -387,7 +388,11 @@ public static partial class Ip4SubnetParser
     }
 }
 
-
+// -get-interface [-name "AmneziaVPN"] [-index 15] [-gateway "128.0.0.1"]                                        [-out "%name %index %gateway"]
+// -get-routes [-subnet "127.0.0.1"] [-mask ""] [-cidrmask ""] [-metric ""] [-name ""] [-index ""] [-gateway ""] [-out "%subnet %mask %cidrmask %metric %name %index %gateway"] e.g. "route add %subnet mask %mask %gateway", (default) "%subnet/%cidrmask"
+// -union-routes -file "" -std -file "" -inline "127.0.0.1/8"                                                    [-out "%subnet %firstip %mask %cidrmask %lastip"] e.g. "%subnet-%lastip", (default) "%subnet/%cidrmask", "%subnet %mask"
+// -except-routes [-std] [-file ""] [-inline "127.0.0.1/8"] (1 except 2 except 3 etc.)                           [-out "%subnet %firstip %mask %cidrmask %lastip"] e.g. "%subnet-%lastip", (default) "%subnet/%cidrmask", "%subnet %mask"
+// -intersect [-file ""] [-std] [-file ""] [-inline "127.0.0.1/8"]                                               [-out "%subnet %firstip %mask %cidrmask %lastip"] e.g. "%subnet-%lastip", (default) "%subnet/%cidrmask", "%subnet %mask"
 public static partial class ParametersBuilder
 {
     public static Parameters? Parse(ReadOnlySpan<string> args)
