@@ -43,7 +43,7 @@ namespace routes
                 .FirstOrDefault();
         }
 
-        private static IPAddress? GetPrimaryGatewayViaRouteTable(List<Ip4RouteEntry> table, int interfaceIndex)
+        private static IPAddress? GetPrimaryGatewayViaRouteTable(IEnumerable<Ip4RouteEntry> table, int interfaceIndex)
         {
             return table
                 .Where(i => i.InterfaceIndex == interfaceIndex)
@@ -62,7 +62,7 @@ namespace routes
         /// <exception cref="NetworkInformationException"></exception>
         [UnsupportedOSPlatform("macOS")]
         [UnsupportedOSPlatform("OSX")]
-        public static IPAddress? GetPrimaryGateway(this NetworkInterface networkInterface, Func<List<Ip4RouteEntry>> tableFunc)
+        public static IPAddress? GetPrimaryGateway(this NetworkInterface networkInterface, Func<IEnumerable<Ip4RouteEntry>> tableFunc)
         {
             return GetPrimaryGatewayViaGatewayAddresses(networkInterface.GetIPProperties())
                 ?? GetPrimaryGatewayViaRouteTable(tableFunc(), networkInterface.GetInterfaceIndex())

@@ -9,12 +9,9 @@ public class Ip4SubnetTest
     [InlineData("193.228.161.128/25", "193.228.161.128", "193.228.161.255")]
     [InlineData("193.233.80.188/32", "193.233.80.188", "193.233.80.188")]
     [InlineData("217.197.2.16/31", "217.197.2.16", "217.197.2.17")]
-    public void CreateByUInt_Check_FirstAddress_LastAddress(string ipWithCidrMask, string firstIp, string lastIp)
+    public void CreateByUInt_Check_FirstAddress_LastAddress(string subnetString, string firstIp, string lastIp)
     {
-        string[] parts = ipWithCidrMask.Split('/');
-        var ip = Ip4Address.Parse(parts[0]);
-        var mask = new Ip4Mask(int.Parse(parts[1]));
-        var subnet = new Ip4Subnet(ip, mask);
+        var subnet = Ip4Subnet.Parse(subnetString);
         string actualResult = $"{subnet.FirstAddress}-{subnet.LastAddress}";
 
         Assert.Equal($"{firstIp}-{lastIp}", actualResult);

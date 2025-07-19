@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 static void AdaptersPrint()
 {
-    var table = new Lazy<List<Ip4RouteEntry>>(Ip4RouteTable.GetRouteTable);
+    var table = new Lazy<Ip4RouteEntry[]>(Ip4RouteTable.GetRouteTable);
 
     var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
         .Where(x => x.IsIpv4())
@@ -26,7 +26,7 @@ static void AdaptersPrint()
 
 static void RoutePrintAll()
 {
-    List<Ip4RouteEntry> routeTable = Ip4RouteTable.GetRouteTable();
+    Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable();
 
     Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,8} ", "DestinationIP", "NetMask", "Gateway", "IF", "Metric");
     foreach (Ip4RouteEntry entry in routeTable)
@@ -49,7 +49,7 @@ static void RoutePrintByName(string name)
 
 static void RoutePrintByIndex(int interfaceIndex)
 {
-    List<Ip4RouteEntry> routeTable = Ip4RouteTable.GetRouteTable();
+    Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable();
 
     Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,8} ", "DestinationIP", "NetMask", "Gateway", "IF", "Metric");
     foreach (Ip4RouteEntry entry in routeTable.Where(x => x.InterfaceIndex == interfaceIndex))
@@ -132,7 +132,7 @@ static void ChangeRoutes(Ip4RangeSet nonRuIps, string interfaceName, int metric)
 
     int interfaceIndex = networkInterface.GetInterfaceIndex();
 
-    var table = new Lazy<List<Ip4RouteEntry>>(Ip4RouteTable.GetRouteTable);
+    var table = new Lazy<Ip4RouteEntry[]>(Ip4RouteTable.GetRouteTable);
 
     IPAddress gatewayIp = networkInterface.GetPrimaryGateway(() => table.Value) ?? throw new Exception("PrimaryGateway is null");
 
