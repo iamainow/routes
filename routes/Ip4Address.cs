@@ -12,6 +12,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     /// <exception cref="FormatException"></exception>
     public static Ip4Address Parse(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
         var step1 = text.Split('.');
         if (step1.Length != 4)
         {
@@ -26,6 +27,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     /// <param name="text">x.x.x.x format</param>
     public static bool TryParse(string text, out Ip4Address result)
     {
+        ArgumentNullException.ThrowIfNull(text);
         var step1 = text.Split('.');
         if (step1.Length != 4)
         {

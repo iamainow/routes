@@ -8,11 +8,7 @@ namespace NativeMethods
         private static int getSize()
         {
             int size = 0;
-            int status = NativeMethods.GetIpForwardTable(nint.Zero, ref size, true);
-            if (status != 0)
-            {
-                throw new InvalidOperationException($"NativeMethods.GetIpForwardTable returns {status}");
-            }
+            _ = NativeMethods.GetIpForwardTable(nint.Zero, ref size, true);
             return size;
         }
 
@@ -82,6 +78,7 @@ namespace NativeMethods
         /// <exception cref="InvalidOperationException"></exception>
         public static void DeleteRoute(Ip4RouteDeleteDto routeEntry)
         {
+            ArgumentNullException.ThrowIfNull(routeEntry);
             var route = new NativeMethods.MIB_IPFORWARDROW
             {
                 dwForwardDest = BitConverter.ToUInt32(routeEntry.DestinationIP.GetAddressBytes()),

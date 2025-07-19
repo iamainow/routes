@@ -26,6 +26,7 @@ public readonly struct Ip4Mask
     /// <param name="text">x.x.x.x format</param>
     public static bool TryParseFullString(string text, out Ip4Mask result)
     {
+        ArgumentNullException.ThrowIfNull(text);
         var step1 = text.Split('.');
         if (step1.Length != 4)
         {
@@ -63,6 +64,7 @@ public readonly struct Ip4Mask
     /// <param name="text">/xx or xx format</param>
     public static bool TryParseCidrString(string text, out Ip4Mask result)
     {
+        ArgumentNullException.ThrowIfNull(text);
         if (text.StartsWith('/'))
         {
             text = text[1..];
@@ -197,12 +199,12 @@ public readonly struct Ip4Mask
 
     public static implicit operator IPAddress(Ip4Mask mask)
     {
-        return new IPAddress([mask._byte1, mask._byte2, mask._byte3, mask._byte4]);
+        return mask.ToIPAddress();
     }
 
     public static implicit operator Ip4Mask(IPAddress address)
     {
-        return new Ip4Mask(address.GetAddressBytes());
+        return FromIPAddress(address);
     }
 
     [FieldOffset(0)]
@@ -280,4 +282,15 @@ public readonly struct Ip4Mask
     }
 
     public override string ToString() => ToCidrString();
+
+    public static Ip4Mask FromIPAddress(IPAddress address)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+        return new Ip4Mask(address.GetAddressBytes());
+    }
+
+    public IPAddress ToIPAddress()
+    {
+        return new IPAddress([_byte1, _byte2, _byte3, _byte4]);
+    }
 }

@@ -5,7 +5,7 @@ using System.Text;
 namespace routes;
 
 [DebuggerDisplay("{_list.Count,nq} ip ranges")]
-public readonly struct Ip4RangeSet
+public class Ip4RangeSet
 {
     public static readonly Ip4RangeSet Empty = new Ip4RangeSet();
     public static readonly Ip4RangeSet All = new Ip4RangeSet(Ip4Range.All);
@@ -29,6 +29,7 @@ public readonly struct Ip4RangeSet
 
     public Ip4RangeSet(IEnumerable<Ip4Range> ranges)
     {
+        ArgumentNullException.ThrowIfNull(ranges);
         var current = new Ip4RangeSet();
         foreach (var range in ranges)
         {
@@ -40,6 +41,7 @@ public readonly struct Ip4RangeSet
 
     public Ip4RangeSet(IEnumerable<Ip4Subnet> subnets)
     {
+        ArgumentNullException.ThrowIfNull(subnets);
         var current = new Ip4RangeSet();
         foreach (var subnet in subnets)
         {
@@ -51,7 +53,7 @@ public readonly struct Ip4RangeSet
 
     private Ip4RangeSet(IImmutableList<Ip4Range> list)
     {
-        _list = list;
+        _list = list ?? throw new ArgumentNullException(nameof(list));
     }
 
     public Ip4RangeSet Union(Ip4Range other)
@@ -123,15 +125,16 @@ public readonly struct Ip4RangeSet
 
     public Ip4RangeSet Intersect(Ip4RangeSet other)
     {
+        ArgumentNullException.ThrowIfNull(other);
         Ip4RangeSet result = new Ip4RangeSet();
         foreach (var item in other._list)
         {
-            result = result.Intersect(item);
+            result = result.Union(this.Intersect(item));
         }
         return result;
     }
 
-    private bool ExpandSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
+    private static bool ExpandSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
     {
         bool wasListChanged = false;
         LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
@@ -154,15 +157,16 @@ public readonly struct Ip4RangeSet
         return wasListChanged;
     }
 
-    public Ip4RangeSet ExpandSet(Ip4RangeSet set, uint delta, out bool wasListChanged)
+    public static Ip4RangeSet ExpandSet(Ip4RangeSet set, uint delta, out bool wasListChanged)
     {
+        ArgumentNullException.ThrowIfNull(set);
         LinkedList<Ip4Range> list = new(set.ToIp4Ranges().OrderBy(x => x.FirstAddress));
 
         wasListChanged = ExpandSortedLinkedList(list, delta);
         return new Ip4RangeSet(list);
     }
 
-    private bool ShrinkSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
+    private static bool ShrinkSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
     {
         bool wasElementRemoved = false;
         LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
@@ -185,8 +189,9 @@ public readonly struct Ip4RangeSet
         return wasElementRemoved;
     }
 
-    public Ip4RangeSet ShrinkSet(Ip4RangeSet set, uint delta, out bool wasListChanged)
+    public static Ip4RangeSet ShrinkSet(Ip4RangeSet set, uint delta, out bool wasListChanged)
     {
+        ArgumentNullException.ThrowIfNull(set);
         LinkedList<Ip4Range> list = new(set.ToIp4Ranges().OrderBy(x => x.FirstAddress));
 
         wasListChanged = ShrinkSortedLinkedList(list, delta);

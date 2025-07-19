@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Runtime.Versioning;
 
 namespace NativeMethods
 {
@@ -10,6 +9,7 @@ namespace NativeMethods
         /// <exception cref="NetworkInformationException"></exception>
         public static bool IsIpv4(this NetworkInterface networkInterface)
         {
+            ArgumentNullException.ThrowIfNull(networkInterface);
             try
             {
                 return networkInterface.GetIPProperties().GetIPv4Properties() is not null;
@@ -23,6 +23,7 @@ namespace NativeMethods
         /// <exception cref="NetworkInformationException"></exception>
         public static int GetInterfaceIndex(this NetworkInterface networkInterface)
         {
+            ArgumentNullException.ThrowIfNull(networkInterface);
             try
             {
                 return networkInterface.GetIPProperties().GetIPv4Properties().Index;
@@ -51,18 +52,17 @@ namespace NativeMethods
                 .FirstOrDefault();
         }
 
-        [UnsupportedOSPlatform("macOS")]
-        [UnsupportedOSPlatform("OSX")]
         private static IPAddress? GetPrimaryGatewayViaDhcpServerAddresses(IPInterfaceProperties properties)
         {
+            ArgumentNullException.ThrowIfNull(properties);
             return properties.DhcpServerAddresses.FirstOrDefault();
         }
 
         /// <exception cref="NetworkInformationException"></exception>
-        [UnsupportedOSPlatform("macOS")]
-        [UnsupportedOSPlatform("OSX")]
         public static IPAddress? GetPrimaryGateway(this NetworkInterface networkInterface, Func<IEnumerable<Ip4RouteEntry>> tableFunc)
         {
+            ArgumentNullException.ThrowIfNull(networkInterface);
+            ArgumentNullException.ThrowIfNull(tableFunc);
             return GetPrimaryGatewayViaGatewayAddresses(networkInterface.GetIPProperties())
                 ?? GetPrimaryGatewayViaRouteTable(tableFunc(), networkInterface.GetInterfaceIndex())
                 ?? GetPrimaryGatewayViaDhcpServerAddresses(networkInterface.GetIPProperties());

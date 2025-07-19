@@ -142,7 +142,7 @@ public readonly struct Ip4Range
         return result.ToArray();
     }
 
-    private void SearchForBiggestSubnetWithin(Ip4Range ipRange, List<Ip4Subnet> result, int position)
+    private static void SearchForBiggestSubnetWithin(Ip4Range ipRange, List<Ip4Subnet> result, int position)
     {
         if (position == 0)
         {
