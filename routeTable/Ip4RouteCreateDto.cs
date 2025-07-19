@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace routeTable
+namespace NativeMethods
 {
     public class Ip4RouteCreateDto
     {

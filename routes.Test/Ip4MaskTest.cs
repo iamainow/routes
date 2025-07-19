@@ -1,5 +1,4 @@
-﻿using routes.core;
-using System.Net;
+﻿using System.Net;
 
 namespace routes.Test;
 

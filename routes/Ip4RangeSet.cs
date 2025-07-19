@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace routes.core;
+namespace routes;
 
 [DebuggerDisplay("{_list.Count,nq} ip ranges")]
 public readonly struct Ip4RangeSet
@@ -35,7 +35,7 @@ public readonly struct Ip4RangeSet
             current = current.Union(range);
         }
 
-        this._list = current._list;
+        _list = current._list;
     }
 
     public Ip4RangeSet(IEnumerable<Ip4Subnet> subnets)
@@ -46,7 +46,7 @@ public readonly struct Ip4RangeSet
             current = current.Union(subnet);
         }
 
-        this._list = current._list;
+        _list = current._list;
     }
 
     private Ip4RangeSet(IImmutableList<Ip4Range> list)
@@ -223,7 +223,7 @@ public readonly struct Ip4RangeSet
 
     public Ip4RangeSet MinimizeSubnets(uint delta)
     {
-        return new Ip4RangeSet(this.ToIp4Subnets().Where(x => x.Count > delta));
+        return new Ip4RangeSet(ToIp4Subnets().Where(x => x.Count > delta));
     }
 
     public Ip4Range[] ToIp4Ranges()

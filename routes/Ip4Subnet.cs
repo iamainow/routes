@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace routes.core;
+namespace routes;
 
 [DebuggerDisplay("{ToString(),nq}")]
 public readonly struct Ip4Subnet

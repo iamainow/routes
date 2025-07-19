@@ -1,6 +1,5 @@
-﻿using routes;
-using routes.core;
-using routeTable;
+﻿using NativeMethods;
+using routes;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.Versioning;

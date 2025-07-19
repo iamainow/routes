@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace routeTable
+namespace NativeMethods
 {
     internal static class NativeMethods
     {

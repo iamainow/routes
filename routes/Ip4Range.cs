@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace routes.core;
+namespace routes;
 
 [DebuggerDisplay("{ToString(),nq}")]
 public readonly struct Ip4Range
@@ -12,7 +12,7 @@ public readonly struct Ip4Range
             return number & 1;
         }
 
-        return (number >> (position - 1)) & 1;
+        return number >> position - 1 & 1;
     }
 
     private static uint GetLastBits(uint number, int count)
@@ -22,7 +22,7 @@ public readonly struct Ip4Range
             return 0;
         }
 
-        return (number << (32 - count)) >> (32 - count);
+        return number << 32 - count >> 32 - count;
     }
 
     private static uint GetFirstBits(uint number, int count)
@@ -32,7 +32,7 @@ public readonly struct Ip4Range
             return 0;
         }
 
-        return (number >> (32 - count)) << (32 - count);
+        return number >> 32 - count << 32 - count;
     }
 
     public static implicit operator Ip4RangeSet(Ip4Range range)
@@ -60,13 +60,13 @@ public readonly struct Ip4Range
 
     public bool IsIntersects(Ip4Range other)
     {
-        return other.FirstAddress <= this.LastAddress && other.LastAddress >= this.FirstAddress;
+        return other.FirstAddress <= LastAddress && other.LastAddress >= FirstAddress;
     }
 
     public Ip4Range IntersectableUnion(Ip4Range other)
     {
-        Ip4Address start = this.FirstAddress < other.FirstAddress ? this.FirstAddress : other.FirstAddress;
-        Ip4Address end = this.LastAddress > other.LastAddress ? this.LastAddress : other.LastAddress;
+        Ip4Address start = FirstAddress < other.FirstAddress ? FirstAddress : other.FirstAddress;
+        Ip4Address end = LastAddress > other.LastAddress ? LastAddress : other.LastAddress;
 
         return new Ip4Range(start, end);
     }
@@ -83,8 +83,8 @@ public readonly struct Ip4Range
 
     public Ip4Range IntersectableIntersect(Ip4Range other)
     {
-        Ip4Address start = Ip4Address.Max(this.FirstAddress, other.FirstAddress);
-        Ip4Address end = Ip4Address.Min(this.LastAddress, other.LastAddress);
+        Ip4Address start = Ip4Address.Max(FirstAddress, other.FirstAddress);
+        Ip4Address end = Ip4Address.Min(LastAddress, other.LastAddress);
         return new Ip4Range(start, end);
     }
 
@@ -100,11 +100,11 @@ public readonly struct Ip4Range
 
     public Ip4Range[] IntersectableExcept(Ip4Range other)
     {
-        if (other.FirstAddress <= this.FirstAddress)
+        if (other.FirstAddress <= FirstAddress)
         {
-            if (other.LastAddress < this.LastAddress)
+            if (other.LastAddress < LastAddress)
             {
-                return [new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), this.LastAddress)];
+                return [new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), LastAddress)];
             }
             else
             {
@@ -113,13 +113,13 @@ public readonly struct Ip4Range
         }
         else
         {
-            if (other.LastAddress < this.LastAddress)
+            if (other.LastAddress < LastAddress)
             {
-                return [new Ip4Range(this.FirstAddress, new Ip4Address((uint)other.FirstAddress - 1)), new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), this.LastAddress)];
+                return [new Ip4Range(FirstAddress, new Ip4Address((uint)other.FirstAddress - 1)), new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), LastAddress)];
             }
             else
             {
-                return [new Ip4Range(this.FirstAddress, new Ip4Address((uint)other.FirstAddress - 1))];
+                return [new Ip4Range(FirstAddress, new Ip4Address((uint)other.FirstAddress - 1))];
             }
         }
     }

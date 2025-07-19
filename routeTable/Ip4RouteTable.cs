@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Runtime.InteropServices;
 
-namespace routeTable
+namespace NativeMethods
 {
     public static class Ip4RouteTable
     {

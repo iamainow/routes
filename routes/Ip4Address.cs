@@ -2,7 +2,7 @@
 using System.Net;
 using System.Runtime.InteropServices;
 
-namespace routes.core;
+namespace routes;
 
 [DebuggerDisplay("{ToString(),nq}")]
 [StructLayout(LayoutKind.Explicit)]
@@ -179,19 +179,19 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
 
     public int CompareTo(Ip4Address other)
     {
-        return this._address.CompareTo(other._address);
+        return _address.CompareTo(other._address);
     }
 
     public bool Equals(Ip4Address other)
     {
-        return this._address.Equals(other._address);
+        return _address.Equals(other._address);
     }
 
     public override bool Equals(object? obj)
     {
         if (obj is Ip4Address address)
         {
-            return this.Equals(address);
+            return Equals(address);
         }
         return false;
     }

@@ -1,6 +1,4 @@
-﻿using routes.core;
-
-namespace routes.Test;
+﻿namespace routes.Test;
 
 public class Ip4SubnetTest
 {

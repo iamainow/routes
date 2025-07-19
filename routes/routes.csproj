@@ -1,15 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="System.Net.NetworkInformation" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\routeTable\routeTable.csproj" />
+    <ProjectReference Include="..\routeTable\NativeMethods.csproj" />
   </ItemGroup>
 
 </Project>

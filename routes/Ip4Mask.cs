@@ -2,7 +2,7 @@
 using System.Net;
 using System.Runtime.InteropServices;
 
-namespace routes.core;
+namespace routes;
 
 [DebuggerDisplay("{ToString(),nq}")]
 [StructLayout(LayoutKind.Explicit)]
