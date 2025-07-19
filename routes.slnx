@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
   <Project Path="routes.Test/routes.Test.csproj" />
   <Project Path="routes/routes.csproj" />
   <Project Path="routeTable/routeTable.csproj" Id="ed2a6324-edfd-4998-846d-aca0da4d9afa" />

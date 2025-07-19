@@ -1,0 +1,11 @@
+﻿<Project>
+  
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageVersion Include="System.Net.NetworkInformation" Version="4.3.0" />
+  </ItemGroup>
+  
+</Project>
