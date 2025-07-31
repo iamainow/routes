@@ -51,15 +51,19 @@ namespace NativeMethods
         }
 
         [DllImport("iphlpapi", CharSet = CharSet.Auto)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static extern int GetIpForwardTable(nint pIpForwardTable, ref int pdwSize, bool bOrder);
 
         [DllImport("iphlpapi", CharSet = CharSet.Auto)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static extern int CreateIpForwardEntry(nint pRoute);
 
         [DllImport("iphlpapi", CharSet = CharSet.Auto)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static extern int DeleteIpForwardEntry(nint pRoute);
 
         [DllImport("iphlpapi", CharSet = CharSet.Auto)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static extern int SetIpForwardEntry(nint pRoute);
     }
 }

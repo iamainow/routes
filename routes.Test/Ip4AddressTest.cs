@@ -30,7 +30,7 @@ public class Ip4AddressTest
     {
         var ip = new Ip4Address(part1, part2, part3, part4);
 
-        Assert.Equal(address, ip.AsUInt32());
+        Assert.Equal(address, ip.ToUInt32());
     }
 
     [Theory]

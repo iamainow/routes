@@ -6,7 +6,7 @@ namespace routes;
 
 [DebuggerDisplay("{ToString(),nq}")]
 [StructLayout(LayoutKind.Explicit)]
-public readonly struct Ip4Mask
+public readonly struct Ip4Mask : IEquatable<Ip4Mask>
 {
     public static readonly Ip4Mask Full = new Ip4Mask(0x00000000);
     public static readonly Ip4Mask SingleAddress = new Ip4Mask(0xFFFFFFFF);
@@ -197,6 +197,12 @@ public readonly struct Ip4Mask
         };
     }
 
+    public static Ip4Mask FromIPAddress(IPAddress address)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+        return new Ip4Mask(address.GetAddressBytes());
+    }
+
     public static implicit operator IPAddress(Ip4Mask mask)
     {
         return mask.ToIPAddress();
@@ -272,6 +278,11 @@ public readonly struct Ip4Mask
         return [_byte1, _byte2, _byte3, _byte4];
     }
 
+    public IPAddress ToIPAddress()
+    {
+        return new IPAddress([_byte1, _byte2, _byte3, _byte4]);
+    }
+
     public string ToFullString()
     {
         return $"{_byte1}.{_byte2}.{_byte3}.{_byte4}";
@@ -283,14 +294,28 @@ public readonly struct Ip4Mask
 
     public override string ToString() => ToCidrString();
 
-    public static Ip4Mask FromIPAddress(IPAddress address)
+    public override bool Equals(object? obj)
     {
-        ArgumentNullException.ThrowIfNull(address);
-        return new Ip4Mask(address.GetAddressBytes());
+        return obj is Ip4Mask other && Equals(other);
     }
 
-    public IPAddress ToIPAddress()
+    public override int GetHashCode()
     {
-        return new IPAddress([_byte1, _byte2, _byte3, _byte4]);
+        return _mask.GetHashCode();
+    }
+
+    public static bool operator ==(Ip4Mask left, Ip4Mask right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Ip4Mask left, Ip4Mask right)
+    {
+        return !(left == right);
+    }
+
+    public bool Equals(Ip4Mask other)
+    {
+        return _mask.Equals(other._mask);
     }
 }

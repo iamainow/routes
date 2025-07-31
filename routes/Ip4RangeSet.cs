@@ -79,6 +79,7 @@ public class Ip4RangeSet
 
     public Ip4RangeSet Union(Ip4RangeSet other)
     {
+        ArgumentNullException.ThrowIfNull(other);
         Ip4RangeSet result = this;
         foreach (var item in other._list)
         {
@@ -101,6 +102,7 @@ public class Ip4RangeSet
 
     public Ip4RangeSet Except(Ip4RangeSet other)
     {
+        ArgumentNullException.ThrowIfNull(other);
         Ip4RangeSet result = this;
         foreach (var item in other._list)
         {

@@ -6,7 +6,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
-public static class Program
+namespace App;
+
+internal static class Program
 {
     private static void AdaptersPrint()
     {
@@ -69,7 +71,7 @@ public static class Program
             return Ip4RangeSet.Empty;
         }
         var responseJson = await response.Content.ReadAsStringAsync();
-        var googleIpRanges = JsonSerializer.Deserialize(responseJson, SourceGenerationContext.Default.GoogleIpsResponseRoot).prefixes
+        var googleIpRanges = JsonSerializer.Deserialize(responseJson, SourceGenerationContext.Default.GoogleIpsResponseRoot)!.prefixes
             .Select(x => x.ipv4Prefix)
             .Where(x => !string.IsNullOrEmpty(x))
             .ToArray();
@@ -109,7 +111,7 @@ public static class Program
             .Except(googleIps)
             .Except(GetLocalIps());
     }
-    // routes -ip4all | routes -except -file "ru.txt" | routes -except -google | routes -except -local | interface -set-routes -name "AmneziaVPN" -metric 5 -gateway default
+    // routes --ip4all | routes --except --file="ru.txt" | routes --except --google | routes --except --local | interface --set-routes --name="AmneziaVPN" --metric=5 --gateway=default
 
     private static Ip4RangeSet GetLocalIps()
     {
@@ -303,24 +305,75 @@ public static class Program
             }
         }
     }
+
+    public static async Task Main2(string[] args)
+    {
+        if (args.Length == 1)
+        {
+            if (args[0] == "--ip4all")
+            {
+                using var writer = new StreamWriter(Console.OpenStandardOutput());
+                writer.AutoFlush = true;
+                await writer.WriteLineAsync(Ip4Subnet.All.ToCidrString());
+            }
+        }
+        else if (args.Length == 2)
+        {
+            if (args[0] == "--except")
+            {
+                using var reader = new StreamReader(Console.OpenStandardInput());
+                var standartInput = await reader.ReadToEndAsync();
+
+                if (args[1].StartsWith("--file="))
+                {
+                    string filePath = args[1][7..];
+                    var nonRuIps = await GetNonRuSubnetsAsync(filePath);
+                    using var writer = new StreamWriter(Console.OpenStandardOutput());
+                    writer.AutoFlush = true;
+                    foreach (var subnet in nonRuIps.ToIp4Subnets())
+                    {
+                        await writer.WriteLineAsync(subnet.ToString());
+                    }
+                }
+                else if (args[1].StartsWith("--google"))
+                {
+                    var googleIps = await TryGetGoogleIpsAsync();
+                    using var writer = new StreamWriter(Console.OpenStandardOutput());
+                    writer.AutoFlush = true;
+                    foreach (var subnet in googleIps.ToIp4Subnets())
+                    {
+                        await writer.WriteLineAsync(subnet.ToString());
+                    }
+                }
+                else if (args[1].StartsWith("--local"))
+                {
+                    var localIps = GetLocalIps();
+                    using var writer = new StreamWriter(Console.OpenStandardOutput());
+                    writer.AutoFlush = true;
+                    foreach (var subnet in localIps.ToIp4Subnets())
+                    {
+                        await writer.WriteLineAsync(subnet.ToString());
+                    }
+                }
+            }
+        }
+    }
 }
-
-internal record GoogleIpsResponseRoot(GoogleIpsResponseItem[] prefixes);
-
-internal record GoogleIpsResponseItem(string ipv4Prefix);
 
 [JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(GoogleIpsResponseRoot))]
 [JsonSerializable(typeof(AmneziaItem[]))]
-internal partial class SourceGenerationContext : JsonSerializerContext
+internal sealed partial class SourceGenerationContext : JsonSerializerContext
 {
 }
 
-internal record AmneziaRoot(AmneziaItem[] items);
+internal sealed record AmneziaItem(string hostname);
 
-internal record AmneziaItem(string hostname);
+internal sealed record GoogleIpsResponseRoot(GoogleIpsResponseItem[] prefixes);
 
-internal class Parameters
+internal sealed record GoogleIpsResponseItem(string ipv4Prefix);
+
+internal sealed class Parameters
 {
     public required int Quality { get; set; }
     public required string Source { get; set; }
@@ -329,7 +382,7 @@ internal class Parameters
     public required string ConverterExe { get; set; }
 }
 
-internal class InternalParameters
+internal sealed class InternalParameters
 {
     public int? Quality { get; set; }
     public string? Source { get; set; }
@@ -338,7 +391,11 @@ internal class InternalParameters
     public string? ConverterExe { get; set; }
     public Parameters ToParameters()
     {
-        ArgumentNullException.ThrowIfNull(Quality);
+        if (!Quality.HasValue)
+        {
+            throw new ArgumentNullException(nameof(Quality));
+        }
+
         ArgumentNullException.ThrowIfNull(Source);
         ArgumentNullException.ThrowIfNull(Destination);
         ArgumentNullException.ThrowIfNull(SourceExtension);
@@ -355,7 +412,7 @@ internal class InternalParameters
     }
 }
 
-public static partial class Ip4AddressParser
+internal static partial class Ip4AddressParser
 {
     [GeneratedRegex(@"(?<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})")]
     public static partial Regex RegEx();
@@ -375,7 +432,7 @@ public static partial class Ip4AddressParser
     }
 }
 
-public static partial class Ip4SubnetParser
+internal static partial class Ip4SubnetParser
 {
     [GeneratedRegex(@"\b(?<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})\/(?<mask>3[0-2]|([1-2]|)\d)\b")]
     public static partial Regex CidrRegEx();
@@ -480,7 +537,7 @@ internal static partial class ParametersBuilder
                         throw new ArgumentException("missing -source-ext value, should use -source-ext <ext>");
                     }
 
-                    if (!enumerator.Current.StartsWith("."))
+                    if (!enumerator.Current.StartsWith('.'))
                     {
                         throw new ArgumentException("-source-ext value should start with '.'");
                     }

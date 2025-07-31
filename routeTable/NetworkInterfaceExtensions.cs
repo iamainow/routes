@@ -52,11 +52,11 @@ namespace NativeMethods
                 .FirstOrDefault();
         }
 
-        private static IPAddress? GetPrimaryGatewayViaDhcpServerAddresses(IPInterfaceProperties properties)
-        {
-            ArgumentNullException.ThrowIfNull(properties);
-            return properties.DhcpServerAddresses.FirstOrDefault();
-        }
+        //private static IPAddress? GetPrimaryGatewayViaDhcpServerAddresses(IPInterfaceProperties properties)
+        //{
+        //    ArgumentNullException.ThrowIfNull(properties);
+        //    return properties.DhcpServerAddresses.FirstOrDefault();
+        //}
 
         /// <exception cref="NetworkInformationException"></exception>
         public static IPAddress? GetPrimaryGateway(this NetworkInterface networkInterface, Func<IEnumerable<Ip4RouteEntry>> tableFunc)
@@ -64,8 +64,8 @@ namespace NativeMethods
             ArgumentNullException.ThrowIfNull(networkInterface);
             ArgumentNullException.ThrowIfNull(tableFunc);
             return GetPrimaryGatewayViaGatewayAddresses(networkInterface.GetIPProperties())
-                ?? GetPrimaryGatewayViaRouteTable(tableFunc(), networkInterface.GetInterfaceIndex())
-                ?? GetPrimaryGatewayViaDhcpServerAddresses(networkInterface.GetIPProperties());
+                ?? GetPrimaryGatewayViaRouteTable(tableFunc(), networkInterface.GetInterfaceIndex());
+            //?? GetPrimaryGatewayViaDhcpServerAddresses(networkInterface.GetIPProperties());
         }
     }
 }

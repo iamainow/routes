@@ -93,12 +93,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
 
     public static explicit operator uint(Ip4Address address)
     {
-        return address.AsUInt32();
-    }
-
-    public static Ip4Address operator |(Ip4Address address, Ip4Mask mask)
-    {
-        return new Ip4Address(address.AsUInt32() | mask.AsUInt32());
+        return address.ToUInt32();
     }
 
     public static implicit operator Ip4Range(Ip4Address address)
@@ -118,12 +113,12 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
 
     public static implicit operator IPAddress(Ip4Address address)
     {
-        return new IPAddress([address._byte1, address._byte2, address._byte3, address._byte4]);
+        return address.ToIPAddress();
     }
 
     public static implicit operator Ip4Address(IPAddress address)
     {
-        return new Ip4Address(address.GetAddressBytes());
+        return FromIPAddress(address);
     }
 
     [FieldOffset(0)]
@@ -169,7 +164,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         _byte4 = bytes[3];
     }
 
-    public uint AsUInt32()
+    public uint ToUInt32()
     {
         return _address;
     }
@@ -221,5 +216,16 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public override string ToString()
     {
         return $"{_byte1}.{_byte2}.{_byte3}.{_byte4}";
+    }
+
+    public static Ip4Address FromIPAddress(IPAddress address)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+        return new Ip4Address(address.GetAddressBytes());
+    }
+
+    public IPAddress ToIPAddress()
+    {
+        return new IPAddress([_byte1, _byte2, _byte3, _byte4]);
     }
 }
