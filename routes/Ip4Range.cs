@@ -12,7 +12,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
             return number & 1;
         }
 
-        return number >> position - 1 & 1;
+        return (number >> (position - 1)) & 1;
     }
 
     private static uint GetLastBits(uint number, int count)
@@ -22,7 +22,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
             return 0;
         }
 
-        return number << 32 - count >> 32 - count;
+        return (number << (32 - count)) >> (32 - count);
     }
 
     private static uint GetFirstBits(uint number, int count)
@@ -32,7 +32,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
             return 0;
         }
 
-        return number >> 32 - count << 32 - count;
+        return (number >> (32 - count)) << (32 - count);
     }
 
     public static implicit operator Ip4RangeSet(Ip4Range range)
@@ -204,7 +204,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
 
     public static bool operator !=(Ip4Range left, Ip4Range right)
     {
-        return !(left == right);
+        return !left.Equals(right);
     }
 
     public bool Equals(Ip4Range other)
