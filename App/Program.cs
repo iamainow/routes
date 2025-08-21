@@ -340,8 +340,8 @@ internal static class Program
         if (args.Length == 1 && args[0] == "parse")
         {
             Action<string?> errorWriteLine = Console.IsErrorRedirected ? Console.Error.WriteLine : new AnsiColoredWriter(Console.Error, AnsiColors.Red).WriteLine;
-            string stdin = await Console.In.ReadToEndAsync();
-            foreach (var line in stdin.Split(["\n", "\r\n"], StringSplitOptions.None))
+            string? line;
+            while ((line = Console.ReadLine()) != null)
             {
                 var subnets = Ip4SubnetParser.GetSubnets(line, errorWriteLine);
                 foreach (var subnet in subnets)
