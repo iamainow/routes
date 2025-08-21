@@ -225,12 +225,12 @@ internal static class Program
 
     internal class AnsiColoredWriter
     {
-        public required string Style { get; set; }
+        public required AnsiColor Style { get; set; }
 
         private readonly TextWriter textWriter;
 
         [SetsRequiredMembers]
-        public AnsiColoredWriter(TextWriter textWriter, string style = "")
+        public AnsiColoredWriter(TextWriter textWriter, AnsiColor style)
         {
             this.textWriter = textWriter;
             this.Style = style;
@@ -238,100 +238,119 @@ internal static class Program
 
         public void WriteLine(string? message)
         {
-            textWriter.WriteLine($"{Style}{message}{AnsiColors.Reset}");
+            textWriter.WriteLine($"{Style}{message}{AnsiColor.Reset}");
         }
 
         public void Write(string? message)
         {
-            textWriter.Write($"{Style}{message}{AnsiColors.Reset}");
+            textWriter.Write($"{Style}{message}{AnsiColor.Reset}");
         }
 
         public async Task WriteLineAsync(string? message)
         {
-            await textWriter.WriteLineAsync($"{Style}{message}{AnsiColors.Reset}");
+            await textWriter.WriteLineAsync($"{Style}{message}{AnsiColor.Reset}");
         }
 
         public async Task WriteAsync(string? message)
         {
-            await textWriter.WriteAsync($"{Style}{message}{AnsiColors.Reset}");
+            await textWriter.WriteAsync($"{Style}{message}{AnsiColor.Reset}");
         }
     }
 
-    public static class AnsiColors
+    internal readonly struct AnsiColor
     {
+        private readonly string internalColor = "";
+        private AnsiColor(string internalColor)
+        {
+            this.internalColor = internalColor;
+        }
+
+        public override string ToString()
+        {
+            return internalColor;
+        }
+
+        public static AnsiColor operator +(AnsiColor left, AnsiColor right)
+        {
+            return new AnsiColor(left.internalColor + right.internalColor);
+        }
+
+        public static implicit operator string(AnsiColor color)
+        {
+            return color.internalColor;
+        }
+
         // Reset
-        public const string Reset = "\u001b[0m";
+        public static readonly AnsiColor Empty = new AnsiColor("");
+
+        // Reset
+        public static readonly AnsiColor Reset = new AnsiColor("\u001b[0m");
 
         // Text colors
-        public const string Black = "\u001b[30m";
-        public const string Red = "\u001b[31m";
-        public const string Green = "\u001b[32m";
-        public const string Yellow = "\u001b[33m";
-        public const string Blue = "\u001b[34m";
-        public const string Magenta = "\u001b[35m";
-        public const string Cyan = "\u001b[36m";
-        public const string White = "\u001b[37m";
-        public const string BrightBlack = "\u001b[90m";
-        public const string BrightRed = "\u001b[91m";
-        public const string BrightGreen = "\u001b[92m";
-        public const string BrightYellow = "\u001b[93m";
-        public const string BrightBlue = "\u001b[94m";
-        public const string BrightMagenta = "\u001b[95m";
-        public const string BrightCyan = "\u001b[96m";
-        public const string BrightWhite = "\u001b[97m";
+        public static readonly AnsiColor Black = new AnsiColor("\u001b[30m");
+        public static readonly AnsiColor Red = new AnsiColor("\u001b[31m");
+        public static readonly AnsiColor Green = new AnsiColor("\u001b[32m");
+        public static readonly AnsiColor Yellow = new AnsiColor("\u001b[33m");
+        public static readonly AnsiColor Blue = new AnsiColor("\u001b[34m");
+        public static readonly AnsiColor Magenta = new AnsiColor("\u001b[35m");
+        public static readonly AnsiColor Cyan = new AnsiColor("\u001b[36m");
+        public static readonly AnsiColor White = new AnsiColor("\u001b[37m");
+        public static readonly AnsiColor BrightBlack = new AnsiColor("\u001b[90m");
+        public static readonly AnsiColor BrightRed = new AnsiColor("\u001b[91m");
+        public static readonly AnsiColor BrightGreen = new AnsiColor("\u001b[92m");
+        public static readonly AnsiColor BrightYellow = new AnsiColor("\u001b[93m");
+        public static readonly AnsiColor BrightBlue = new AnsiColor("\u001b[94m");
+        public static readonly AnsiColor BrightMagenta = new AnsiColor("\u001b[95m");
+        public static readonly AnsiColor BrightCyan = new AnsiColor("\u001b[96m");
+        public static readonly AnsiColor BrightWhite = new AnsiColor("\u001b[97m");
 
         // Background colors
-        public const string BgBlack = "\u001b[40m";
-        public const string BgRed = "\u001b[41m";
-        public const string BgGreen = "\u001b[42m";
-        public const string BgYellow = "\u001b[43m";
-        public const string BgBlue = "\u001b[44m";
-        public const string BgMagenta = "\u001b[45m";
-        public const string BgCyan = "\u001b[46m";
-        public const string BgWhite = "\u001b[47m";
-        public const string BgBrightBlack = "\u001b[100m";
-        public const string BgBrightRed = "\u001b[101m";
-        public const string BgBrightGreen = "\u001b[102m";
-        public const string BgBrightYellow = "\u001b[103m";
-        public const string BgBrightBlue = "\u001b[104m";
-        public const string BgBrightMagenta = "\u001b[105m";
-        public const string BgBrightCyan = "\u001b[106m";
-        public const string BgBrightWhite = "\u001b[107m";
+        public static readonly AnsiColor BgBlack = new AnsiColor("\u001b[40m");
+        public static readonly AnsiColor BgRed = new AnsiColor("\u001b[41m");
+        public static readonly AnsiColor BgGreen = new AnsiColor("\u001b[42m");
+        public static readonly AnsiColor BgYellow = new AnsiColor("\u001b[43m");
+        public static readonly AnsiColor BgBlue = new AnsiColor("\u001b[44m");
+        public static readonly AnsiColor BgMagenta = new AnsiColor("\u001b[45m");
+        public static readonly AnsiColor BgCyan = new AnsiColor("\u001b[46m");
+        public static readonly AnsiColor BgWhite = new AnsiColor("\u001b[47m");
+        public static readonly AnsiColor BgBrightBlack = new AnsiColor("\u001b[100m");
+        public static readonly AnsiColor BgBrightRed = new AnsiColor("\u001b[101m");
+        public static readonly AnsiColor BgBrightGreen = new AnsiColor("\u001b[102m");
+        public static readonly AnsiColor BgBrightYellow = new AnsiColor("\u001b[103m");
+        public static readonly AnsiColor BgBrightBlue = new AnsiColor("\u001b[104m");
+        public static readonly AnsiColor BgBrightMagenta = new AnsiColor("\u001b[105m");
+        public static readonly AnsiColor BgBrightCyan = new AnsiColor("\u001b[106m");
+        public static readonly AnsiColor BgBrightWhite = new AnsiColor("\u001b[107m");
 
         // Text styles
-        public const string Bold = "\u001b[1m";
-        public const string Dim = "\u001b[2m";
-        public const string Italic = "\u001b[3m";
-        public const string Underline = "\u001b[4m";
-        public const string Blink = "\u001b[5m";
-        public const string Reverse = "\u001b[7m";
-        public const string Hidden = "\u001b[8m";
-        public const string Strikethrough = "\u001b[9m";
+        public static readonly AnsiColor Bold = new AnsiColor("\u001b[1m");
+        public static readonly AnsiColor Dim = new AnsiColor("\u001b[2m");
+        public static readonly AnsiColor Italic = new AnsiColor("\u001b[3m");
+        public static readonly AnsiColor Underline = new AnsiColor("\u001b[4m");
+        public static readonly AnsiColor Blink = new AnsiColor("\u001b[5m");
+        public static readonly AnsiColor Reverse = new AnsiColor("\u001b[7m");
+        public static readonly AnsiColor Hidden = new AnsiColor("\u001b[8m");
+        public static readonly AnsiColor Strikethrough = new AnsiColor("\u001b[9m");
 
         // Helper methods
-        public static string Colorize(string text, string colorCode)
+        public static AnsiColor RGBForeground(int r, int g, int b)
         {
-            return $"{colorCode}{text}{Reset}";
+            return new AnsiColor($"\u001b[38;2;{r};{g};{b}m");
         }
 
-        public static string RGBForeground(int r, int g, int b)
+        public static AnsiColor RGBBackground(int r, int g, int b)
         {
-            return $"\u001b[38;2;{r};{g};{b}m";
+            return new AnsiColor($"\u001b[48;2;{r};{g};{b}m");
         }
 
-        public static string RGBBackground(int r, int g, int b)
+        public static AnsiColor Color256Foreground(byte colorCode)
         {
-            return $"\u001b[48;2;{r};{g};{b}m";
+            return new AnsiColor($"\u001b[38;5;{colorCode}m");
         }
 
-        public static string Color256Foreground(byte colorCode)
+        public static AnsiColor Color256Background(byte colorCode)
         {
-            return $"\u001b[38;5;{colorCode}m";
-        }
-
-        public static string Color256Background(byte colorCode)
-        {
-            return $"\u001b[48;5;{colorCode}m";
+            return new AnsiColor($"\u001b[48;5;{colorCode}m");
         }
     }
 
@@ -339,7 +358,7 @@ internal static class Program
     {
         if (args.Length == 1 && args[0] == "parse")
         {
-            Action<string?> errorWriteLine = Console.IsErrorRedirected ? Console.Error.WriteLine : new AnsiColoredWriter(Console.Error, AnsiColors.Red).WriteLine;
+            Action<string?> errorWriteLine = Console.IsErrorRedirected ? Console.Error.WriteLine : new AnsiColoredWriter(Console.Error, AnsiColor.Red).WriteLine;
             string? line;
             while ((line = Console.ReadLine()) != null)
             {
