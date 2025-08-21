@@ -140,6 +140,14 @@ internal static class Program
     //--exclude="stdin:"  # Read from pipe
 
 
+    /*
+    ∪ union (или merge)
+    ∩ intersection
+    - difference (или minus/subtract)
+    ∆ symmetric_difference (или xor)
+    */
+
+
     private static Ip4RangeSet GetLocalIps()
     {
         return new Ip4RangeSet([
