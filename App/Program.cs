@@ -1,5 +1,6 @@
 ﻿using NativeMethods;
 using routes;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Text.Json;
@@ -143,12 +144,12 @@ internal static class Program
     {
         return new Ip4RangeSet([
             Ip4Subnet.Parse("10.0.0.0/8"),
-        Ip4Subnet.Parse("100.64.0.0/10"),
-        Ip4Subnet.Parse("127.0.0.0/8"),
-        Ip4Subnet.Parse("169.254.0.0/16"),
-        Ip4Subnet.Parse("172.16.0.0/12"),
-        Ip4Subnet.Parse("192.168.0.0/16"),
-    ]);
+            Ip4Subnet.Parse("100.64.0.0/10"),
+            Ip4Subnet.Parse("127.0.0.0/8"),
+            Ip4Subnet.Parse("169.254.0.0/16"),
+            Ip4Subnet.Parse("172.16.0.0/12"),
+            Ip4Subnet.Parse("192.168.0.0/16"),
+        ]);
     }
 
     private static void ChangeRoutes(Ip4RangeSet nonRuIps, string interfaceName, int metric)
@@ -222,14 +223,127 @@ internal static class Program
     private static Lazy<Task<Ip4RangeSet>> nonRu = new Lazy<Task<Ip4RangeSet>>(async () => await GetNonRuSubnetsAsync("ru.txt"));
     private const string AmneziaVPN = "AmneziaVPN";
 
+    internal class AnsiColoredWriter
+    {
+        public required string Style { get; set; }
+
+        private readonly TextWriter textWriter;
+
+        [SetsRequiredMembers]
+        public AnsiColoredWriter(TextWriter textWriter, string style = "")
+        {
+            this.textWriter = textWriter;
+            this.Style = style;
+        }
+
+        public void WriteLine(string? message)
+        {
+            textWriter.WriteLine($"{Style}{message}{AnsiColors.Reset}");
+        }
+
+        public void Write(string? message)
+        {
+            textWriter.Write($"{Style}{message}{AnsiColors.Reset}");
+        }
+
+        public async Task WriteLineAsync(string? message)
+        {
+            await textWriter.WriteLineAsync($"{Style}{message}{AnsiColors.Reset}");
+        }
+
+        public async Task WriteAsync(string? message)
+        {
+            await textWriter.WriteAsync($"{Style}{message}{AnsiColors.Reset}");
+        }
+    }
+
+    public static class AnsiColors
+    {
+        // Reset
+        public const string Reset = "\u001b[0m";
+
+        // Text colors
+        public const string Black = "\u001b[30m";
+        public const string Red = "\u001b[31m";
+        public const string Green = "\u001b[32m";
+        public const string Yellow = "\u001b[33m";
+        public const string Blue = "\u001b[34m";
+        public const string Magenta = "\u001b[35m";
+        public const string Cyan = "\u001b[36m";
+        public const string White = "\u001b[37m";
+        public const string BrightBlack = "\u001b[90m";
+        public const string BrightRed = "\u001b[91m";
+        public const string BrightGreen = "\u001b[92m";
+        public const string BrightYellow = "\u001b[93m";
+        public const string BrightBlue = "\u001b[94m";
+        public const string BrightMagenta = "\u001b[95m";
+        public const string BrightCyan = "\u001b[96m";
+        public const string BrightWhite = "\u001b[97m";
+
+        // Background colors
+        public const string BgBlack = "\u001b[40m";
+        public const string BgRed = "\u001b[41m";
+        public const string BgGreen = "\u001b[42m";
+        public const string BgYellow = "\u001b[43m";
+        public const string BgBlue = "\u001b[44m";
+        public const string BgMagenta = "\u001b[45m";
+        public const string BgCyan = "\u001b[46m";
+        public const string BgWhite = "\u001b[47m";
+        public const string BgBrightBlack = "\u001b[100m";
+        public const string BgBrightRed = "\u001b[101m";
+        public const string BgBrightGreen = "\u001b[102m";
+        public const string BgBrightYellow = "\u001b[103m";
+        public const string BgBrightBlue = "\u001b[104m";
+        public const string BgBrightMagenta = "\u001b[105m";
+        public const string BgBrightCyan = "\u001b[106m";
+        public const string BgBrightWhite = "\u001b[107m";
+
+        // Text styles
+        public const string Bold = "\u001b[1m";
+        public const string Dim = "\u001b[2m";
+        public const string Italic = "\u001b[3m";
+        public const string Underline = "\u001b[4m";
+        public const string Blink = "\u001b[5m";
+        public const string Reverse = "\u001b[7m";
+        public const string Hidden = "\u001b[8m";
+        public const string Strikethrough = "\u001b[9m";
+
+        // Helper methods
+        public static string Colorize(string text, string colorCode)
+        {
+            return $"{colorCode}{text}{Reset}";
+        }
+
+        public static string RGBForeground(int r, int g, int b)
+        {
+            return $"\u001b[38;2;{r};{g};{b}m";
+        }
+
+        public static string RGBBackground(int r, int g, int b)
+        {
+            return $"\u001b[48;2;{r};{g};{b}m";
+        }
+
+        public static string Color256Foreground(byte colorCode)
+        {
+            return $"\u001b[38;5;{colorCode}m";
+        }
+
+        public static string Color256Background(byte colorCode)
+        {
+            return $"\u001b[48;5;{colorCode}m";
+        }
+    }
+
     public static async Task Main(string[] args)
     {
         if (args.Length == 1 && args[0] == "parse")
         {
+            Action<string?> errorWriteLine = Console.IsErrorRedirected ? Console.Error.WriteLine : new AnsiColoredWriter(Console.Error, AnsiColors.Red).WriteLine;
             string stdin = await Console.In.ReadToEndAsync();
             foreach (var line in stdin.Split(["\n", "\r\n"], StringSplitOptions.None))
             {
-                var subnets = Ip4SubnetParser.GetSubnets(line, Console.Out.WriteLine);
+                var subnets = Ip4SubnetParser.GetSubnets(line, errorWriteLine);
                 foreach (var subnet in subnets)
                 {
                     Console.WriteLine(subnet.ToString());
@@ -474,7 +588,7 @@ internal static partial class Ip4AddressParser
 
 internal static partial class Ip4SubnetParser
 {
-    [GeneratedRegex(@"(?:(?<rangebegin>\d+\.\d+\.\d+\.\d+)\s\-\s(?<rangeend>\d+\.\d+\.\d+\.\d+)|(?<cidrip>\d+\.\d+\.\d+\.\d+)(?<cidrmask>\/\d+)|(?<ip>\d+\.\d+\.\d+\.\d+))")]
+    [GeneratedRegex(@"(?:(?<rangebegin>\d+\.\d+\.\d+\.\d+)\s*\-\s*(?<rangeend>\d+\.\d+\.\d+\.\d+)|(?<cidrip>\d+\.\d+\.\d+\.\d+)(?<cidrmask>\/\d+)|(?<ip>\d+\.\d+\.\d+\.\d+))")]
     public static partial Regex RangeOrCidrOrIp();
 
     public static IEnumerable<Ip4Subnet> GetSubnets(string text, Action<string> errorWriter)
@@ -489,11 +603,13 @@ internal static partial class Ip4SubnetParser
                     if (!Ip4Address.TryParse(match.Groups["rangebegin"].Value, out Ip4Address begin))
                     {
                         errorWriter($"error parsing '{match.Groups["rangebegin"].Value}' as 'rangebegin' ip address");
+                        continue;
                     }
 
                     if (!Ip4Address.TryParse(match.Groups["rangeend"].Value, out Ip4Address end))
                     {
                         errorWriter($"error parsing '{match.Groups["rangeend"].Value}' as 'rangeend' ip address");
+                        continue;
                     }
 
                     foreach (Ip4Subnet subnet in new Ip4Range(begin, end).ToSubnets())
@@ -506,11 +622,13 @@ internal static partial class Ip4SubnetParser
                     if (!Ip4Address.TryParse(match.Groups["cidrip"].Value, out Ip4Address ip))
                     {
                         errorWriter($"error parsing '{match.Groups["cidrip"].Value}' as 'cidrip' ip address");
+                        continue;
                     }
 
                     if (!Ip4Mask.TryParseCidrString(match.Groups["cidrmask"].Value, out Ip4Mask mask))
                     {
                         errorWriter($"error parsing '{match.Groups["cidrmask"].Value}' as 'cidrmask' subnet mask");
+                        continue;
                     }
 
                     yield return new Ip4Subnet(ip, mask);
@@ -520,6 +638,7 @@ internal static partial class Ip4SubnetParser
                     if (!Ip4Address.TryParse(match.Groups["ip"].Value, out Ip4Address ip))
                     {
                         errorWriter($"error parsing '{match.Groups["ip"].Value}' as 'ip' ip address");
+                        continue;
                     }
 
                     yield return new Ip4Subnet(ip, Ip4Mask.SingleAddress);
