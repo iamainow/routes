@@ -113,6 +113,32 @@ internal static class Program
     }
     // routes --ip4all | routes --except --file="ru.txt" | routes --except --google | routes --except --local | interface --set-routes --name="AmneziaVPN" --metric=5 --gateway=default
 
+    // routes --ipsubnet=0.0.0.0/32 --except-file="ru.txt" --except-google --except-local | interface --set-routes --name="AmneziaVPN" --metric=5 --gateway=default
+
+    // ipmanip routes generate [filter-options] | ipmanip interface apply [action-options]
+    // ipmanip routes generate --base="0.0.0.0/0" --exclude-source=FILE --exclude-google --exclude-local --output-format=text|json
+    // ipmanip interface apply --name=INTERFACE_NAME --metric=METRIC --gateway=GATEWAY_IP|"default" --dry-run
+    //  ipmanip routes generate --base="0.0.0.0/0" --exclude-source=ru.txt --exclude-google --exclude-local | ipmanip interface apply --name="AmneziaVPN" --metric=5 --gateway=default
+
+    // curl -s "https://example.com/ip-ranges.txt" | ipmanip routes generate --base="0.0.0.0/0" --exclude-source=- --exclude-google
+    // ipmanip routes generate --base="0.0.0.0/0" --exclude-url="https://example.com/ip-ranges.txt" --exclude-google
+    // curl "https://api.aws.amazon.com/ip-ranges.json" | ipmanip parse --format=aws-json | ipmanip routes generate --exclude-source=-
+    // curl -s https://example.com/ip-list.txt | ipmanip routes generate --base="0.0.0.0/0" --exclude-stdin --exclude-google --output-format=json
+    // ipmanip routes generate --base="0.0.0.0/0" --exclude-url="https://example.com/ip-list.txt" --exclude-local --output-file=filtered_routes.txt
+    // Exit Codes:
+    //0: Success
+    //1: General error
+    //2: Network error
+    //3: Invalid input
+    //4: Permission issue
+
+    // ipmanip routes generate --base="0.0.0.0/0" --exclude="url:https://123.com/exclude.txt" --include="url:https://456.com/include.txt" --exclude="predefined:local" --output-format=cidr
+    // --include="url:https://api.cloud.com/ips"
+    //--exclude="file:./local-exceptions.txt"
+    //--include="predefined:google"
+    //--exclude="stdin:"  # Read from pipe
+
+
     private static Ip4RangeSet GetLocalIps()
     {
         return new Ip4RangeSet([
@@ -198,6 +224,20 @@ internal static class Program
 
     public static async Task Main(string[] args)
     {
+        if (args.Length == 1 && args[0] == "parse")
+        {
+            string stdin = await Console.In.ReadToEndAsync();
+            foreach (var line in stdin.Split(["\n", "\r\n"], StringSplitOptions.None))
+            {
+                var subnets = Ip4SubnetParser.GetSubnets(line, Console.Out.WriteLine);
+                foreach (var subnet in subnets)
+                {
+                    Console.WriteLine(subnet.ToString());
+                }
+            }
+
+            return;
+        }
         while (true)
         {
             Console.WriteLine("1 - Print Adapters");
@@ -434,22 +474,55 @@ internal static partial class Ip4AddressParser
 
 internal static partial class Ip4SubnetParser
 {
-    [GeneratedRegex(@"\b(?<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})\/(?<mask>3[0-2]|([1-2]|)\d)\b")]
-    public static partial Regex CidrRegEx();
+    [GeneratedRegex(@"(?:(?<rangebegin>\d+\.\d+\.\d+\.\d+)\s\-\s(?<rangeend>\d+\.\d+\.\d+\.\d+)|(?<cidrip>\d+\.\d+\.\d+\.\d+)(?<cidrmask>\/\d+)|(?<ip>\d+\.\d+\.\d+\.\d+))")]
+    public static partial Regex RangeOrCidrOrIp();
 
-    [GeneratedRegex(@"\b(?<ip>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}) (?<mask>((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})\b")]
-    public static partial Regex FullRegEx();
-
-    public static IEnumerable<Ip4Subnet> GetSubnets(string text)
+    public static IEnumerable<Ip4Subnet> GetSubnets(string text, Action<string> errorWriter)
     {
-        var matches = Enumerable.Concat(CidrRegEx().Matches(text), FullRegEx().Matches(text)).OrderBy(x => x.Index);
+        var matches = RangeOrCidrOrIp().Matches(text);
         foreach (Match match in matches)
         {
-            if (match.Success && match.Groups["ip"].Success && match.Groups["mask"].Success)
+            if (match.Success)
             {
-                if (Ip4Address.TryParse(match.Groups["ip"].Value, out Ip4Address address) && Ip4Mask.TryParse(match.Groups["mask"].Value, out Ip4Mask mask))
+                if (match.Groups["rangebegin"].Success && match.Groups["rangeend"].Success)
                 {
-                    yield return new Ip4Subnet(address, mask);
+                    if (!Ip4Address.TryParse(match.Groups["rangebegin"].Value, out Ip4Address begin))
+                    {
+                        errorWriter($"error parsing '{match.Groups["rangebegin"].Value}' as 'rangebegin' ip address");
+                    }
+
+                    if (!Ip4Address.TryParse(match.Groups["rangeend"].Value, out Ip4Address end))
+                    {
+                        errorWriter($"error parsing '{match.Groups["rangeend"].Value}' as 'rangeend' ip address");
+                    }
+
+                    foreach (Ip4Subnet subnet in new Ip4Range(begin, end).ToSubnets())
+                    {
+                        yield return subnet;
+                    }
+                }
+                else if (match.Groups["cidrip"].Success && match.Groups["cidrmask"].Success)
+                {
+                    if (!Ip4Address.TryParse(match.Groups["cidrip"].Value, out Ip4Address ip))
+                    {
+                        errorWriter($"error parsing '{match.Groups["cidrip"].Value}' as 'cidrip' ip address");
+                    }
+
+                    if (!Ip4Mask.TryParseCidrString(match.Groups["cidrmask"].Value, out Ip4Mask mask))
+                    {
+                        errorWriter($"error parsing '{match.Groups["cidrmask"].Value}' as 'cidrmask' subnet mask");
+                    }
+
+                    yield return new Ip4Subnet(ip, mask);
+                }
+                else if (match.Groups["ip"].Success)
+                {
+                    if (!Ip4Address.TryParse(match.Groups["ip"].Value, out Ip4Address ip))
+                    {
+                        errorWriter($"error parsing '{match.Groups["ip"].Value}' as 'ip' ip address");
+                    }
+
+                    yield return new Ip4Subnet(ip, Ip4Mask.SingleAddress);
                 }
             }
         }
@@ -484,7 +557,7 @@ internal static partial class ParametersBuilder
         {
             switch (enumerator.Current)
             {
-                case "-quality":
+                case "parse":
                     if (!enumerator.MoveNext())
                     {
                         throw new ArgumentException("missing -quality value, should use -quality [0, 10]");
@@ -496,67 +569,6 @@ internal static partial class ParametersBuilder
                     }
 
                     result.Quality = quality;
-                    break;
-
-                case "-source-directory":
-                    if (!enumerator.MoveNext())
-                    {
-                        throw new ArgumentException("missing -source-directory value, should use -source-directory <path>");
-                    }
-
-                    if (string.IsNullOrEmpty(enumerator.Current))
-                    {
-                        throw new ArgumentException("missing -source-directory value, should use -source-directory <path>");
-                    }
-
-                    result.Source = enumerator.Current;
-                    break;
-
-                case "-dest-directory":
-                    if (!enumerator.MoveNext())
-                    {
-                        throw new ArgumentException("missing -dest-directory value, should use -dest-directory <path>");
-                    }
-
-                    if (string.IsNullOrEmpty(enumerator.Current))
-                    {
-                        throw new ArgumentException("missing -dest-directory value, should use -dest-directory <path>");
-                    }
-
-                    result.Destination = enumerator.Current;
-                    break;
-
-                case "-source-ext":
-                    if (!enumerator.MoveNext())
-                    {
-                        throw new ArgumentException("missing -source-ext value, should use -source-ext <ext>");
-                    }
-
-                    if (string.IsNullOrEmpty(enumerator.Current))
-                    {
-                        throw new ArgumentException("missing -source-ext value, should use -source-ext <ext>");
-                    }
-
-                    if (!enumerator.Current.StartsWith('.'))
-                    {
-                        throw new ArgumentException("-source-ext value should start with '.'");
-                    }
-
-                    result.SourceExtension = enumerator.Current;
-                    break;
-
-                case "-ffmpeg":
-                    if (!enumerator.MoveNext())
-                    {
-                        throw new ArgumentException("missing -ffmpeg value, should use -ffmpeg <path>");
-                    }
-
-                    if (string.IsNullOrEmpty(enumerator.Current))
-                    {
-                        throw new ArgumentException("missing -ffmpeg value, should use -ffmpeg <path>");
-                    }
-
-                    result.ConverterExe = enumerator.Current;
                     break;
 
                 default:
