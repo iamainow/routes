@@ -130,11 +130,10 @@ internal static class Program
             Ip4RangeSet ip4RangeSet = new();
             while ((line = Console.ReadLine()) != null)
             {
-                var subnets = Ip4SubnetParser.GetSubnets(line, errorWriteLine);
-                foreach (var subnet in subnets)
-                {
-                    ip4RangeSet = ip4RangeSet.Union(subnet);
-                }
+                var ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
+                Ip4RangeSet rangesSet = new(ranges);
+
+                ip4RangeSet = ip4RangeSet.Union(rangesSet);
             }
 
             ChangeRoutes(ip4RangeSet, interfaceName, metric, Console.WriteLine, errorWriteLine);
@@ -156,10 +155,10 @@ internal static class Program
         {
             Console.Write("""
                 usage:
-                  netif.windows set "AmneziaVPN" 5 < some-ips.txt
+                  netif.windows set [interface-name] [metric] < some-ips.txt
                   netif.windows print-all-interfaces
                   netif.windows print-all-routes
-                  netif.windows print-routes-with-interface-name "AmneziaVPN"
+                  netif.windows print-routes-with-interface-name [interface-name]
                 """);
         }
     }

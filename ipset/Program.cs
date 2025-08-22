@@ -51,8 +51,8 @@ internal static class Program
                         throw new ArgumentException("missing raw value, should use raw <ips|subnets|ip ranges>");
                     }
 
-                    var subnets1 = Ip4SubnetParser.GetSubnets(enumerator.Current, errorWriteLine);
-                    result = new Ip4RangeSet(subnets1);
+                    var ranges1 = Ip4SubnetParser.GetRanges(enumerator.Current, errorWriteLine);
+                    result = new Ip4RangeSet(ranges1);
                     break;
 
                 case "file":
@@ -62,18 +62,18 @@ internal static class Program
                     }
 
                     string[] lines2 = File.ReadAllLines(enumerator.Current);
-                    var subnets2 = lines2.SelectMany(line => Ip4SubnetParser.GetSubnets(line, errorWriteLine));
-                    result = new Ip4RangeSet(subnets2);
+                    var ranges2 = lines2.SelectMany(line => Ip4SubnetParser.GetRanges(line, errorWriteLine));
+                    result = new Ip4RangeSet(ranges2);
                     break;
 
                 case "stdin":
                     string? line3;
-                    List<Ip4Subnet> subnets3 = new();
+                    List<Ip4Range> ranges3 = new();
                     while ((line3 = Console.ReadLine()) is not null)
                     {
-                        subnets3.AddRange(Ip4SubnetParser.GetSubnets(line3, errorWriteLine));
+                        ranges3.AddRange(Ip4SubnetParser.GetRanges(line3, errorWriteLine));
                     }
-                    result = new Ip4RangeSet(subnets3);
+                    result = new Ip4RangeSet(ranges3);
                     break;
 
                 case "local":
@@ -94,8 +94,8 @@ internal static class Program
                                 throw new ArgumentException("missing raw value, should use raw <ips|subnets|ip ranges>");
                             }
 
-                            var subnets4 = Ip4SubnetParser.GetSubnets(enumerator.Current, errorWriteLine);
-                            result = result.Except(new Ip4RangeSet(subnets4));
+                            var ranges4 = Ip4SubnetParser.GetRanges(enumerator.Current, errorWriteLine);
+                            result = result.Except(new Ip4RangeSet(ranges4));
                             break;
 
                         case "file":
@@ -105,18 +105,18 @@ internal static class Program
                             }
 
                             string[] lines5 = File.ReadAllLines(enumerator.Current);
-                            var subnets5 = lines5.SelectMany(line => Ip4SubnetParser.GetSubnets(line, errorWriteLine));
-                            result = result.Except(new Ip4RangeSet(subnets5));
+                            var ranges5 = lines5.SelectMany(line => Ip4SubnetParser.GetRanges(line, errorWriteLine));
+                            result = result.Except(new Ip4RangeSet(ranges5));
                             break;
 
                         case "stdin":
                             string? line6;
-                            List<Ip4Subnet> subnets6 = new();
+                            List<Ip4Range> ranges6 = new();
                             while ((line6 = Console.ReadLine()) is not null)
                             {
-                                subnets6.AddRange(Ip4SubnetParser.GetSubnets(line6, errorWriteLine));
+                                ranges6.AddRange(Ip4SubnetParser.GetRanges(line6, errorWriteLine));
                             }
-                            result = result.Except(new Ip4RangeSet(subnets6));
+                            result = result.Except(new Ip4RangeSet(ranges6));
                             break;
 
                         case "local":
@@ -143,8 +143,8 @@ internal static class Program
                                 throw new ArgumentException("missing raw value, should use raw <ips|subnets|ip ranges>");
                             }
 
-                            var subnets4 = Ip4SubnetParser.GetSubnets(enumerator.Current, errorWriteLine);
-                            result = result.Union(new Ip4RangeSet(subnets4));
+                            var ranges4 = Ip4SubnetParser.GetRanges(enumerator.Current, errorWriteLine);
+                            result = result.Union(new Ip4RangeSet(ranges4));
                             break;
 
                         case "file":
@@ -154,18 +154,18 @@ internal static class Program
                             }
 
                             string[] lines5 = File.ReadAllLines(enumerator.Current);
-                            var subnets5 = lines5.SelectMany(line => Ip4SubnetParser.GetSubnets(line, errorWriteLine));
-                            result = result.Union(new Ip4RangeSet(subnets5));
+                            var ranges5 = lines5.SelectMany(line => Ip4SubnetParser.GetRanges(line, errorWriteLine));
+                            result = result.Union(new Ip4RangeSet(ranges5));
                             break;
 
                         case "stdin":
                             string? line6;
-                            List<Ip4Subnet> subnets6 = new();
+                            List<Ip4Range> ranges6 = new();
                             while ((line6 = Console.ReadLine()) is not null)
                             {
-                                subnets6.AddRange(Ip4SubnetParser.GetSubnets(line6, errorWriteLine));
+                                ranges6.AddRange(Ip4SubnetParser.GetRanges(line6, errorWriteLine));
                             }
-                            result = result.Union(new Ip4RangeSet(subnets6));
+                            result = result.Union(new Ip4RangeSet(ranges6));
                             break;
 
                         case "local":

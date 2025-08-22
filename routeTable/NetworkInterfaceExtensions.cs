@@ -54,7 +54,6 @@ public static class NetworkInterfaceExtensions
 
     private static IPAddress? GetPrimaryGatewayViaDhcpServerAddresses(IPInterfaceProperties properties)
     {
-        ArgumentNullException.ThrowIfNull(properties);
         return properties.DhcpServerAddresses.FirstOrDefault();
     }
 
