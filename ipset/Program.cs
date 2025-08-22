@@ -1,8 +1,7 @@
 ﻿using AnsiColoredWriters;
 using Ip4Parsers;
 using routes;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+//using System.Text.Json;
 
 namespace ipset;
 
@@ -19,14 +18,14 @@ internal static class Program
             Ip4Subnet.Parse("192.168.0.0/16"),
         ]);
     }
-    private static async Task SerializeToAmneziaJsonAsync(Ip4RangeSet set, string filePath)
-    {
-        var objectToSerialize = set.ToIp4Subnets()
-            .Select(x => new AmneziaItem(x.ToCidrString()))
-            .ToArray();
+    //private static async Task SerializeToAmneziaJsonAsync(Ip4RangeSet set, string filePath)
+    //{
+    //    var objectToSerialize = set.ToIp4Subnets()
+    //        .Select(x => new AmneziaItem(x.ToCidrString()))
+    //        .ToArray();
 
-        await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(objectToSerialize, SourceGenerationContext.Default.AmneziaItemArray));
-    }
+    //    await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(objectToSerialize, SourceGenerationContext.Default.AmneziaItemArray));
+    //}
 
     public static void Main(string[] args)
     {
@@ -190,15 +189,15 @@ internal static class Program
     }
 }
 
-[JsonSourceGenerationOptions(WriteIndented = true)]
-[JsonSerializable(typeof(GoogleIpsResponseRoot))]
-[JsonSerializable(typeof(AmneziaItem[]))]
-internal sealed partial class SourceGenerationContext : JsonSerializerContext
-{
-}
+//[JsonSourceGenerationOptions(WriteIndented = true)]
+//[JsonSerializable(typeof(GoogleIpsResponseRoot))]
+//[JsonSerializable(typeof(AmneziaItem[]))]
+//internal sealed partial class SourceGenerationContext : JsonSerializerContext
+//{
+//}
 
-internal sealed record AmneziaItem(string hostname);
+//internal sealed record AmneziaItem(string hostname);
 
-internal sealed record GoogleIpsResponseRoot(GoogleIpsResponseItem[] prefixes);
+//internal sealed record GoogleIpsResponseRoot(GoogleIpsResponseItem[] prefixes);
 
-internal sealed record GoogleIpsResponseItem(string ipv4Prefix);
+//internal sealed record GoogleIpsResponseItem(string ipv4Prefix);

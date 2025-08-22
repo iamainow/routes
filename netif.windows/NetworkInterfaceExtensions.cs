@@ -1,10 +1,11 @@
-﻿using System.Net;
+﻿using NativeMethods.Windows;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
-namespace NativeMethods.Windows;
+namespace netif.windows;
 
-public static class NetworkInterfaceExtensions
+internal static class NetworkInterfaceExtensions
 {
     /// <exception cref="NetworkInformationException"></exception>
     public static bool IsIpv4(this NetworkInterface networkInterface)
