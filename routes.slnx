@@ -1,11 +1,16 @@
 <Solution>
+  <Folder Name="/Apps/">
+    <Project Path="ipset/ipset.csproj" Id="9da63b15-10ef-4cdc-b8c0-d27a359dd664" />
+    <Project Path="netif.windows/netif.windows.csproj" Id="229ff53c-2749-4c09-8580-c0d7f49b973c" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
   </Folder>
-  <Project Path="App/App.csproj" Id="cd160e71-05cb-4675-91b6-b7d7c9c8e316" />
+  <Project Path="AnsiColoredWriter/AnsiColoredWriters.csproj" Id="cdee56b4-61b2-4da9-8125-6cdf2f15a3ce" />
+  <Project Path="Ip4Parsers/Ip4Parsers.csproj" Id="5fc83869-6073-4120-9e2f-f419393309db" />
   <Project Path="routes.Test/routes.Test.csproj" />
   <Project Path="routes/routes.csproj" />
-  <Project Path="routeTable/NativeMethods.csproj" Id="ed2a6324-edfd-4998-846d-aca0da4d9afa" />
+  <Project Path="routeTable/NativeMethods.Windows.csproj" Id="ed2a6324-edfd-4998-846d-aca0da4d9afa" />
 </Solution>

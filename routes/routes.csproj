@@ -4,8 +4,4 @@
     <PackageReference Include="System.Net.NetworkInformation" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\routeTable\NativeMethods.csproj" />
-  </ItemGroup>
-
 </Project>
