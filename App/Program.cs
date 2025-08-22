@@ -231,7 +231,7 @@ internal static class Program
     private static Lazy<Task<Ip4RangeSet>> nonRu = new Lazy<Task<Ip4RangeSet>>(async () => await GetNonRuSubnetsAsync("ru.txt"));
     private const string AmneziaVPN = "AmneziaVPN";
 
-    internal class AnsiColoredWriter
+    internal sealed class AnsiColoredWriter
     {
         public required AnsiColor Style { get; set; }
 
