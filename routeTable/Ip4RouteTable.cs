@@ -106,4 +106,36 @@ public static class Ip4RouteTable
             Marshal.FreeHGlobal(ptr);
         }
     }
+
+    /// <exception cref="InvalidOperationException"></exception>
+    public static void ChangeMetric(Ip4RouteChangeMetricDto routeEntry)
+    {
+        ArgumentNullException.ThrowIfNull(routeEntry);
+        var route = new NativeMethods.MIB_IPFORWARDROW
+        {
+            dwForwardDest = BitConverter.ToUInt32(routeEntry.DestinationIP.GetAddressBytes()),
+            dwForwardMask = BitConverter.ToUInt32(routeEntry.SubnetMask.GetAddressBytes()),
+            dwForwardNextHop = BitConverter.ToUInt32(routeEntry.GatewayIP.GetAddressBytes()),
+            dwForwardMetric1 = Convert.ToUInt32(routeEntry.Metric),
+            dwForwardType = Convert.ToUInt32(3), //Default to 3
+            dwForwardProto = Convert.ToUInt32(3), //Default to 3
+            dwForwardAge = 0,
+            dwForwardIfIndex = Convert.ToUInt32(routeEntry.InterfaceIndex)
+        };
+        nint ptr = Marshal.AllocHGlobal(Marshal.SizeOf<NativeMethods.MIB_IPFORWARDROW>());
+        try
+        {
+            Marshal.StructureToPtr(route, ptr, false);
+
+            int status = NativeMethods.SetIpForwardEntry(ptr);
+            if (status != 0)
+            {
+                throw new InvalidOperationException($"NativeMethods.SetIpForwardEntry returns {status}");
+            }
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(ptr);
+        }
+    }
 }

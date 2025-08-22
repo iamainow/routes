@@ -1,5 +1,6 @@
 ﻿using AnsiColoredWriters;
 using Ip4Parsers;
+using Ip4RangeSetDifferenceCalculator;
 using NativeMethods.Windows;
 using routes;
 using System.Net;
@@ -61,7 +62,7 @@ internal static class Program
         Console.WriteLine();
     }
 
-    private static void ChangeRoutes(Ip4RangeSet nonRuIps, string interfaceName, int metric, Action<string?> successWriteLine, Action<string?> errorWriteLine)
+    private static void ChangeRoutes(Ip4RangeSet targetRangeSet, string interfaceName, int metric, Action<string?> successWriteLine, Action<string?> errorWriteLine)
     {
         var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
             .Where(x => x.Name == interfaceName)
@@ -73,48 +74,86 @@ internal static class Program
 
         IPAddress gatewayIp = networkInterface.GetPrimaryGateway(() => table.Value) ?? throw new InvalidOperationException("PrimaryGateway is null");
 
-        var routesToRemove = Ip4RouteTable.GetRouteTable()
+        var currentRoutes = Ip4RouteTable.GetRouteTable()
             .Where(x => x.InterfaceIndex == interfaceIndex)
             .Where(x => x.Metric == metric)
+            .Select(x => new RouteWithMetricDto(new RouteWithoutMetricDto(x.DestinationIP, x.SubnetMask, x.GatewayIP), x.Metric))
             .ToArray();
 
-        foreach (var routeToRemove in routesToRemove)
+        var targetRoutes = targetRangeSet.ToIp4Subnets()
+            .Select(x => new RouteWithMetricDto(new RouteWithoutMetricDto(x.FirstAddress, x.Mask, gatewayIp), metric))
+            .ToArray();
+
+        List<RouteWithMetricDto> routesToRemove = new();
+        List<RouteWithMetricDto> routesToAdd = new();
+        List<ChangeMetricRouteDto> routesToChangeMetric = new();
+        List<RouteWithMetricDto> routesUnchanged = new();
+
+        RoutesDifferenceCalculator.CalculateDifference(
+            source: currentRoutes,
+            target: targetRoutes,
+            toAdd: routesToAdd.Add,
+            toRemove: routesToRemove.Add,
+            toChangeMetric: routesToChangeMetric.Add,
+            toUnchanged: routesUnchanged.Add
+        );
+
+        foreach (var route in routesToChangeMetric)
         {
-            var subnet = new Ip4Subnet(routeToRemove.DestinationIP, routeToRemove.SubnetMask);
+            try
+            {
+                Ip4RouteTable.ChangeMetric(new Ip4RouteChangeMetricDto
+                {
+                    DestinationIP = route.RouteWithoutMetric.DestinationIP,
+                    SubnetMask = route.RouteWithoutMetric.SubnetMask,
+                    InterfaceIndex = interfaceIndex,
+                    GatewayIP = route.RouteWithoutMetric.GatewayIP,
+                    Metric = route.NewMetric,
+                });
+                successWriteLine($"route changed: {route.RouteWithoutMetric.DestinationIP} mask {route.RouteWithoutMetric.SubnetMask} gateway {route.RouteWithoutMetric.GatewayIP} metric {route.OldMetric} => {route.NewMetric}");
+            }
+            catch (InvalidOperationException exception)
+            {
+                errorWriteLine($"error changing route {route.RouteWithoutMetric.DestinationIP} mask {route.RouteWithoutMetric.SubnetMask} gateway {route.RouteWithoutMetric.GatewayIP}: {exception.GetBaseException().Message}");
+            }
+        }
+
+        foreach (var route in routesToRemove)
+        {
             try
             {
                 Ip4RouteTable.DeleteRoute(new Ip4RouteDeleteDto
                 {
-                    DestinationIP = routeToRemove.DestinationIP,
-                    SubnetMask = routeToRemove.SubnetMask,
-                    InterfaceIndex = routeToRemove.InterfaceIndex,
-                    GatewayIP = routeToRemove.GatewayIP,
+                    DestinationIP = route.RouteWithoutMetric.DestinationIP,
+                    SubnetMask = route.RouteWithoutMetric.SubnetMask,
+                    InterfaceIndex = interfaceIndex,
+                    GatewayIP = route.RouteWithoutMetric.GatewayIP,
                 });
-                successWriteLine($"route deleted: {subnet}");
+                successWriteLine($"route deleted: {route.RouteWithoutMetric.DestinationIP} mask {route.RouteWithoutMetric.SubnetMask} gateway {route.RouteWithoutMetric.GatewayIP}");
             }
             catch (InvalidOperationException exception)
             {
-                errorWriteLine($"error deleting route {subnet}: {exception.GetBaseException().Message}");
+                errorWriteLine($"error deleting route {route.RouteWithoutMetric.DestinationIP} mask {route.RouteWithoutMetric.SubnetMask} gateway {route.RouteWithoutMetric.GatewayIP}: {exception.GetBaseException().Message}");
             }
         }
 
-        foreach (var subnet in nonRuIps.ToIp4Subnets())
+        foreach (var route in routesToAdd)
         {
             try
             {
                 Ip4RouteTable.CreateRoute(new Ip4RouteCreateDto
                 {
-                    DestinationIP = subnet.FirstAddress,
-                    SubnetMask = subnet.Mask,
+                    DestinationIP = route.RouteWithoutMetric.DestinationIP,
+                    SubnetMask = route.RouteWithoutMetric.SubnetMask,
                     InterfaceIndex = interfaceIndex,
-                    GatewayIP = gatewayIp,
-                    Metric = metric,
+                    GatewayIP = route.RouteWithoutMetric.GatewayIP,
+                    Metric = route.Metric,
                 });
-                successWriteLine($"route created: {subnet}");
+                successWriteLine($"route created: {route.RouteWithoutMetric.DestinationIP} mask {route.RouteWithoutMetric.SubnetMask} gateway {route.RouteWithoutMetric.GatewayIP} metric {route.Metric}");
             }
             catch (InvalidOperationException exception)
             {
-                errorWriteLine($"error creating route {subnet}: {exception.GetBaseException().Message}");
+                errorWriteLine($"error creating route {route.RouteWithoutMetric.DestinationIP} mask {route.RouteWithoutMetric.SubnetMask} gateway {route.RouteWithoutMetric.GatewayIP}: {exception.GetBaseException().Message}");
             }
         }
     }

@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AnsiColoredWriter\AnsiColoredWriters.csproj" />
     <ProjectReference Include="..\Ip4Parsers\Ip4Parsers.csproj" />
+    <ProjectReference Include="..\Ip4RangeSetDifferenceCalculator\Ip4RangeSetDifferenceCalculator.csproj" />
     <ProjectReference Include="..\routes\routes.csproj" />
     <ProjectReference Include="..\routeTable\NativeMethods.Windows.csproj" />
   </ItemGroup>

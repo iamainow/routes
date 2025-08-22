@@ -10,6 +10,7 @@
   </Folder>
   <Project Path="AnsiColoredWriter/AnsiColoredWriters.csproj" Id="cdee56b4-61b2-4da9-8125-6cdf2f15a3ce" />
   <Project Path="Ip4Parsers/Ip4Parsers.csproj" Id="5fc83869-6073-4120-9e2f-f419393309db" />
+  <Project Path="Ip4RangeSetDifferenceCalculator/Ip4RangeSetDifferenceCalculator.csproj" Id="0145d941-c406-4003-843f-94f499f87aef" />
   <Project Path="routes.Test/routes.Test.csproj" />
   <Project Path="routes/routes.csproj" />
   <Project Path="routeTable/NativeMethods.Windows.csproj" Id="ed2a6324-edfd-4998-846d-aca0da4d9afa" />
