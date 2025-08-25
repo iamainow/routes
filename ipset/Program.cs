@@ -75,10 +75,11 @@ internal static class Program
         var enumerator = args.AsEnumerable().GetEnumerator();
         if (!enumerator.MoveNext())
         {
-            errorWriteLine("""
+            Console.WriteLine("""
                 usage:
                 ipset [raw <ips|subnets|ip ranges> | file <path> | stdin | local] [ except|union [raw <ips|subnets|ip ranges> | file <path> | stdin | local] ]*
                 """);
+            return;
         }
         do
         {
