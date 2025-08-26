@@ -1,6 +1,6 @@
 ﻿//using System.Text.Json;
 
-namespace ipset;
+namespace ipops;
 
 //private static async Task SerializeToAmneziaJsonAsync(Ip4RangeSet set, string filePath)
 //{

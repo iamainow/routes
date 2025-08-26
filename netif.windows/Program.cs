@@ -6,7 +6,7 @@ using routes;
 using System.Net;
 using System.Net.NetworkInformation;
 
-namespace netif.windows;
+namespace ifroute;
 
 internal static class Program
 {

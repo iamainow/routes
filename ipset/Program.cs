@@ -2,7 +2,7 @@
 using Ip4Parsers;
 using routes;
 
-namespace ipset;
+namespace ipops;
 
 internal static class Program
 {
@@ -77,7 +77,7 @@ internal static class Program
         {
             Console.WriteLine("""
                 usage:
-                ipset [raw <ips|subnets|ip ranges> | file <path> | stdin | local] [ except|union [raw <ips|subnets|ip ranges> | file <path> | stdin | local] ]*
+                ipset [raw <ips|subnets|ip ranges> | file <path> | - | local] [ except|union [raw <ips|subnets|ip ranges> | file <path> | - | local] ]*
                 """);
             return;
         }
@@ -93,7 +93,7 @@ internal static class Program
                     result = await fileAsync(enumerator, errorWriteLine);
                     break;
 
-                case "stdin":
+                case "-":
                     result = stdin(errorWriteLine);
                     break;
 
@@ -104,7 +104,7 @@ internal static class Program
                 case "except":
                     if (!enumerator.MoveNext())
                     {
-                        throw new ArgumentException("missing except argument, should use except [raw <ips|subnets|ip ranges> | file <path> | stdin | local]");
+                        throw new ArgumentException("missing except argument, should use except [raw <ips|subnets|ip ranges> | file <path> | - | local]");
                     }
 
                     switch (enumerator.Current)
@@ -117,7 +117,7 @@ internal static class Program
                             result = result.Except(await fileAsync(enumerator, errorWriteLine));
                             break;
 
-                        case "stdin":
+                        case "-":
                             result = result.Except(stdin(errorWriteLine));
                             break;
 
@@ -134,7 +134,7 @@ internal static class Program
                 case "union":
                     if (!enumerator.MoveNext())
                     {
-                        throw new ArgumentException("missing union argument, should use union [raw <ips|subnets|ip ranges> | file <path> | stdin | local]");
+                        throw new ArgumentException("missing union argument, should use union [raw <ips|subnets|ip ranges> | file <path> | - | local]");
                     }
 
                     switch (enumerator.Current)
@@ -147,7 +147,7 @@ internal static class Program
                             result = result.Union(await fileAsync(enumerator, errorWriteLine));
                             break;
 
-                        case "stdin":
+                        case "-":
                             result = result.Union(stdin(errorWriteLine));
                             break;
 

@@ -1,7 +1,7 @@
 <Solution>
   <Folder Name="/Apps/">
-    <Project Path="ipset/ipset.csproj" Id="9da63b15-10ef-4cdc-b8c0-d27a359dd664" />
-    <Project Path="netif.windows/netif.windows.csproj" Id="229ff53c-2749-4c09-8580-c0d7f49b973c" />
+    <Project Path="ipset/ipops.csproj" Id="9da63b15-10ef-4cdc-b8c0-d27a359dd664" />
+    <Project Path="netif.windows/ifroute.csproj" Id="229ff53c-2749-4c09-8580-c0d7f49b973c" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
