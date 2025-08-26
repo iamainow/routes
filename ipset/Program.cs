@@ -55,15 +55,24 @@ internal static class Program
         return result;
     }
 
-    private static Ip4RangeSet local()
+    private static Ip4RangeSet bogon()
     {
         return new Ip4RangeSet([
-            Ip4Subnet.Parse("10.0.0.0/8"),
-            Ip4Subnet.Parse("100.64.0.0/10"),
-            Ip4Subnet.Parse("127.0.0.0/8"),
-            Ip4Subnet.Parse("169.254.0.0/16"),
-            Ip4Subnet.Parse("172.16.0.0/12"),
-            Ip4Subnet.Parse("192.168.0.0/16"),
+            Ip4Subnet.Parse("0.0.0.0/8"), // "This" network
+            Ip4Subnet.Parse("10.0.0.0/8"), // Private-use networks
+            Ip4Subnet.Parse("100.64.0.0/10"), // Carrier-grade NAT
+            Ip4Subnet.Parse("127.0.0.0/8"), // Loopback
+            Ip4Subnet.Parse("169.254.0.0/16"), // Link local
+            Ip4Subnet.Parse("172.16.0.0/12"), // Private-use networks
+            Ip4Subnet.Parse("192.0.0.0/24"), // IETF Protocol Assignments
+            Ip4Subnet.Parse("192.0.2.0/24"), // TEST-NET-1
+            Ip4Subnet.Parse("198.51.100.0/24"), // TEST-NET-2
+            Ip4Subnet.Parse("192.88.99.0/24"), // 6to4 Relay Anycast
+            Ip4Subnet.Parse("192.168.0.0/16"), // Private-use networks
+            Ip4Subnet.Parse("198.18.0.0/15"), // Benchmark testing
+            Ip4Subnet.Parse("203.0.113.0/24"), // TEST-NET-3
+            Ip4Subnet.Parse("224.0.0.0/4"), // Multicast
+            Ip4Subnet.Parse("240.0.0.0/4"), // Reserved for future use
         ]);
     }
 
@@ -75,9 +84,9 @@ internal static class Program
         var enumerator = args.AsEnumerable().GetEnumerator();
         if (!enumerator.MoveNext())
         {
-            Console.WriteLine("""
+            Console.Write("""
                 usage:
-                ipset [raw <ips|subnets|ip ranges> | file <path> | - | local] [ except|union [raw <ips|subnets|ip ranges> | file <path> | - | local] ]*
+                    ipops [raw <ips> | file <path> | - | bogon] [ except|union [raw <ips> | file <path> | - | bogon] ]*
                 """);
             return;
         }
@@ -97,14 +106,14 @@ internal static class Program
                     result = stdin(errorWriteLine);
                     break;
 
-                case "local":
-                    result = local();
+                case "bogon":
+                    result = bogon();
                     break;
 
                 case "except":
                     if (!enumerator.MoveNext())
                     {
-                        throw new ArgumentException("missing except argument, should use except [raw <ips|subnets|ip ranges> | file <path> | - | local]");
+                        throw new ArgumentException("missing except argument, should use except [raw ips> | file <path> | - | local]");
                     }
 
                     switch (enumerator.Current)
@@ -121,8 +130,8 @@ internal static class Program
                             result = result.Except(stdin(errorWriteLine));
                             break;
 
-                        case "local":
-                            result = result.Except(local());
+                        case "bogon":
+                            result = result.Except(bogon());
                             break;
 
                         default:
@@ -134,7 +143,7 @@ internal static class Program
                 case "union":
                     if (!enumerator.MoveNext())
                     {
-                        throw new ArgumentException("missing union argument, should use union [raw <ips|subnets|ip ranges> | file <path> | - | local]");
+                        throw new ArgumentException("missing union argument, should use union [raw <ips> | file <path> | - | local]");
                     }
 
                     switch (enumerator.Current)
@@ -151,8 +160,8 @@ internal static class Program
                             result = result.Union(stdin(errorWriteLine));
                             break;
 
-                        case "local":
-                            result = result.Union(local());
+                        case "bogon":
+                            result = result.Union(bogon());
                             break;
 
                         default:

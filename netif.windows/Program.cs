@@ -19,10 +19,10 @@ internal static class Program
             .OrderBy(x => x.GetInterfaceIndex())
             .ToList();
 
-        Console.WriteLine("{0, 40} {1, 20} {2, 20}", "Name", "InterfaceIndex", "PrimaryGateway");
+        Console.WriteLine("{0, 30} {1, 14} {2, 18}", "Name", "InterfaceIndex", "PrimaryGateway");
         foreach (var networkInterface in networkInterfaces)
         {
-            Console.WriteLine("{0, 40} {1, 20} {2, 20}", networkInterface.Name, networkInterface.GetInterfaceIndex(), networkInterface.GetPrimaryGateway(() => table.Value));
+            Console.WriteLine("{0, 30} {1, 14} {2, 18}", new string(networkInterface.Name.Take(30).ToArray()), networkInterface.GetInterfaceIndex(), networkInterface.GetPrimaryGateway(() => table.Value));
         }
         Console.WriteLine();
     }
@@ -31,10 +31,10 @@ internal static class Program
     {
         Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable();
 
-        Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,8} ", "DestinationIP", "NetMask", "Gateway", "IF", "Metric");
+        Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,6} ", "DestinationIP", "NetMask", "Gateway", "IF", "Metric");
         foreach (Ip4RouteEntry entry in routeTable)
         {
-            Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,8} ", entry.DestinationIP, entry.SubnetMask, entry.GatewayIP, entry.InterfaceIndex, entry.Metric);
+            Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,6} ", entry.DestinationIP, entry.SubnetMask, entry.GatewayIP, entry.InterfaceIndex, entry.Metric);
         }
         Console.WriteLine();
     }
@@ -54,10 +54,10 @@ internal static class Program
     {
         Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable();
 
-        Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,8} ", "DestinationIP", "NetMask", "Gateway", "IF", "Metric");
+        Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,6} ", "DestinationIP", "NetMask", "Gateway", "IF", "Metric");
         foreach (Ip4RouteEntry entry in routeTable.Where(x => x.InterfaceIndex == interfaceIndex))
         {
-            Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,8} ", entry.DestinationIP, entry.SubnetMask, entry.GatewayIP, entry.InterfaceIndex, entry.Metric);
+            Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,6} ", entry.DestinationIP, entry.SubnetMask, entry.GatewayIP, entry.InterfaceIndex, entry.Metric);
         }
         Console.WriteLine();
     }
@@ -194,10 +194,10 @@ internal static class Program
         {
             Console.Write("""
                 usage:
-                  netif.windows set [interface-name] [metric] < some-ips.txt
-                  netif.windows print-all-interfaces
-                  netif.windows print-all-routes
-                  netif.windows print-routes-with-interface-name [interface-name]
+                  ifroute set [interface-name] [metric] < some-ips.txt
+                  ifroute print-all-interfaces
+                  ifroute print-all-routes
+                  ifroute print-routes-with-interface-name [interface-name]
                 """);
         }
     }
