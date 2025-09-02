@@ -80,13 +80,15 @@ internal static class Program
     {
         Action<string?> errorWriteLine = Console.IsErrorRedirected ? Console.Error.WriteLine : new AnsiColoredWriter(Console.Error, AnsiColor.Red).WriteLine;
         Ip4RangeSet result = new();
+        RangeSetPrintFormat printFormat = RangeSetPrintFormat.Subnet;
+        string printPattern = "%subnet/%cidr";
 
         var enumerator = args.AsEnumerable().GetEnumerator();
         if (!enumerator.MoveNext())
         {
             Console.Write("""
                 usage:
-                    ipops [raw <ips> | file <path> | - | bogon] [ except|union [raw <ips> | file <path> | - | bogon] ]*
+                    ipops [raw <ips> | file <path> | - | bogon] [except|union [raw <ips> | file <path> | - | bogon] | simplify <number> | normalize]* [print subnet | range] [format <string:%subnet/%cidr | %subnet %mask | %firstaddress-%lastaddress>]
                 """);
             return;
         }
@@ -115,29 +117,14 @@ internal static class Program
                     {
                         throw new ArgumentException("missing except argument, should use except [raw ips> | file <path> | - | local]");
                     }
-
-                    switch (enumerator.Current)
+                    result = enumerator.Current switch
                     {
-                        case "raw":
-                            result = result.Except(raw(enumerator, errorWriteLine));
-                            break;
-
-                        case "file":
-                            result = result.Except(await fileAsync(enumerator, errorWriteLine));
-                            break;
-
-                        case "-":
-                            result = result.Except(stdin(errorWriteLine));
-                            break;
-
-                        case "bogon":
-                            result = result.Except(bogon());
-                            break;
-
-                        default:
-                            throw new ArgumentException($"unknown argument '{enumerator.Current}'");
-                    }
-
+                        "raw" => result.Except(raw(enumerator, errorWriteLine)),
+                        "file" => result.Except(await fileAsync(enumerator, errorWriteLine)),
+                        "-" => result.Except(stdin(errorWriteLine)),
+                        "bogon" => result.Except(bogon()),
+                        _ => throw new ArgumentException($"unknown argument '{enumerator.Current}'"),
+                    };
                     break;
 
                 case "union":
@@ -145,29 +132,48 @@ internal static class Program
                     {
                         throw new ArgumentException("missing union argument, should use union [raw <ips> | file <path> | - | local]");
                     }
-
-                    switch (enumerator.Current)
+                    result = enumerator.Current switch
                     {
-                        case "raw":
-                            result = result.Union(raw(enumerator, errorWriteLine));
-                            break;
+                        "raw" => result.Union(raw(enumerator, errorWriteLine)),
+                        "file" => result.Union(await fileAsync(enumerator, errorWriteLine)),
+                        "-" => result.Union(stdin(errorWriteLine)),
+                        "bogon" => result.Union(bogon()),
+                        _ => throw new ArgumentException($"unknown argument '{enumerator.Current}'"),
+                    };
+                    break;
 
-                        case "file":
-                            result = result.Union(await fileAsync(enumerator, errorWriteLine));
-                            break;
-
-                        case "-":
-                            result = result.Union(stdin(errorWriteLine));
-                            break;
-
-                        case "bogon":
-                            result = result.Union(bogon());
-                            break;
-
-                        default:
-                            throw new ArgumentException($"unknown argument '{enumerator.Current}'");
+                case "simplify":
+                    if (!enumerator.MoveNext())
+                    {
+                        throw new ArgumentException("missing simplify argument, should use simplify <number>");
                     }
+                    uint simplifyRange = uint.Parse(enumerator.Current);
+                    result = result.Simplify(simplifyRange);
+                    break;
 
+                case "normalize":
+                    result = result.Normalize();
+                    break;
+
+                case "print":
+                    if (!enumerator.MoveNext())
+                    {
+                        throw new ArgumentException("missing union argument, should use print [subnet | range]");
+                    }
+                    printFormat = enumerator.Current switch
+                    {
+                        "subnet" => RangeSetPrintFormat.Subnet,
+                        "range" => RangeSetPrintFormat.Range,
+                        _ => throw new ArgumentException($"unknown argument '{enumerator.Current}'"),
+                    };
+                    break;
+
+                case "format":
+                    if (!enumerator.MoveNext())
+                    {
+                        throw new ArgumentException("missing format argument, should use format <string:%subnet/%cidr | %subnet %mask | %firstaddress-%lastaddress>");
+                    }
+                    printPattern = enumerator.Current;
                     break;
 
                 default:
@@ -175,9 +181,41 @@ internal static class Program
             }
         } while (enumerator.MoveNext());
 
-        foreach (var subnet in result.ToIp4Subnets())
+        switch (printFormat)
         {
-            Console.WriteLine(subnet.ToCidrString());
+            case RangeSetPrintFormat.Subnet:
+                foreach (var subnet in result.ToIp4Subnets())
+                {
+                    string resultString = printPattern
+                        .Replace("%subnet", subnet.FirstAddress.ToString())
+                        .Replace("%cidr", subnet.Mask.Cidr.ToString())
+                        .Replace("%mask", subnet.Mask.ToFullString())
+                        .Replace("%firstaddress", subnet.FirstAddress.ToString())
+                        .Replace("%lastaddress", subnet.LastAddress.ToString())
+                        .Replace("%count", subnet.Count.ToString());
+
+                    Console.WriteLine(resultString);
+                }
+                break;
+
+            case RangeSetPrintFormat.Range:
+                foreach (var subnet in result.ToIp4Ranges())
+                {
+                    string resultString = printPattern
+                        .Replace("%firstaddress", subnet.FirstAddress.ToString())
+                        .Replace("%lastaddress", subnet.LastAddress.ToString())
+                        .Replace("%count", subnet.Count.ToString());
+
+                    Console.WriteLine(resultString);
+                }
+                break;
         }
+
     }
+}
+
+internal enum RangeSetPrintFormat
+{
+    Subnet,
+    Range,
 }

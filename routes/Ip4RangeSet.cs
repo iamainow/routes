@@ -143,7 +143,7 @@ public class Ip4RangeSet
         while (current is not null && current.Next is not null)
         {
             var next = current.Next;
-            // if gap between neighbors equals or more than delta, remove it
+            // if gap between neighbors equals or more than delta, union them
             if ((ulong)(uint)current.Value.LastAddress + delta + 1 >= (uint)next.Value.FirstAddress)
             {
                 current.Value = new Ip4Range(current.Value.FirstAddress, next.Value.LastAddress);
@@ -226,6 +226,11 @@ public class Ip4RangeSet
         }
 
         return result;
+    }
+
+    public Ip4RangeSet Normalize()
+    {
+        return ExpandSet(this, 0, out _);
     }
 
     public Ip4RangeSet MinimizeSubnets(uint delta)

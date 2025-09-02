@@ -31,10 +31,11 @@ internal static class Program
     {
         Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable();
 
-        Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,6} ", "DestinationIP", "NetMask", "Gateway", "IF", "Metric");
+        Console.WriteLine("{0,21} {1,18} {2,6}", "Subnet", "Gateway", "Metric");
         foreach (Ip4RouteEntry entry in routeTable)
         {
-            Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,6} ", entry.DestinationIP, entry.SubnetMask, entry.GatewayIP, entry.InterfaceIndex, entry.Metric);
+            Ip4Subnet subnet = new(entry.DestinationIP, entry.SubnetMask);
+            Console.WriteLine("{0,21} {1,18} {2,6}", subnet, entry.GatewayIP, entry.Metric);
         }
         Console.WriteLine();
     }
@@ -50,14 +51,39 @@ internal static class Program
         PrintRoutesWithInterfaceIndex(interfaceIndex);
     }
 
+    private static void PrintRoutesWithInterfaceNameAndMetric(string name, int metric)
+    {
+        var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
+            .Where(x => x.Name == name)
+            .First();
+
+        int interfaceIndex = networkInterface.GetInterfaceIndex();
+
+        Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable()
+            .Where(x => x.InterfaceIndex == interfaceIndex)
+            .Where(x => x.Metric == metric)
+            .ToArray();
+
+        Console.WriteLine("{0,21} {1,18} {2,6}", "Subnet", "Gateway", "Metric");
+        foreach (Ip4RouteEntry entry in routeTable)
+        {
+            Ip4Subnet subnet = new(entry.DestinationIP, entry.SubnetMask);
+            Console.WriteLine("{0,21} {1,18} {2,6}", subnet, entry.GatewayIP, entry.Metric);
+        }
+        Console.WriteLine();
+    }
+
     private static void PrintRoutesWithInterfaceIndex(int interfaceIndex)
     {
-        Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable();
+        Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable()
+            .Where(x => x.InterfaceIndex == interfaceIndex)
+            .ToArray();
 
-        Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,6} ", "DestinationIP", "NetMask", "Gateway", "IF", "Metric");
-        foreach (Ip4RouteEntry entry in routeTable.Where(x => x.InterfaceIndex == interfaceIndex))
+        Console.WriteLine("{0,21} {1,18} {2,6}", "Subnet", "Gateway", "Metric");
+        foreach (Ip4RouteEntry entry in routeTable)
         {
-            Console.WriteLine("{0,18} {1,18} {2,18} {3,5} {4,6} ", entry.DestinationIP, entry.SubnetMask, entry.GatewayIP, entry.InterfaceIndex, entry.Metric);
+            Ip4Subnet subnet = new(entry.DestinationIP, entry.SubnetMask);
+            Console.WriteLine("{0,21} {1,18} {2,6}", subnet, entry.GatewayIP, entry.Metric);
         }
         Console.WriteLine();
     }
@@ -189,6 +215,12 @@ internal static class Program
         {
             string interfaceName = args[1];
             PrintRoutesWithInterfaceName(interfaceName);
+        }
+        else if (args.Length == 3 && args[0] == "print-routes-with-interface-name-and-metric")
+        {
+            string interfaceName = args[1];
+            int metric = int.Parse(args[2]);
+            PrintRoutesWithInterfaceNameAndMetric(interfaceName, metric);
         }
         else
         {
