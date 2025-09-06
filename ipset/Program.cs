@@ -88,7 +88,7 @@ internal static class Program
         {
             Console.Write("""
                 usage:
-                    ipops [raw <ips> | file <path> | - | bogon] [except|union [raw <ips> | file <path> | - | bogon] | simplify <number> | normalize]* [print subnet | range] [format <string:%subnet/%cidr | %subnet %mask | %firstaddress-%lastaddress>]
+                    ipops [raw <ips> | file <path> | - | bogon] [except|union [raw <ips> | file <path> | - | bogon] | simplify <number> | normalize]* [print subnet | range | amneziajson] [format <string:%subnet/%cidr | %subnet %mask | %firstaddress-%lastaddress>]
                 """);
             return;
         }
@@ -158,12 +158,13 @@ internal static class Program
                 case "print":
                     if (!enumerator.MoveNext())
                     {
-                        throw new ArgumentException("missing union argument, should use print [subnet | range]");
+                        throw new ArgumentException("missing print argument, should use print [subnet | range | amneziajson]");
                     }
                     printFormat = enumerator.Current switch
                     {
                         "subnet" => RangeSetPrintFormat.Subnet,
                         "range" => RangeSetPrintFormat.Range,
+                        "amneziajson" => RangeSetPrintFormat.AmneziaJson,
                         _ => throw new ArgumentException($"unknown argument '{enumerator.Current}'"),
                     };
                     break;
@@ -209,8 +210,18 @@ internal static class Program
                     Console.WriteLine(resultString);
                 }
                 break;
-        }
 
+            case RangeSetPrintFormat.AmneziaJson:
+                {
+                    string resultString = Ip4RangeSetSerializers.SerializeToAmneziaJson(result);
+                    Console.WriteLine(resultString);
+                }
+
+                break;
+
+            default:
+                throw new NotImplementedException($"switch printFormat = '{printFormat}'");
+        }
     }
 }
 
@@ -218,4 +229,5 @@ internal enum RangeSetPrintFormat
 {
     Subnet,
     Range,
+    AmneziaJson,
 }
