@@ -190,18 +190,18 @@ internal static class Program
         {
             string interfaceName = args[1];
             int metric = int.Parse(args[2]);
-            Action<string?> errorWriteLine = Console.IsErrorRedirected ? Console.Error.WriteLine : new AnsiColoredWriter(Console.Error, AnsiColor.Red).WriteLine;
+            ITextWriterWrapper errorTextWriterWrapper = Console.IsErrorRedirected ? new TextWriterWrapper(Console.Error) : new AnsiColoredTextWriterWrapper(Console.Error, AnsiColor.Red);
             string? line;
             Ip4RangeSet ip4RangeSet = new();
             while ((line = Console.ReadLine()) != null)
             {
-                var ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
+                var ranges = Ip4SubnetParser.GetRanges(line, errorTextWriterWrapper.WriteLine);
                 Ip4RangeSet rangesSet = new(ranges);
 
                 ip4RangeSet = ip4RangeSet.Union(rangesSet);
             }
 
-            ChangeRoutes(ip4RangeSet, interfaceName, metric, Console.WriteLine, errorWriteLine);
+            ChangeRoutes(ip4RangeSet, interfaceName, metric, Console.WriteLine, errorTextWriterWrapper.WriteLine);
         }
         else if (args.Length == 1 && args[0] == "print-all-interfaces")
         {

@@ -100,15 +100,15 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     /// <param name="text">/xx, xx or x.x.x.x</param>
     public static bool TryParse(string text, out Ip4Mask result)
     {
-        if (TryParseFullString(text, out var result1))
-        {
-            result = result1;
-            return true;
-        }
-
         if (TryParseCidrString(text, out var result2))
         {
             result = result2;
+            return true;
+        }
+
+        if (TryParseFullString(text, out var result1))
+        {
+            result = result1;
             return true;
         }
 
@@ -292,7 +292,10 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
         return $"/{Cidr}";
     }
 
-    public override string ToString() => ToCidrString();
+    public override string ToString()
+    {
+        return ToCidrString();
+    }
 
     public override bool Equals(object? obj)
     {

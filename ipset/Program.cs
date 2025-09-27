@@ -78,7 +78,7 @@ internal static class Program
 
     public static async Task Main(string[] args)
     {
-        Action<string?> errorWriteLine = Console.IsErrorRedirected ? Console.Error.WriteLine : new AnsiColoredWriter(Console.Error, AnsiColor.Red).WriteLine;
+        Action<string?> errorWriteLine = Console.IsErrorRedirected ? Console.Error.WriteLine : new AnsiColoredTextWriterWrapper(Console.Error, AnsiColor.Red).WriteLine;
         Ip4RangeSet result = new();
         RangeSetPrintFormat printFormat = RangeSetPrintFormat.Subnet;
         string printPattern = "%subnet/%cidr";

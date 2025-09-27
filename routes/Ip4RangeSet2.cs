@@ -157,6 +157,8 @@ public class SortedLinkedListOfIntervals<T>
 
     public LinkedListNode<Interval<T>>? FindLast(Predicate<Interval<T>> predicate)
     {
+        ArgumentNullException.ThrowIfNull(predicate);
+
         var current = list.First;
         while (current is not null && !predicate(current.Value))
         {
@@ -186,22 +188,25 @@ public class SortedLinkedListOfIntervals<T>
 
     public void Union(Interval<T> item)
     {
-        if (list.First is null || list.Last is null) // empty
+        if (list.Count == 0) // empty
         {
             list.AddFirst(item);
             return;
         }
 
-        // list.First is not null here
-        if (list.First.Next is null) // 1 element
+        Debug.Assert(list.First is not null); // list.Count != 0
+        Debug.Assert(list.Last is not null); // list.Count != 0
+
+        if (list.Count == 1) // 1 element
         {
-            if (list.First.Value.IsIntersects(item))
+            LinkedListNode<Interval<T>> element = list.First;
+            if (element.Value.IsIntersects(item))
             {
-                list.First.Value = list.First.Value.IntersectableUnion(item);
+                element.Value = element.Value.IntersectableUnion(item);
             }
             else
             {
-                if (item.BeginInclusive < list.First.Value.BeginInclusive)
+                if (item.BeginInclusive < element.Value.BeginInclusive)
                 {
                     list.AddFirst(item);
                 }
@@ -243,7 +248,7 @@ public class SortedLinkedListOfIntervals<T>
             }
             else
             {
-                for (var node = list.First; node != last; node = node.Next)
+                for (var node = list.First; node != last && node is not null; node = node.Next)
                 {
 
                 }
@@ -270,61 +275,6 @@ public class SortedLinkedListOfIntervals<T>
     public void Remove(LinkedListNode<Interval<T>> node)
     {
         list.Remove(node);
-    }
-}
-
-public class SortedLinkedList<T>
-    where T : IComparable<T>
-{
-    private readonly LinkedList<T> _list;
-
-    public SortedLinkedList()
-    {
-        _list = new();
-    }
-
-    public SortedLinkedList(IEnumerable<T> items) : this()
-    {
-        ArgumentNullException.ThrowIfNull(items);
-        foreach (var item in items)
-        {
-            Add(item);
-        }
-    }
-
-    public SortedLinkedList(SortedLinkedList<T> sortedLinkedList) : this()
-    {
-        ArgumentNullException.ThrowIfNull(sortedLinkedList);
-        foreach (var item in sortedLinkedList._list)
-        {
-            _list.AddLast(item);
-        }
-    }
-    // a.CompareTo(b)
-    // < 0 a < b
-    // = 0 a == b
-    // > 0 a > b
-
-    public void Union(T item)
-    {
-        foreach (var node in _list)
-        {
-            if (item.CompareTo(node) < 0)
-            {
-                _list.AddBefore(_list.Find(node)!, item);
-                return;
-            }
-        }
-    }
-
-    public void Remove(T item)
-    {
-        _list.Remove(item);
-    }
-
-    public void Remove(LinkedListNode<T> node)
-    {
-        _list.Remove(node);
     }
 }
 

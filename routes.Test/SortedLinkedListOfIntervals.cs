@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 
 namespace routes.Test;
+
 internal readonly struct Point : ICountable<Point>, IComparable<Point>, IComparisonOperators<Point, Point, bool>, IEquatable<Point>
 {
     public int Value { get; }
@@ -70,14 +71,23 @@ internal readonly struct Point : ICountable<Point>, IComparable<Point>, ICompari
         return left.CompareTo(right) != 0;
     }
 
+    public static implicit operator Point(int val)
+    {
+        return new Point(val);
+    }
 
+    public static Point ToPoint(int val)
+    {
+        return new Point(val);
+    }
 }
-internal class SortedLinkedListOfIntervalsTest
+public class SortedLinkedListOfIntervalsTest
 {
     [Theory]
-    public void UnionTest(Point p1, Point p2)
+    [InlineData(5, 7)]
+    internal void UnionTest(Point b1, Point e1)
     {
         var test = new SortedLinkedListOfIntervals<Point>();
-        test.Union(new Interval<Point>(p1, p2));
+        test.Union(new Interval<Point>(b1, e1));
     }
 }

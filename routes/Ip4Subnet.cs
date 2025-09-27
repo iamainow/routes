@@ -30,6 +30,7 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     public static bool TryParse(string text, out Ip4Subnet result)
     {
         ArgumentNullException.ThrowIfNull(text);
+
         var step1 = text.Split('/', ' ');
         if (step1.Length == 2 && Ip4Address.TryParse(step1[0], out var address) && Ip4Mask.TryParse(step1[1], out var mask))
         {
@@ -109,7 +110,10 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
         return $"{FirstAddress}/{Mask.Cidr}";
     }
 
-    public override string ToString() => ToCidrString();
+    public override string ToString()
+    {
+        return ToCidrString();
+    }
 
     public override bool Equals(object? obj)
     {

@@ -1,15 +1,12 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿namespace AnsiColoredWriters;
 
-namespace AnsiColoredWriters;
-
-public sealed class AnsiColoredWriter
+public sealed class AnsiColoredTextWriterWrapper : ITextWriterWrapper
 {
-    public required AnsiColor Style { get; set; }
+    private AnsiColor Style { get; init; }
 
     private readonly TextWriter textWriter;
 
-    [SetsRequiredMembers]
-    public AnsiColoredWriter(TextWriter textWriter, AnsiColor style)
+    public AnsiColoredTextWriterWrapper(TextWriter textWriter, AnsiColor style)
     {
         this.textWriter = textWriter;
         Style = style;
