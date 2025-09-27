@@ -13,7 +13,7 @@ internal static class Program
             throw new ArgumentException("missing raw argument, should use raw <ips|subnets|ip ranges>");
         }
 
-        var ranges = Ip4SubnetParser.GetRanges(enumerator.Current, errorWriteLine);
+        IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(enumerator.Current, errorWriteLine);
         return new Ip4RangeSet(ranges);
     }
 
@@ -25,14 +25,14 @@ internal static class Program
         }
 
         using FileStream fileStream = File.Open(enumerator.Current, FileMode.Open, FileAccess.Read, FileShare.Read);
-        using StreamReader streamReader = new StreamReader(fileStream);
+        using StreamReader streamReader = new(fileStream);
 
-        Ip4RangeSet result = new Ip4RangeSet();
+        Ip4RangeSet result = new();
         string? line;
         while ((line = await streamReader.ReadLineAsync()) is not null)
         {
-            var ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
-            foreach (var range in ranges)
+            IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
+            foreach (Ip4Range range in ranges)
             {
                 result = result.Union(range);
             }
@@ -42,12 +42,12 @@ internal static class Program
 
     private static Ip4RangeSet stdin(Action<string?> errorWriteLine)
     {
-        Ip4RangeSet result = new Ip4RangeSet();
+        Ip4RangeSet result = new();
         string? line;
         while ((line = Console.ReadLine()) is not null)
         {
-            var ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
-            foreach (var range in ranges)
+            IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
+            foreach (Ip4Range range in ranges)
             {
                 result = result.Union(range);
             }
@@ -83,7 +83,7 @@ internal static class Program
         RangeSetPrintFormat printFormat = RangeSetPrintFormat.Subnet;
         string printPattern = "%subnet/%cidr";
 
-        var enumerator = args.AsEnumerable().GetEnumerator();
+        IEnumerator<string> enumerator = args.AsEnumerable().GetEnumerator();
         if (!enumerator.MoveNext())
         {
             Console.Write("""
@@ -185,7 +185,7 @@ internal static class Program
         switch (printFormat)
         {
             case RangeSetPrintFormat.Subnet:
-                foreach (var subnet in result.ToIp4Subnets())
+                foreach (Ip4Subnet subnet in result.ToIp4Subnets())
                 {
                     string resultString = printPattern
                         .Replace("%subnet", subnet.FirstAddress.ToString())
@@ -200,7 +200,7 @@ internal static class Program
                 break;
 
             case RangeSetPrintFormat.Range:
-                foreach (var subnet in result.ToIp4Ranges())
+                foreach (Ip4Range subnet in result.ToIp4Ranges())
                 {
                     string resultString = printPattern
                         .Replace("%firstaddress", subnet.FirstAddress.ToString())

@@ -13,13 +13,13 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public static Ip4Address Parse(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
-        var step1 = text.Split('.');
+        string[] step1 = text.Split('.');
         if (step1.Length != 4)
         {
             throw new FormatException();
         }
 
-        var step2 = step1.Select(byte.Parse).ToArray();
+        byte[] step2 = step1.Select(byte.Parse).ToArray();
 
         return new Ip4Address(step2[0], step2[1], step2[2], step2[3]);
     }
@@ -28,14 +28,14 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public static bool TryParse(string text, out Ip4Address result)
     {
         ArgumentNullException.ThrowIfNull(text);
-        var step1 = text.Split('.');
+        string[] step1 = text.Split('.');
         if (step1.Length != 4)
         {
             result = default;
             return false;
         }
 
-        List<byte> step2 = new List<byte>(4);
+        List<byte> step2 = new(4);
         foreach (string step1Item in step1)
         {
             if (!byte.TryParse(step1Item, out byte step2Item))
@@ -186,11 +186,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
 
     public override bool Equals(object? obj)
     {
-        if (obj is Ip4Address address)
-        {
-            return Equals(address);
-        }
-        return false;
+        return obj is Ip4Address address && Equals(address);
     }
 
     public override int GetHashCode()

@@ -8,33 +8,28 @@ namespace routes;
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Ip4Mask : IEquatable<Ip4Mask>
 {
-    public static readonly Ip4Mask Full = new Ip4Mask(0x00000000);
-    public static readonly Ip4Mask SingleAddress = new Ip4Mask(0xFFFFFFFF);
+    public static readonly Ip4Mask Full = new(0x00000000);
+    public static readonly Ip4Mask SingleAddress = new(0xFFFFFFFF);
 
     /// <param name="text">x.x.x.x format</param>
     /// <exception cref="FormatException"></exception>
     public static Ip4Mask ParseFullString(string text)
     {
-        if (!TryParseFullString(text, out var result))
-        {
-            throw new FormatException();
-        }
-
-        return result;
+        return !TryParseFullString(text, out Ip4Mask result) ? throw new FormatException() : result;
     }
 
     /// <param name="text">x.x.x.x format</param>
     public static bool TryParseFullString(string text, out Ip4Mask result)
     {
         ArgumentNullException.ThrowIfNull(text);
-        var step1 = text.Split('.');
+        string[] step1 = text.Split('.');
         if (step1.Length != 4)
         {
             result = default;
             return false;
         }
 
-        List<byte> step2 = new List<byte>(4);
+        List<byte> step2 = new(4);
         foreach (string step1Item in step1)
         {
             if (!byte.TryParse(step1Item, out byte step2Item))
@@ -53,12 +48,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     /// <param name="text">/xx or xx format</param>
     public static Ip4Mask ParseCidrString(string text)
     {
-        if (!TryParseCidrString(text, out var mask))
-        {
-            throw new FormatException();
-        }
-
-        return mask;
+        return !TryParseCidrString(text, out Ip4Mask mask) ? throw new FormatException() : mask;
     }
 
     /// <param name="text">/xx or xx format</param>
@@ -76,7 +66,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
             return false;
         }
 
-        if (cidr < 0 || cidr > 32)
+        if (cidr is < 0 or > 32)
         {
             result = default;
             return false;
@@ -89,24 +79,19 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     /// <param name="text">/xx, xx or x.x.x.x</param>
     public static Ip4Mask Parse(string text)
     {
-        if (!TryParse(text, out var result))
-        {
-            throw new FormatException();
-        }
-
-        return result;
+        return !TryParse(text, out Ip4Mask result) ? throw new FormatException() : result;
     }
 
     /// <param name="text">/xx, xx or x.x.x.x</param>
     public static bool TryParse(string text, out Ip4Mask result)
     {
-        if (TryParseCidrString(text, out var result2))
+        if (TryParseCidrString(text, out Ip4Mask result2))
         {
             result = result2;
             return true;
         }
 
-        if (TryParseFullString(text, out var result1))
+        if (TryParseFullString(text, out Ip4Mask result1))
         {
             result = result1;
             return true;

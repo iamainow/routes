@@ -41,7 +41,7 @@ public class Ip4MaskTest
 
     public void ParseFromCidr_CheckSubnet(int cidr, string subnet)
     {
-        var mask = new Ip4Mask(cidr);
+        Ip4Mask mask = new(cidr);
 
         Assert.Equal(subnet, mask.ToFullString());
     }
@@ -89,8 +89,8 @@ public class Ip4MaskTest
     [InlineData("255.192.0.0")]
     public void ToIPAddress(string address)
     {
-        var ip4mask = Ip4Mask.Parse(address);
-        var ipAddress = (IPAddress)ip4mask;
+        Ip4Mask ip4mask = Ip4Mask.Parse(address);
+        IPAddress ipAddress = (IPAddress)ip4mask;
 
         string actualValue = ipAddress.ToString();
 
@@ -101,8 +101,8 @@ public class Ip4MaskTest
     [InlineData("255.192.0.0")]
     public void FromIPAddress(string address)
     {
-        var ipAddress = IPAddress.Parse(address);
-        var ip4mask = (Ip4Mask)ipAddress;
+        IPAddress ipAddress = IPAddress.Parse(address);
+        Ip4Mask ip4mask = (Ip4Mask)ipAddress;
 
         string actualValue = ip4mask.ToFullString();
 

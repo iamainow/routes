@@ -12,7 +12,7 @@ public static partial class Ip4SubnetParser
     {
         ArgumentException.ThrowIfNullOrEmpty(text);
 
-        var matches = RangeOrCidrOrIp().Matches(text);
+        MatchCollection matches = RangeOrCidrOrIp().Matches(text);
         foreach (Match match in matches)
         {
             if (match.Success)

@@ -87,7 +87,7 @@ public class SortedLinkedListOfIntervalsTest
     [InlineData(5, 7)]
     internal void UnionTest(Point b1, Point e1)
     {
-        var test = new SortedLinkedListOfIntervals<Point>();
+        SortedLinkedListOfIntervals<Point> test = new();
         test.Union(new Interval<Point>(b1, e1));
     }
 }

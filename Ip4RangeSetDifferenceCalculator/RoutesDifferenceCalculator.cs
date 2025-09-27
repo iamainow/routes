@@ -12,9 +12,9 @@ public static class RoutesDifferenceCalculator
         Action<ChangeMetricRouteDto>? toChangeMetric = null,
         Action<RouteWithMetricDto>? toUnchanged = null)
     {
-        var sourceDictionary = source.ToDictionary(x => x.RouteWithoutMetric, x => x.Metric);
-        var targetDictionary = target.ToDictionary(x => x.RouteWithoutMetric, x => x.Metric);
-        var commonRoutes = sourceDictionary.Keys.Intersect(targetDictionary.Keys).ToArray();
+        Dictionary<RouteWithoutMetricDto, int> sourceDictionary = source.ToDictionary(x => x.RouteWithoutMetric, x => x.Metric);
+        Dictionary<RouteWithoutMetricDto, int> targetDictionary = target.ToDictionary(x => x.RouteWithoutMetric, x => x.Metric);
+        RouteWithoutMetricDto[] commonRoutes = sourceDictionary.Keys.Intersect(targetDictionary.Keys).ToArray();
 
         if (toUnchanged is not null)
         {
@@ -46,7 +46,7 @@ public static class RoutesDifferenceCalculator
 
         if (toRemove is not null)
         {
-            var routesToDelete = sourceDictionary.Keys.Except(commonRoutes);
+            IEnumerable<RouteWithoutMetricDto> routesToDelete = sourceDictionary.Keys.Except(commonRoutes);
             foreach (RouteWithoutMetricDto routeToDelete in routesToDelete)
             {
                 toRemove(new RouteWithMetricDto(routeToDelete, sourceDictionary[routeToDelete]));
@@ -55,7 +55,7 @@ public static class RoutesDifferenceCalculator
 
         if (toAdd is not null)
         {
-            var routesToAdd = targetDictionary.Keys.Except(commonRoutes);
+            IEnumerable<RouteWithoutMetricDto> routesToAdd = targetDictionary.Keys.Except(commonRoutes);
             foreach (RouteWithoutMetricDto routeToAdd in routesToAdd)
             {
                 toAdd(new RouteWithMetricDto(routeToAdd, targetDictionary[routeToAdd]));

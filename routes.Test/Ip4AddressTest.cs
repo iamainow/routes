@@ -11,9 +11,9 @@ public class Ip4AddressTest
     [InlineData(0xFFFFFFFF, 0xFF, 0xFF, 0xFF, 0xFF)]
     public void CreateByUInt(uint address, byte part1, byte part2, byte part3, byte part4)
     {
-        var ip = new Ip4Address(address);
+        Ip4Address ip = new(address);
 
-        var ipAsBytes = ip.AsByteArray();
+        byte[] ipAsBytes = ip.AsByteArray();
 
         Assert.Equal(part1, ipAsBytes[0]);
         Assert.Equal(part2, ipAsBytes[1]);
@@ -28,7 +28,7 @@ public class Ip4AddressTest
     [InlineData(0xFFFFFFFF, 0xFF, 0xFF, 0xFF, 0xFF)]
     public void CreateByBytes(uint address, byte part1, byte part2, byte part3, byte part4)
     {
-        var ip = new Ip4Address(part1, part2, part3, part4);
+        Ip4Address ip = new(part1, part2, part3, part4);
 
         Assert.Equal(address, ip.ToUInt32());
     }
@@ -37,8 +37,8 @@ public class Ip4AddressTest
     [InlineData("192.168.1.1")]
     public void ToIPAddress(string address)
     {
-        var ip4Address = Ip4Address.Parse(address);
-        var ipAddress = (IPAddress)ip4Address;
+        Ip4Address ip4Address = Ip4Address.Parse(address);
+        IPAddress ipAddress = (IPAddress)ip4Address;
 
         string actualValue = ipAddress.ToString();
 
@@ -49,8 +49,8 @@ public class Ip4AddressTest
     [InlineData("192.168.1.1")]
     public void FromIPAddress(string address)
     {
-        var ipAddress = IPAddress.Parse(address);
-        var ip4Address = (Ip4Address)ipAddress;
+        IPAddress ipAddress = IPAddress.Parse(address);
+        Ip4Address ip4Address = (Ip4Address)ipAddress;
 
         string actualValue = ip4Address.ToString();
 

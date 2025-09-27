@@ -7,8 +7,8 @@ namespace routes;
 [DebuggerDisplay("{_list.Count,nq} ip ranges")]
 public class Ip4RangeSet
 {
-    public static readonly Ip4RangeSet Empty = new Ip4RangeSet();
-    public static readonly Ip4RangeSet All = new Ip4RangeSet(Ip4Range.All);
+    public static readonly Ip4RangeSet Empty = new();
+    public static readonly Ip4RangeSet All = new(Ip4Range.All);
 
     private readonly IImmutableList<Ip4Range> _list;
 
@@ -30,8 +30,8 @@ public class Ip4RangeSet
     public Ip4RangeSet(IEnumerable<Ip4Range> ranges)
     {
         ArgumentNullException.ThrowIfNull(ranges);
-        var current = new Ip4RangeSet();
-        foreach (var range in ranges)
+        Ip4RangeSet current = new();
+        foreach (Ip4Range range in ranges)
         {
             current = current.Union(range);
         }
@@ -42,8 +42,8 @@ public class Ip4RangeSet
     public Ip4RangeSet(IEnumerable<Ip4Subnet> subnets)
     {
         ArgumentNullException.ThrowIfNull(subnets);
-        var current = new Ip4RangeSet();
-        foreach (var subnet in subnets)
+        Ip4RangeSet current = new();
+        foreach (Ip4Subnet subnet in subnets)
         {
             current = current.Union(subnet);
         }
@@ -60,7 +60,7 @@ public class Ip4RangeSet
     {
         List<Ip4Range> result = [];
         Ip4Range newItem = other;
-        foreach (var item in _list)
+        foreach (Ip4Range item in _list)
         {
             if (newItem.IsIntersects(item))
             {
@@ -81,7 +81,7 @@ public class Ip4RangeSet
     {
         ArgumentNullException.ThrowIfNull(other);
         Ip4RangeSet result = this;
-        foreach (var item in other._list)
+        foreach (Ip4Range item in other._list)
         {
             result = result.Union(item);
         }
@@ -92,7 +92,7 @@ public class Ip4RangeSet
     public Ip4RangeSet Except(Ip4Range other)
     {
         List<Ip4Range> result = [];
-        foreach (var item in _list)
+        foreach (Ip4Range item in _list)
         {
             result.AddRange(item.Except(other));
         }
@@ -104,7 +104,7 @@ public class Ip4RangeSet
     {
         ArgumentNullException.ThrowIfNull(other);
         Ip4RangeSet result = this;
-        foreach (var item in other._list)
+        foreach (Ip4Range item in other._list)
         {
             result = result.Except(item);
         }
@@ -114,7 +114,7 @@ public class Ip4RangeSet
     public Ip4RangeSet Intersect(Ip4Range other)
     {
         List<Ip4Range> result = [];
-        foreach (var item in _list)
+        foreach (Ip4Range item in _list)
         {
             if (other.IsIntersects(item))
             {
@@ -128,10 +128,10 @@ public class Ip4RangeSet
     public Ip4RangeSet Intersect(Ip4RangeSet other)
     {
         ArgumentNullException.ThrowIfNull(other);
-        Ip4RangeSet result = new Ip4RangeSet();
-        foreach (var item in other._list)
+        Ip4RangeSet result = new();
+        foreach (Ip4Range item in other._list)
         {
-            result = result.Union(this.Intersect(item));
+            result = result.Union(Intersect(item));
         }
         return result;
     }
@@ -142,7 +142,7 @@ public class Ip4RangeSet
         LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
         while (current is not null && current.Next is not null)
         {
-            var next = current.Next;
+            LinkedListNode<Ip4Range> next = current.Next;
             // if gap between neighbors equals or more than delta, union them
             if ((ulong)(uint)current.Value.LastAddress + delta + 1 >= (uint)next.Value.FirstAddress)
             {
@@ -177,7 +177,7 @@ public class Ip4RangeSet
             // if current range is equals or smaller than delta, remove it
             if (current.Value.Count <= delta)
             {
-                var toDelete = current;
+                LinkedListNode<Ip4Range> toDelete = current;
                 current = current.Next;
                 sortedLinkedList.Remove(toDelete);
                 wasElementRemoved = true;
@@ -250,10 +250,10 @@ public class Ip4RangeSet
 
     public override string ToString()
     {
-        StringBuilder result = new StringBuilder();
-        foreach (var item in _list)
+        StringBuilder result = new();
+        foreach (Ip4Range item in _list)
         {
-            result.AppendLine(item.ToString());
+            _ = result.AppendLine(item.ToString());
         }
 
         return result.ToString();

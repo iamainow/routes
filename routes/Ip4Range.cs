@@ -7,32 +7,17 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
 {
     private static uint GetNthBit(uint number, int position)
     {
-        if (position == 0)
-        {
-            return number & 1;
-        }
-
-        return (number >> (position - 1)) & 1;
+        return position == 0 ? number & 1 : (number >> (position - 1)) & 1;
     }
 
     private static uint GetLastBits(uint number, int count)
     {
-        if (count == 0)
-        {
-            return 0;
-        }
-
-        return (number << (32 - count)) >> (32 - count);
+        return count == 0 ? 0 : (number << (32 - count)) >> (32 - count);
     }
 
     private static uint GetFirstBits(uint number, int count)
     {
-        if (count == 0)
-        {
-            return 0;
-        }
-
-        return (number >> (32 - count)) << (32 - count);
+        return count == 0 ? 0 : (number >> (32 - count)) << (32 - count);
     }
 
     public static implicit operator Ip4RangeSet(Ip4Range range)
@@ -40,13 +25,10 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         return new Ip4RangeSet(range);
     }
 
-    public static readonly Ip4Range All = new Ip4Range(new Ip4Address(0x00000000), new Ip4Address(0xFFFFFFFF));
+    public static readonly Ip4Range All = new(new Ip4Address(0x00000000), new Ip4Address(0xFFFFFFFF));
 
-    private readonly Ip4Address _FirstAddress;
-    private readonly Ip4Address _LastAddress;
-
-    public Ip4Address FirstAddress => _FirstAddress;
-    public Ip4Address LastAddress => _LastAddress;
+    public Ip4Address FirstAddress { get; }
+    public Ip4Address LastAddress { get; }
 
     public ulong Count => 1UL + LastAddress.ToUInt32() - FirstAddress.ToUInt32();
 
@@ -57,8 +39,8 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
             throw new ArgumentException("End address must be greater than or equal to start address.");
         }
 
-        _FirstAddress = start;
-        _LastAddress = end;
+        FirstAddress = start;
+        LastAddress = end;
     }
 
     public bool IsIntersects(Ip4Range other)
@@ -76,12 +58,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
 
     public Ip4Range[] Union(Ip4Range other)
     {
-        if (!IsIntersects(other))
-        {
-            return [this, other];
-        }
-
-        return [IntersectableUnion(other)];
+        return !IsIntersects(other) ? [this, other] : [IntersectableUnion(other)];
     }
 
     public Ip4Range IntersectableIntersect(Ip4Range other)
@@ -93,53 +70,26 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
 
     public Ip4Range? Intersect(Ip4Range other)
     {
-        if (!IsIntersects(other))
-        {
-            return null;
-        }
-
-        return IntersectableIntersect(other);
+        return !IsIntersects(other) ? null : IntersectableIntersect(other);
     }
 
     public Ip4Range[] IntersectableExcept(Ip4Range other)
     {
-        if (other.FirstAddress <= FirstAddress)
-        {
-            if (other.LastAddress < LastAddress)
-            {
-                return [new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), LastAddress)];
-            }
-            else
-            {
-                return [];
-            }
-        }
-        else
-        {
-            if (other.LastAddress < LastAddress)
-            {
-                return [new Ip4Range(FirstAddress, new Ip4Address((uint)other.FirstAddress - 1)), new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), LastAddress)];
-            }
-            else
-            {
-                return [new Ip4Range(FirstAddress, new Ip4Address((uint)other.FirstAddress - 1))];
-            }
-        }
+        return other.FirstAddress <= FirstAddress
+            ? other.LastAddress < LastAddress ? [new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), LastAddress)] : []
+            : other.LastAddress < LastAddress
+                ? [new Ip4Range(FirstAddress, new Ip4Address((uint)other.FirstAddress - 1)), new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), LastAddress)]
+                : [new Ip4Range(FirstAddress, new Ip4Address((uint)other.FirstAddress - 1))];
     }
 
     public Ip4Range[] Except(Ip4Range other)
     {
-        if (IsIntersects(other))
-        {
-            return IntersectableExcept(other);
-        }
-
-        return [this];
+        return IsIntersects(other) ? IntersectableExcept(other) : [this];
     }
 
     public Ip4Subnet[] ToSubnets()
     {
-        List<Ip4Subnet> result = new List<Ip4Subnet>();
+        List<Ip4Subnet> result = [];
         SearchSubnetыWithinRange(this, result, 32);
 
         return result.ToArray();
@@ -153,8 +103,8 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         }
         else
         {
-            var startBit = GetNthBit(ipRange.FirstAddress.ToUInt32(), position);
-            var endBit = GetNthBit(ipRange.LastAddress.ToUInt32(), position);
+            uint startBit = GetNthBit(ipRange.FirstAddress.ToUInt32(), position);
+            uint endBit = GetNthBit(ipRange.LastAddress.ToUInt32(), position);
             if (startBit < endBit)
             {
                 if (GetLastBits(ipRange.FirstAddress.ToUInt32(), position) == 0 && GetLastBits(ipRange.LastAddress.ToUInt32(), position) == GetLastBits(0xFFFFFFFF, position))
@@ -163,10 +113,10 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
                 }
                 else
                 {
-                    Ip4Address end1 = new Ip4Address(ipRange.FirstAddress.ToUInt32() | GetLastBits(0xFFFFFFFF, position - 1));
+                    Ip4Address end1 = new(ipRange.FirstAddress.ToUInt32() | GetLastBits(0xFFFFFFFF, position - 1));
                     SearchSubnetыWithinRange(new Ip4Range(ipRange.FirstAddress, end1), result, position - 1);
 
-                    Ip4Address start2 = new Ip4Address(GetFirstBits(ipRange.LastAddress.ToUInt32(), 32 - position + 1));
+                    Ip4Address start2 = new(GetFirstBits(ipRange.LastAddress.ToUInt32(), 32 - position + 1));
                     SearchSubnetыWithinRange(new Ip4Range(start2, ipRange.LastAddress), result, position - 1);
                 }
             }
@@ -194,7 +144,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(_FirstAddress, _LastAddress);
+        return HashCode.Combine(FirstAddress, LastAddress);
     }
 
     public static bool operator ==(Ip4Range left, Ip4Range right)
@@ -209,6 +159,6 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
 
     public bool Equals(Ip4Range other)
     {
-        return _FirstAddress.Equals(other._FirstAddress) && _LastAddress.Equals(other._LastAddress);
+        return FirstAddress.Equals(other.FirstAddress) && LastAddress.Equals(other.LastAddress);
     }
 }

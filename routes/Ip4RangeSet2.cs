@@ -43,12 +43,7 @@ public readonly struct Interval<T> : IEquatable<Interval<T>>
 
     public Interval<T>[] Union(Interval<T> other)
     {
-        if (!IsIntersects(other))
-        {
-            return [this, other];
-        }
-
-        return [IntersectableUnion(other)];
+        return !IsIntersects(other) ? [this, other] : [IntersectableUnion(other)];
     }
 
     public Interval<T> IntersectableIntersect(Interval<T> other)
@@ -60,48 +55,21 @@ public readonly struct Interval<T> : IEquatable<Interval<T>>
 
     public Interval<T>? Intersect(Interval<T> other)
     {
-        if (!IsIntersects(other))
-        {
-            return null;
-        }
-
-        return IntersectableIntersect(other);
+        return !IsIntersects(other) ? null : IntersectableIntersect(other);
     }
 
     public Interval<T>[] IntersectableExcept(Interval<T> other)
     {
-        if (other.BeginInclusive <= BeginInclusive)
-        {
-            if (other.EndInclusive < EndInclusive)
-            {
-                return [new Interval<T>(other.EndInclusive.GetNext(), EndInclusive)];
-            }
-            else
-            {
-                return [];
-            }
-        }
-        else
-        {
-            if (other.EndInclusive < EndInclusive)
-            {
-                return [new Interval<T>(BeginInclusive, other.BeginInclusive.GetPrevious()), new Interval<T>(other.EndInclusive.GetNext(), EndInclusive)];
-            }
-            else
-            {
-                return [new Interval<T>(BeginInclusive, other.BeginInclusive.GetPrevious())];
-            }
-        }
+        return other.BeginInclusive <= BeginInclusive
+            ? other.EndInclusive < EndInclusive ? [new Interval<T>(other.EndInclusive.GetNext(), EndInclusive)] : []
+            : other.EndInclusive < EndInclusive
+                ? [new Interval<T>(BeginInclusive, other.BeginInclusive.GetPrevious()), new Interval<T>(other.EndInclusive.GetNext(), EndInclusive)]
+                : [new Interval<T>(BeginInclusive, other.BeginInclusive.GetPrevious())];
     }
 
     public Interval<T>[] Except(Interval<T> other)
     {
-        if (IsIntersects(other))
-        {
-            return IntersectableExcept(other);
-        }
-
-        return [this];
+        return IsIntersects(other) ? IntersectableExcept(other) : [this];
     }
 
     public override bool Equals(object? obj)
@@ -143,7 +111,7 @@ public class SortedLinkedListOfIntervals<T>
     public SortedLinkedListOfIntervals(IEnumerable<Interval<T>> items) : this()
     {
         ArgumentNullException.ThrowIfNull(items);
-        foreach (var item in items)
+        foreach (Interval<T> item in items)
         {
             Union(item);
         }
@@ -152,14 +120,14 @@ public class SortedLinkedListOfIntervals<T>
     public SortedLinkedListOfIntervals(Interval<T> item)
     {
         list = new();
-        list.AddFirst(item);
+        _ = list.AddFirst(item);
     }
 
     public LinkedListNode<Interval<T>>? FindLast(Predicate<Interval<T>> predicate)
     {
         ArgumentNullException.ThrowIfNull(predicate);
 
-        var current = list.First;
+        LinkedListNode<Interval<T>>? current = list.First;
         while (current is not null && !predicate(current.Value))
         {
             current = current.Next;
@@ -177,7 +145,7 @@ public class SortedLinkedListOfIntervals<T>
     {
         ArgumentNullException.ThrowIfNull(predicate);
 
-        var current = startFrom;
+        LinkedListNode<Interval<T>>? current = startFrom;
         while (current is not null && !predicate(current.Value))
         {
             current = current.Next;
@@ -190,7 +158,7 @@ public class SortedLinkedListOfIntervals<T>
     {
         if (list.Count == 0) // empty
         {
-            list.AddFirst(item);
+            _ = list.AddFirst(item);
             return;
         }
 
@@ -206,14 +174,7 @@ public class SortedLinkedListOfIntervals<T>
             }
             else
             {
-                if (item.BeginInclusive < element.Value.BeginInclusive)
-                {
-                    list.AddFirst(item);
-                }
-                else
-                {
-                    list.AddLast(item);
-                }
+                _ = item.BeginInclusive < element.Value.BeginInclusive ? list.AddFirst(item) : list.AddLast(item);
             }
             return;
         }
@@ -222,33 +183,33 @@ public class SortedLinkedListOfIntervals<T>
 
         if (item.EndInclusive < list.First.Value.BeginInclusive)
         {
-            list.AddFirst(item);
+            _ = list.AddFirst(item);
             return;
         }
 
         if (item.BeginInclusive > list.Last.Value.EndInclusive)
         {
-            list.AddLast(item);
+            _ = list.AddLast(item);
             return;
         }
 
         // minimum 2 elements;
 
-        var first = FindFirst(x => x.EndInclusive > item.BeginInclusive);
+        LinkedListNode<Interval<T>>? first = FindFirst(x => x.EndInclusive > item.BeginInclusive);
 
-        var last = FindFirst(x => x.BeginInclusive <= item.EndInclusive, first);
+        LinkedListNode<Interval<T>>? last = FindFirst(x => x.BeginInclusive <= item.EndInclusive, first);
 
         if (first is null)
         {
             if (last is null)
             {
-                var value = list.First.Value.IntersectableUnion(item).IntersectableUnion(list.Last.Value);
+                Interval<T> value = list.First.Value.IntersectableUnion(item).IntersectableUnion(list.Last.Value);
                 list.Clear();
-                list.AddFirst(value);
+                _ = list.AddFirst(value);
             }
             else
             {
-                for (var node = list.First; node != last && node is not null; node = node.Next)
+                for (LinkedListNode<Interval<T>>? node = list.First; node != last && node is not null; node = node.Next)
                 {
 
                 }
@@ -269,7 +230,7 @@ public class SortedLinkedListOfIntervals<T>
 
     public void Remove(Interval<T> item)
     {
-        list.Remove(item);
+        _ = list.Remove(item);
     }
 
     public void Remove(LinkedListNode<Interval<T>> node)
@@ -281,10 +242,10 @@ public class SortedLinkedListOfIntervals<T>
 [DebuggerDisplay("{_list.Count,nq} ip ranges")]
 public class Ip4RangeSet2
 {
-    public static readonly Ip4RangeSet2 Empty = new Ip4RangeSet2();
-    public static readonly Ip4RangeSet2 All = new Ip4RangeSet2(Ip4Range.All);
+    public static readonly Ip4RangeSet2 Empty = new();
+    public static readonly Ip4RangeSet2 All = new(Ip4Range.All);
 
-    private SortedSet<Ip4Range> _set;
+    private readonly SortedSet<Ip4Range> _set;
 
     public Ip4RangeSet2()
     {
@@ -305,7 +266,7 @@ public class Ip4RangeSet2
     {
         ArgumentNullException.ThrowIfNull(ranges);
 
-        foreach (var range in ranges)
+        foreach (Ip4Range range in ranges)
         {
             Union(range);
         }
@@ -315,7 +276,7 @@ public class Ip4RangeSet2
     {
         ArgumentNullException.ThrowIfNull(subnets);
 
-        foreach (var subnet in subnets)
+        foreach (Ip4Subnet subnet in subnets)
         {
             Union(subnet);
         }
@@ -330,22 +291,22 @@ public class Ip4RangeSet2
 
     public void Union(Ip4Range other)
     {
-        var intersectableRanges = _set.Where(other.IsIntersects);
-        var forAdd = other;
-        foreach (var intersectableRange in intersectableRanges)
+        IEnumerable<Ip4Range> intersectableRanges = _set.Where(other.IsIntersects);
+        Ip4Range forAdd = other;
+        foreach (Ip4Range intersectableRange in intersectableRanges)
         {
             forAdd = forAdd.IntersectableUnion(intersectableRange);
-            _set.Remove(intersectableRange);
+            _ = _set.Remove(intersectableRange);
         }
 
-        _set.Add(forAdd);
+        _ = _set.Add(forAdd);
     }
 
     public void Union(Ip4RangeSet2 other)
     {
         ArgumentNullException.ThrowIfNull(other);
 
-        foreach (var item in other._set)
+        foreach (Ip4Range item in other._set)
         {
             Union(item);
         }
@@ -353,15 +314,15 @@ public class Ip4RangeSet2
 
     public void Except(Ip4Range other)
     {
-        var intersectableRanges = _set.Where(other.IsIntersects);
-        foreach (var intersectableRange in intersectableRanges)
+        IEnumerable<Ip4Range> intersectableRanges = _set.Where(other.IsIntersects);
+        foreach (Ip4Range intersectableRange in intersectableRanges)
         {
-            var forAdds = intersectableRange.IntersectableExcept(other);
-            foreach (var forAdd in forAdds)
+            Ip4Range[] forAdds = intersectableRange.IntersectableExcept(other);
+            foreach (Ip4Range forAdd in forAdds)
             {
-                _set.Add(forAdd);
+                _ = _set.Add(forAdd);
             }
-            _set.Remove(intersectableRange);
+            _ = _set.Remove(intersectableRange);
         }
     }
 
@@ -369,7 +330,7 @@ public class Ip4RangeSet2
     {
         ArgumentNullException.ThrowIfNull(other);
 
-        foreach (var item in other._set)
+        foreach (Ip4Range item in other._set)
         {
             Except(item);
         }
@@ -377,12 +338,12 @@ public class Ip4RangeSet2
 
     public void Intersect(Ip4Range other)
     {
-        var intersectableRanges = _set.Where(other.IsIntersects);
-        foreach (var intersectableRange in intersectableRanges)
+        IEnumerable<Ip4Range> intersectableRanges = _set.Where(other.IsIntersects);
+        foreach (Ip4Range intersectableRange in intersectableRanges)
         {
-            var forAdd = intersectableRange.IntersectableIntersect(other);
-            _set.Add(forAdd);
-            _set.Remove(intersectableRange);
+            Ip4Range forAdd = intersectableRange.IntersectableIntersect(other);
+            _ = _set.Add(forAdd);
+            _ = _set.Remove(intersectableRange);
         }
     }
 
@@ -390,7 +351,7 @@ public class Ip4RangeSet2
     {
         ArgumentNullException.ThrowIfNull(other);
 
-        foreach (var item in other._set)
+        foreach (Ip4Range item in other._set)
         {
             Intersect(item);
         }
@@ -402,7 +363,7 @@ public class Ip4RangeSet2
         LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
         while (current is not null && current.Next is not null)
         {
-            var next = current.Next;
+            LinkedListNode<Ip4Range> next = current.Next;
             // if gap between neighbors equals or more than delta, union them
             if ((ulong)(uint)current.Value.LastAddress + delta + 1 >= (uint)next.Value.FirstAddress)
             {
@@ -437,7 +398,7 @@ public class Ip4RangeSet2
             // if current range is equals or smaller than delta, remove it
             if (current.Value.Count <= delta)
             {
-                var toDelete = current;
+                LinkedListNode<Ip4Range> toDelete = current;
                 current = current.Next;
                 sortedLinkedList.Remove(toDelete);
                 wasElementRemoved = true;
@@ -467,7 +428,7 @@ public class Ip4RangeSet2
         while (true)
         {
             ulong minSize = result.ToIp4Ranges().Min(x => x.Count);
-            Ip4RangeSet2 negative = new Ip4RangeSet2(All.ToIp4Ranges());
+            Ip4RangeSet2 negative = new(All.ToIp4Ranges());
             negative.Except(result);
             ulong minGap = negative.ToIp4Ranges().Min(x => x.Count);
 
@@ -512,10 +473,10 @@ public class Ip4RangeSet2
 
     public override string ToString()
     {
-        StringBuilder result = new StringBuilder();
-        foreach (var item in _set)
+        StringBuilder result = new();
+        foreach (Ip4Range item in _set)
         {
-            result.AppendLine(item.ToString());
+            _ = result.AppendLine(item.ToString());
         }
 
         return result.ToString();

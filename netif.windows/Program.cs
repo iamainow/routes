@@ -12,15 +12,15 @@ internal static class Program
 {
     private static void PrintAllInterfaces()
     {
-        var table = new Lazy<Ip4RouteEntry[]>(Ip4RouteTable.GetRouteTable);
+        Lazy<Ip4RouteEntry[]> table = new(Ip4RouteTable.GetRouteTable);
 
-        var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
+        List<NetworkInterface> networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
             .Where(x => x.IsIpv4())
             .OrderBy(x => x.GetInterfaceIndex())
             .ToList();
 
         Console.WriteLine("{0, 30} {1, 14} {2, 18}", "Name", "InterfaceIndex", "PrimaryGateway");
-        foreach (var networkInterface in networkInterfaces)
+        foreach (NetworkInterface? networkInterface in networkInterfaces)
         {
             Console.WriteLine("{0, 30} {1, 14} {2, 18}", new string(networkInterface.Name.Take(30).ToArray()), networkInterface.GetInterfaceIndex(), networkInterface.GetPrimaryGateway(() => table.Value));
         }
@@ -42,7 +42,7 @@ internal static class Program
 
     private static void PrintRoutesWithInterfaceName(string name)
     {
-        var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
+        NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()
             .Where(x => x.Name == name)
             .First();
 
@@ -53,7 +53,7 @@ internal static class Program
 
     private static void PrintRoutesWithInterfaceNameAndMetric(string name, int metric)
     {
-        var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
+        NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()
             .Where(x => x.Name == name)
             .First();
 
@@ -90,30 +90,30 @@ internal static class Program
 
     private static void ChangeRoutes(Ip4RangeSet targetRangeSet, string interfaceName, int metric, Action<string?> successWriteLine, Action<string?> errorWriteLine)
     {
-        var networkInterface = NetworkInterface.GetAllNetworkInterfaces()
+        NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()
             .Where(x => x.Name == interfaceName)
             .Single();
 
         int interfaceIndex = networkInterface.GetInterfaceIndex();
 
-        var table = new Lazy<Ip4RouteEntry[]>(Ip4RouteTable.GetRouteTable);
+        Lazy<Ip4RouteEntry[]> table = new(Ip4RouteTable.GetRouteTable);
 
         IPAddress gatewayIp = networkInterface.GetPrimaryGateway(() => table.Value) ?? throw new InvalidOperationException("PrimaryGateway is null");
 
-        var currentRoutes = Ip4RouteTable.GetRouteTable()
+        RouteWithMetricDto[] currentRoutes = Ip4RouteTable.GetRouteTable()
             .Where(x => x.InterfaceIndex == interfaceIndex)
             .Where(x => x.Metric == metric)
             .Select(x => new RouteWithMetricDto(new RouteWithoutMetricDto(x.DestinationIP, x.SubnetMask, x.GatewayIP), x.Metric))
             .ToArray();
 
-        var targetRoutes = targetRangeSet.ToIp4Subnets()
+        RouteWithMetricDto[] targetRoutes = targetRangeSet.ToIp4Subnets()
             .Select(x => new RouteWithMetricDto(new RouteWithoutMetricDto(x.FirstAddress, x.Mask, gatewayIp), metric))
             .ToArray();
 
-        List<RouteWithMetricDto> routesToRemove = new();
-        List<RouteWithMetricDto> routesToAdd = new();
-        List<ChangeMetricRouteDto> routesToChangeMetric = new();
-        List<RouteWithMetricDto> routesUnchanged = new();
+        List<RouteWithMetricDto> routesToRemove = [];
+        List<RouteWithMetricDto> routesToAdd = [];
+        List<ChangeMetricRouteDto> routesToChangeMetric = [];
+        List<RouteWithMetricDto> routesUnchanged = [];
 
         RoutesDifferenceCalculator.CalculateDifference(
             source: currentRoutes,
@@ -124,7 +124,7 @@ internal static class Program
             toUnchanged: routesUnchanged.Add
         );
 
-        foreach (var route in routesToChangeMetric)
+        foreach (ChangeMetricRouteDto route in routesToChangeMetric)
         {
             try
             {
@@ -144,7 +144,7 @@ internal static class Program
             }
         }
 
-        foreach (var route in routesToRemove)
+        foreach (RouteWithMetricDto route in routesToRemove)
         {
             try
             {
@@ -163,7 +163,7 @@ internal static class Program
             }
         }
 
-        foreach (var route in routesToAdd)
+        foreach (RouteWithMetricDto route in routesToAdd)
         {
             try
             {
@@ -195,7 +195,7 @@ internal static class Program
             Ip4RangeSet ip4RangeSet = new();
             while ((line = Console.ReadLine()) != null)
             {
-                var ranges = Ip4SubnetParser.GetRanges(line, errorTextWriterWrapper.WriteLine);
+                IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line, errorTextWriterWrapper.WriteLine);
                 Ip4RangeSet rangesSet = new(ranges);
 
                 ip4RangeSet = ip4RangeSet.Union(rangesSet);

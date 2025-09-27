@@ -14,9 +14,9 @@ public class Ip4RangeTest
     [InlineData(20, 30, "0.0.0.10-0.0.0.19")]
     public void IntersectableExcept_Intersectable_BorderConditions(uint start, uint end, string expectedResult)
     {
-        Ip4Range range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        Ip4Range range = new(new Ip4Address(10), new Ip4Address(20));
 
-        var result = range.Except(new Ip4Range(new Ip4Address(start), new Ip4Address(end)));
+        Ip4Range[] result = range.Except(new Ip4Range(new Ip4Address(start), new Ip4Address(end)));
 
         string actualResult = string.Join(',', result);
 
@@ -30,9 +30,9 @@ public class Ip4RangeTest
     [InlineData(15, 30, "0.0.0.10-0.0.0.14")]
     public void IntersectableExcept_Intersectable_NormalConditions(uint start, uint end, string expectedResult)
     {
-        Ip4Range range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        Ip4Range range = new(new Ip4Address(10), new Ip4Address(20));
 
-        var result = range.Except(new Ip4Range(new Ip4Address(start), new Ip4Address(end)));
+        Ip4Range[] result = range.Except(new Ip4Range(new Ip4Address(start), new Ip4Address(end)));
 
         string actualResult = string.Join(',', result);
 
@@ -47,7 +47,7 @@ public class Ip4RangeTest
     [InlineData("0.0.0.0", "255.255.255.255", "0.0.0.0/0")]
     public void ToSubsets_SingularSubset(string start, string end, string expectedResult)
     {
-        Ip4Range range = new Ip4Range(Ip4Address.Parse(start), Ip4Address.Parse(end));
+        Ip4Range range = new(Ip4Address.Parse(start), Ip4Address.Parse(end));
 
         Assert.Equal(expectedResult, string.Join(", ", range.ToSubnets().OrderBy(x => x.FirstAddress)));
     }
@@ -58,7 +58,7 @@ public class Ip4RangeTest
     [InlineData("81.3.192.0", "81.4.191.255", "81.3.192.0/18, 81.4.0.0/17, 81.4.128.0/18")]
     public void ToSubsets_MultipleSubsets(string start, string end, string expectedResult)
     {
-        Ip4Range range = new Ip4Range(Ip4Address.Parse(start), Ip4Address.Parse(end));
+        Ip4Range range = new(Ip4Address.Parse(start), Ip4Address.Parse(end));
 
         Assert.Equal(expectedResult, string.Join(", ", range.ToSubnets().OrderBy(x => x.FirstAddress)));
     }

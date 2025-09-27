@@ -47,7 +47,7 @@ public static class Ip4RouteTable
     public static void CreateRoute(Ip4RouteCreateDto routeEntry)
     {
         ArgumentNullException.ThrowIfNull(routeEntry);
-        var route = new NativeMethods.MIB_IPFORWARDROW
+        NativeMethods.MIB_IPFORWARDROW route = new()
         {
             dwForwardDest = BitConverter.ToUInt32(routeEntry.DestinationIP.GetAddressBytes()),
             dwForwardMask = BitConverter.ToUInt32(routeEntry.SubnetMask.GetAddressBytes()),
@@ -79,7 +79,7 @@ public static class Ip4RouteTable
     public static void DeleteRoute(Ip4RouteDeleteDto routeEntry)
     {
         ArgumentNullException.ThrowIfNull(routeEntry);
-        var route = new NativeMethods.MIB_IPFORWARDROW
+        NativeMethods.MIB_IPFORWARDROW route = new()
         {
             dwForwardDest = BitConverter.ToUInt32(routeEntry.DestinationIP.GetAddressBytes()),
             dwForwardMask = BitConverter.ToUInt32(routeEntry.SubnetMask.GetAddressBytes()),
@@ -111,7 +111,7 @@ public static class Ip4RouteTable
     public static void ChangeMetric(Ip4RouteChangeMetricDto routeEntry)
     {
         ArgumentNullException.ThrowIfNull(routeEntry);
-        var route = new NativeMethods.MIB_IPFORWARDROW
+        NativeMethods.MIB_IPFORWARDROW route = new()
         {
             dwForwardDest = BitConverter.ToUInt32(routeEntry.DestinationIP.GetAddressBytes()),
             dwForwardMask = BitConverter.ToUInt32(routeEntry.SubnetMask.GetAddressBytes()),
