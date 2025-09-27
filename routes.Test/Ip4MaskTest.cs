@@ -89,8 +89,8 @@ public class Ip4MaskTest
     [InlineData("255.192.0.0")]
     public void ToIPAddress(string address)
     {
-        Ip4Mask ip4mask = Ip4Mask.Parse(address);
-        IPAddress ipAddress = (IPAddress)ip4mask;
+        var ip4mask = Ip4Mask.Parse(address);
+        var ipAddress = (IPAddress)ip4mask;
 
         string actualValue = ipAddress.ToString();
 
@@ -101,8 +101,8 @@ public class Ip4MaskTest
     [InlineData("255.192.0.0")]
     public void FromIPAddress(string address)
     {
-        IPAddress ipAddress = IPAddress.Parse(address);
-        Ip4Mask ip4mask = (Ip4Mask)ipAddress;
+        var ipAddress = IPAddress.Parse(address);
+        var ip4mask = (Ip4Mask)ipAddress;
 
         string actualValue = ip4mask.ToFullString();
 

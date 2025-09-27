@@ -14,7 +14,7 @@ internal static class Program
     {
         Lazy<Ip4RouteEntry[]> table = new(Ip4RouteTable.GetRouteTable);
 
-        List<NetworkInterface> networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
+        var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
             .Where(x => x.IsIpv4())
             .OrderBy(x => x.GetInterfaceIndex())
             .ToList();
@@ -65,7 +65,7 @@ internal static class Program
             .ToArray();
 
         Console.WriteLine("{0,21} {1,18} {2,6}", "Subnet", "Gateway", "Metric");
-        foreach (Ip4RouteEntry entry in routeTable)
+        foreach (Ip4RouteEntry? entry in routeTable)
         {
             Ip4Subnet subnet = new(entry.DestinationIP, entry.SubnetMask);
             Console.WriteLine("{0,21} {1,18} {2,6}", subnet, entry.GatewayIP, entry.Metric);
@@ -80,7 +80,7 @@ internal static class Program
             .ToArray();
 
         Console.WriteLine("{0,21} {1,18} {2,6}", "Subnet", "Gateway", "Metric");
-        foreach (Ip4RouteEntry entry in routeTable)
+        foreach (Ip4RouteEntry? entry in routeTable)
         {
             Ip4Subnet subnet = new(entry.DestinationIP, entry.SubnetMask);
             Console.WriteLine("{0,21} {1,18} {2,6}", subnet, entry.GatewayIP, entry.Metric);

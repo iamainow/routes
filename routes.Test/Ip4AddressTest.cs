@@ -37,8 +37,8 @@ public class Ip4AddressTest
     [InlineData("192.168.1.1")]
     public void ToIPAddress(string address)
     {
-        Ip4Address ip4Address = Ip4Address.Parse(address);
-        IPAddress ipAddress = (IPAddress)ip4Address;
+        var ip4Address = Ip4Address.Parse(address);
+        var ipAddress = (IPAddress)ip4Address;
 
         string actualValue = ipAddress.ToString();
 
@@ -49,8 +49,8 @@ public class Ip4AddressTest
     [InlineData("192.168.1.1")]
     public void FromIPAddress(string address)
     {
-        IPAddress ipAddress = IPAddress.Parse(address);
-        Ip4Address ip4Address = (Ip4Address)ipAddress;
+        var ipAddress = IPAddress.Parse(address);
+        var ip4Address = (Ip4Address)ipAddress;
 
         string actualValue = ip4Address.ToString();
 

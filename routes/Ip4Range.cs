@@ -63,8 +63,8 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
 
     public Ip4Range IntersectableIntersect(Ip4Range other)
     {
-        Ip4Address start = Ip4Address.Max(FirstAddress, other.FirstAddress);
-        Ip4Address end = Ip4Address.Min(LastAddress, other.LastAddress);
+        var start = Ip4Address.Max(FirstAddress, other.FirstAddress);
+        var end = Ip4Address.Min(LastAddress, other.LastAddress);
         return new Ip4Range(start, end);
     }
 
