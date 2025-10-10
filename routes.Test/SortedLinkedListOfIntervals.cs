@@ -1,9 +1,8 @@
-﻿using routes.v2;
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace routes.Test;
 
-internal readonly struct Point : ICountable<Point>, IComparable<Point>, IComparisonOperators<Point, Point, bool>, IEquatable<Point>
+internal readonly struct Point : IComparable<Point>, IComparisonOperators<Point, Point, bool>, IEquatable<Point>
 {
     public int Value { get; }
 
@@ -30,16 +29,6 @@ internal readonly struct Point : ICountable<Point>, IComparable<Point>, ICompari
     public override int GetHashCode()
     {
         return HashCode.Combine(Value);
-    }
-
-    public Point GetNext()
-    {
-        return new Point(Value + 1);
-    }
-
-    public Point GetPrevious()
-    {
-        return new Point(Value - 1);
     }
 
     public static bool operator >(Point left, Point right)
@@ -80,15 +69,5 @@ internal readonly struct Point : ICountable<Point>, IComparable<Point>, ICompari
     public static Point ToPoint(int val)
     {
         return new Point(val);
-    }
-}
-public class SortedLinkedListOfIntervalsTest
-{
-    [Theory]
-    [InlineData(5, 7)]
-    internal void UnionTest(Point b1, Point e1)
-    {
-        SortedLinkedListOfIntervals<Point> test = new();
-        test.Union(new Interval<Point>(b1, e1));
     }
 }
