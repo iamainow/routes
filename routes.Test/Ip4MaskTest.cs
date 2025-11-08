@@ -108,4 +108,318 @@ public class Ip4MaskTest
 
         Assert.Equal(address, actualValue);
     }
+
+    [Theory]
+    [InlineData(0, 0x00000000u)]
+    [InlineData(8, 0xFF000000u)]
+    [InlineData(16, 0xFFFF0000u)]
+    [InlineData(24, 0xFFFFFF00u)]
+    [InlineData(32, 0xFFFFFFFFu)]
+    public void Constructor_FromCidr_CreatesCorrectMask(int cidr, uint expectedMask)
+    {
+        var mask = new Ip4Mask(cidr);
+
+        Assert.Equal(expectedMask, mask.AsUInt32());
+        Assert.Equal(cidr, mask.Cidr);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(33)]
+    [InlineData(100)]
+    public void Constructor_FromCidr_InvalidCidr_ThrowsArgumentException(int invalidCidr)
+    {
+        Assert.Throws<ArgumentException>(() => new Ip4Mask(invalidCidr));
+    }
+
+    [Theory]
+    [InlineData(0xFFFFFF00u, 24)]
+    [InlineData(0xFFFFFFFFu, 32)]
+    [InlineData(0x00000000u, 0)]
+    [InlineData(0xFFFFFFF0u, 28)]
+    public void Constructor_FromUInt_CreatesCorrectMask(uint maskValue, int expectedCidr)
+    {
+        var mask = new Ip4Mask(maskValue);
+
+        Assert.Equal(expectedCidr, mask.Cidr);
+        Assert.Equal(maskValue, mask.AsUInt32());
+    }
+
+    [Theory]
+    [InlineData(0x12345678u)]
+    [InlineData(0xFFFFFF01u)]
+    [InlineData(0x80000001u)]
+    public void Constructor_FromUInt_InvalidMask_ThrowsArgumentException(uint invalidMask)
+    {
+        Assert.Throws<ArgumentException>(() => new Ip4Mask(invalidMask));
+    }
+
+    [Theory]
+    [InlineData(255, 255, 255, 0, 24)]
+    [InlineData(255, 255, 0, 0, 16)]
+    [InlineData(255, 0, 0, 0, 8)]
+    [InlineData(0, 0, 0, 0, 0)]
+    public void Constructor_FromBytes_CreatesCorrectMask(byte b1, byte b2, byte b3, byte b4, int expectedCidr)
+    {
+        var mask = new Ip4Mask(b1, b2, b3, b4);
+
+        Assert.Equal(expectedCidr, mask.Cidr);
+    }
+
+    [Fact]
+    public void Constructor_ByteArray_ValidArray_CreatesMask()
+    {
+        byte[] bytes = [255, 255, 255, 0];
+        var mask = new Ip4Mask(bytes);
+
+        Assert.Equal(24, mask.Cidr);
+    }
+
+    [Fact]
+    public void Constructor_ByteArray_NullArray_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => new Ip4Mask((byte[])null!));
+    }
+
+    [Theory]
+    [InlineData(3)]
+    [InlineData(5)]
+    [InlineData(0)]
+    public void Constructor_ByteArray_InvalidLength_ThrowsArgumentException(int length)
+    {
+        byte[] bytes = new byte[length];
+        Assert.Throws<ArgumentException>(() => new Ip4Mask(bytes));
+    }
+
+    [Theory]
+    [InlineData("/24", 24)]
+    [InlineData("24", 24)]
+    [InlineData("/0", 0)]
+    [InlineData("32", 32)]
+    [InlineData("/16", 16)]
+    public void ParseCidrString_ValidInput_ReturnsCorrectMask(string input, int expectedCidr)
+    {
+        var mask = Ip4Mask.ParseCidrString(input);
+
+        Assert.Equal(expectedCidr, mask.Cidr);
+    }
+
+    [Theory]
+    [InlineData("/24", true, 24)]
+    [InlineData("24", true, 24)]
+    [InlineData("/33", false, 0)]
+    [InlineData("abc", false, 0)]
+    [InlineData("/-1", false, 0)]
+    public void TryParseCidrString_VariousInputs_ReturnsExpectedResult(string input, bool expectedSuccess, int expectedCidr)
+    {
+        bool result = Ip4Mask.TryParseCidrString(input, out var mask);
+
+        Assert.Equal(expectedSuccess, result);
+        if (expectedSuccess)
+        {
+            Assert.Equal(expectedCidr, mask.Cidr);
+        }
+    }
+
+    [Fact]
+    public void TryParseCidrString_NullString_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => Ip4Mask.TryParseCidrString(null!, out _));
+    }
+
+    [Theory]
+    [InlineData("255.255.255.0", 24)]
+    [InlineData("255.255.0.0", 16)]
+    [InlineData("255.0.0.0", 8)]
+    [InlineData("0.0.0.0", 0)]
+    public void ParseFullString_ValidInput_ReturnsCorrectMask(string input, int expectedCidr)
+    {
+        var mask = Ip4Mask.ParseFullString(input);
+
+        Assert.Equal(expectedCidr, mask.Cidr);
+        Assert.Equal(input, mask.ToFullString());
+    }
+
+    [Theory]
+    [InlineData("255.255.255")]
+    [InlineData("256.0.0.0")]
+    [InlineData("abc.def.ghi.jkl")]
+    public void ParseFullString_InvalidInput_ThrowsFormatException(string input)
+    {
+        Assert.Throws<FormatException>(() => Ip4Mask.ParseFullString(input));
+    }
+
+    [Theory]
+    [InlineData("255.255.255.0", true, 24)]
+    [InlineData("255.255.0.0", true, 16)]
+    [InlineData("255.255.255", false, 0)]
+    [InlineData("256.0.0.0", false, 0)]
+    public void TryParseFullString_VariousInputs_ReturnsExpectedResult(string input, bool expectedSuccess, int expectedCidr)
+    {
+        bool result = Ip4Mask.TryParseFullString(input, out var mask);
+
+        Assert.Equal(expectedSuccess, result);
+        if (expectedSuccess)
+        {
+            Assert.Equal(expectedCidr, mask.Cidr);
+        }
+    }
+
+    [Theory]
+    [InlineData("/24", 24)]
+    [InlineData("24", 24)]
+    [InlineData("255.255.255.0", 24)]
+    [InlineData("/16", 16)]
+    [InlineData("255.255.0.0", 16)]
+    public void Parse_VariousFormats_ReturnsCorrectMask(string input, int expectedCidr)
+    {
+        var mask = Ip4Mask.Parse(input);
+
+        Assert.Equal(expectedCidr, mask.Cidr);
+    }
+
+    [Theory]
+    [InlineData("invalid")]
+    [InlineData("/33")]
+    [InlineData("256.0.0.0")]
+    public void Parse_InvalidInput_ThrowsFormatException(string input)
+    {
+        Assert.Throws<FormatException>(() => Ip4Mask.Parse(input));
+    }
+
+    [Theory]
+    [InlineData("/24", true, 24)]
+    [InlineData("255.255.255.0", true, 24)]
+    [InlineData("invalid", false, 0)]
+    [InlineData("/33", false, 0)]
+    public void TryParse_VariousInputs_ReturnsExpectedResult(string input, bool expectedSuccess, int expectedCidr)
+    {
+        bool result = Ip4Mask.TryParse(input, out var mask);
+
+        Assert.Equal(expectedSuccess, result);
+        if (expectedSuccess)
+        {
+            Assert.Equal(expectedCidr, mask.Cidr);
+        }
+    }
+
+    [Theory]
+    [InlineData(0, 4294967296UL)]
+    [InlineData(8, 16777216UL)]
+    [InlineData(16, 65536UL)]
+    [InlineData(24, 256UL)]
+    [InlineData(32, 1UL)]
+    public void Count_ReturnsCorrectNumberOfAddresses(int cidr, ulong expectedCount)
+    {
+        var mask = new Ip4Mask(cidr);
+
+        Assert.Equal(expectedCount, mask.Count);
+    }
+
+    [Theory]
+    [InlineData(24, "/24")]
+    [InlineData(16, "/16")]
+    [InlineData(0, "/0")]
+    [InlineData(32, "/32")]
+    public void ToCidrString_ReturnsCorrectFormat(int cidr, string expected)
+    {
+        var mask = new Ip4Mask(cidr);
+
+        Assert.Equal(expected, mask.ToCidrString());
+    }
+
+    [Theory]
+    [InlineData(24, "/24")]
+    [InlineData(16, "/16")]
+    [InlineData(32, "/32")]
+    public void ToString_ReturnsCidrFormat(int cidr, string expected)
+    {
+        var mask = new Ip4Mask(cidr);
+
+        Assert.Equal(expected, mask.ToString());
+    }
+
+    [Fact]
+    public void Equals_SameMask_ReturnsTrue()
+    {
+        var mask1 = new Ip4Mask(24);
+        var mask2 = new Ip4Mask(24);
+
+        Assert.True(mask1.Equals(mask2));
+        Assert.True(mask1 == mask2);
+        Assert.False(mask1 != mask2);
+    }
+
+    [Fact]
+    public void Equals_DifferentMask_ReturnsFalse()
+    {
+        var mask1 = new Ip4Mask(24);
+        var mask2 = new Ip4Mask(16);
+
+        Assert.False(mask1.Equals(mask2));
+        Assert.False(mask1 == mask2);
+        Assert.True(mask1 != mask2);
+    }
+
+    [Fact]
+    public void GetHashCode_SameMask_ReturnsSameHash()
+    {
+        var mask1 = new Ip4Mask(24);
+        var mask2 = new Ip4Mask(24);
+
+        Assert.Equal(mask1.GetHashCode(), mask2.GetHashCode());
+    }
+
+    [Fact]
+    public void StaticFields_HaveCorrectValues()
+    {
+        Assert.Equal(0, Ip4Mask.Full.Cidr);
+        Assert.Equal(32, Ip4Mask.SingleAddress.Cidr);
+    }
+
+    [Fact]
+    public void AsByteArray_ReturnsCorrectBytes()
+    {
+        var mask = new Ip4Mask(24);
+
+        byte[] bytes = mask.AsByteArray();
+
+        Assert.Equal([255, 255, 255, 0], bytes);
+    }
+
+    [Fact]
+    public void FromIPAddress_ValidIPAddress_CreatesCorrectMask()
+    {
+        var ipAddress = IPAddress.Parse("255.255.255.0");
+
+        var mask = Ip4Mask.FromIPAddress(ipAddress);
+
+        Assert.Equal(24, mask.Cidr);
+    }
+
+    [Fact]
+    public void FromIPAddress_NullIPAddress_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => Ip4Mask.FromIPAddress(null!));
+    }
+
+    [Fact]
+    public void ImplicitCast_ToIPAddress_WorksCorrectly()
+    {
+        var mask = new Ip4Mask(24);
+
+        IPAddress ipAddress = mask;
+
+        Assert.Equal("255.255.255.0", ipAddress.ToString());
+    }
+
+    [Fact]
+    public void ImplicitCast_FromIPAddress_WorksCorrectly()
+    {
+        var ipAddress = IPAddress.Parse("255.255.255.0");
+
+        Ip4Mask mask = ipAddress;
+
+        Assert.Equal(24, mask.Cidr);
+    }
 }
