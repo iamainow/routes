@@ -90,12 +90,12 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
     public Ip4Subnet[] ToSubnets()
     {
         List<Ip4Subnet> result = [];
-        SearchSubnetыWithinRange(this, result, 32);
+        SearchSubnetsWithinRange(this, result, 32);
 
         return result.ToArray();
     }
 
-    private static void SearchSubnetыWithinRange(Ip4Range ipRange, List<Ip4Subnet> result, int position)
+    private static void SearchSubnetsWithinRange(Ip4Range ipRange, List<Ip4Subnet> result, int position)
     {
         if (position == 0)
         {
@@ -114,15 +114,15 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
                 else
                 {
                     Ip4Address end1 = new(ipRange.FirstAddress.ToUInt32() | GetLastBits(0xFFFFFFFF, position - 1));
-                    SearchSubnetыWithinRange(new Ip4Range(ipRange.FirstAddress, end1), result, position - 1);
+                    SearchSubnetsWithinRange(new Ip4Range(ipRange.FirstAddress, end1), result, position - 1);
 
                     Ip4Address start2 = new(GetFirstBits(ipRange.LastAddress.ToUInt32(), 32 - position + 1));
-                    SearchSubnetыWithinRange(new Ip4Range(start2, ipRange.LastAddress), result, position - 1);
+                    SearchSubnetsWithinRange(new Ip4Range(start2, ipRange.LastAddress), result, position - 1);
                 }
             }
             else
             {
-                SearchSubnetыWithinRange(ipRange, result, position - 1);
+                SearchSubnetsWithinRange(ipRange, result, position - 1);
             }
         }
     }
