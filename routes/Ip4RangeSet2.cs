@@ -176,107 +176,99 @@ public class Ip4RangeSet2
     //    return result;
     //}
 
-    //private static bool ExpandSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
-    //{
-    //    bool wasListChanged = false;
-    //    LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
-    //    while (current is not null && current.Next is not null)
-    //    {
-    //        LinkedListNode<Ip4Range> next = current.Next;
-    //        // if gap between neighbors equals or more than delta, union them
-    //        if ((ulong)(uint)current.Value.LastAddress + delta + 1 >= (uint)next.Value.FirstAddress)
-    //        {
-    //            current.Value = new Ip4Range(current.Value.FirstAddress, next.Value.LastAddress);
-    //            sortedLinkedList.Remove(next);
-    //            wasListChanged = true;
-    //        }
-    //        else
-    //        {
-    //            current = current.Next;
-    //        }
-    //    }
+    private static bool ExpandSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
+    {
+        bool wasListChanged = false;
+        LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
+        while (current is not null && current.Next is not null)
+        {
+            LinkedListNode<Ip4Range> next = current.Next;
+            // if gap between neighbors equals or more than delta, union them
+            if ((ulong)(uint)current.Value.LastAddress + delta + 1 >= (uint)next.Value.FirstAddress)
+            {
+                current.Value = new Ip4Range(current.Value.FirstAddress, next.Value.LastAddress);
+                sortedLinkedList.Remove(next);
+                wasListChanged = true;
+            }
+            else
+            {
+                current = current.Next;
+            }
+        }
 
-    //    return wasListChanged;
-    //}
+        return wasListChanged;
+    }
 
-    //public static Ip4RangeSet2 ExpandSet(Ip4RangeSet2 set, uint delta, out bool wasListChanged)
-    //{
-    //    ArgumentNullException.ThrowIfNull(set);
-    //    LinkedList<Ip4Range> list = new(set.ToIp4Ranges().OrderBy(x => x.FirstAddress));
+    public void ExpandSet(uint delta, out bool wasListChanged)
+    {
+        wasListChanged = ExpandSortedLinkedList(this._list, delta);
+    }
 
-    //    wasListChanged = ExpandSortedLinkedList(list, delta);
-    //    return new Ip4RangeSet2(list);
-    //}
+    private static bool ShrinkSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
+    {
+        bool wasElementRemoved = false;
+        LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
+        while (current is not null)
+        {
+            // if current range is equals or smaller than delta, remove it
+            if (current.Value.Count <= delta)
+            {
+                LinkedListNode<Ip4Range> toDelete = current;
+                current = current.Next;
+                sortedLinkedList.Remove(toDelete);
+                wasElementRemoved = true;
+            }
+            else
+            {
+                current = current.Next;
+            }
+        }
 
-    //private static bool ShrinkSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
-    //{
-    //    bool wasElementRemoved = false;
-    //    LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
-    //    while (current is not null)
-    //    {
-    //        // if current range is equals or smaller than delta, remove it
-    //        if (current.Value.Count <= delta)
-    //        {
-    //            LinkedListNode<Ip4Range> toDelete = current;
-    //            current = current.Next;
-    //            sortedLinkedList.Remove(toDelete);
-    //            wasElementRemoved = true;
-    //        }
-    //        else
-    //        {
-    //            current = current.Next;
-    //        }
-    //    }
+        return wasElementRemoved;
+    }
 
-    //    return wasElementRemoved;
-    //}
+    public void ShrinkSet(uint delta, out bool wasListChanged)
+    {
+        wasListChanged = ShrinkSortedLinkedList(this._list, delta);
+    }
 
-    //public static Ip4RangeSet2 ShrinkSet(Ip4RangeSet2 set, uint delta, out bool wasListChanged)
-    //{
-    //    ArgumentNullException.ThrowIfNull(set);
-    //    LinkedList<Ip4Range> list = new(set.ToIp4Ranges().OrderBy(x => x.FirstAddress));
+    public void Simplify(uint delta)
+    {
+        while (this._list.Count >= 2)
+        {
+            ulong minSize = this.ToIp4Ranges().Min(x => x.Count);
 
-    //    wasListChanged = ShrinkSortedLinkedList(list, delta);
-    //    return new Ip4RangeSet2(list);
-    //}
+            var temp = All;
+            temp.Except(this);
 
-    //public Ip4RangeSet2 Simplify(uint delta)
-    //{
-    //    Ip4RangeSet2 result = this;
+            ulong minGap = temp.ToIp4Ranges().Min(x => x.Count);
 
-    //    while (true)
-    //    {
-    //        ulong minSize = result.ToIp4Ranges().Min(x => x.Count);
-    //        ulong minGap = All.Except(result).ToIp4Ranges().Min(x => x.Count);
+            if (minSize <= minGap && minSize <= delta && minSize <= uint.MaxValue)
+            {
+                ShrinkSet((uint)minSize, out _);
+                continue;
+            }
+            else if (minGap <= minSize && minGap <= delta && minGap <= uint.MaxValue)
+            {
+                ExpandSet((uint)minGap, out _);
+                continue;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
 
-    //        if (minSize <= minGap && minSize <= delta && minSize <= uint.MaxValue)
-    //        {
-    //            result = ShrinkSet(result, (uint)minSize, out _);
-    //            continue;
-    //        }
-    //        else if (minGap <= minSize && minGap <= delta && minGap <= uint.MaxValue)
-    //        {
-    //            result = ExpandSet(result, (uint)minGap, out _);
-    //            continue;
-    //        }
-    //        else
-    //        {
-    //            break;
-    //        }
-    //    }
+    public void Normalize()
+    {
+        ExpandSet(0, out _);
+    }
 
-    //    return result;
-    //}
-
-    //public Ip4RangeSet2 Normalize()
-    //{
-    //    return ExpandSet(this, 0, out _);
-    //}
-
-    //public Ip4RangeSet2 MinimizeSubnets(uint delta)
-    //{
-    //    return new Ip4RangeSet2(ToIp4Subnets().Where(x => x.Count > delta));
-    //}
+    public Ip4RangeSet2 MinimizeSubnets(uint delta)
+    {
+        return new Ip4RangeSet2(ToIp4Subnets().Where(x => x.Count > delta));
+    }
 
     public Ip4Range[] ToIp4Ranges()
     {
