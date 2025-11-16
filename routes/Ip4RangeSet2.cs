@@ -99,27 +99,57 @@ public class Ip4RangeSet2
         }
     }
 
-    //public void Except(Ip4Range other)
-    //{
-    //    List<Ip4Range> result = [];
-    //    foreach (Ip4Range item in _list)
-    //    {
-    //        result.AddRange(item.Except(other));
-    //    }
+    public void Except(Ip4Range other)
+    {
+        var current = _list.First;
+        while (current is not null)
+        {
+            if (current.Value.IsIntersects(other))
+            {
+                while (current is not null && current.Value.IsIntersects(other))
+                {
+                    var newElements = current.Value.IntersectableExcept(other);
+                    switch (newElements.Length)
+                    {
+                        case 0:
+                            var toDelete = current;
+                            current = current.Next;
+                            _list.Remove(toDelete);
+                            break;
+                        case 1:
+                            current.Value = newElements[0];
+                            current = current.Next;
+                            break;
+                        case 2:
+                            _list.AddBefore(current, newElements[0]);
+                            current.Value = newElements[1];
+                            current = current.Next;
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                }
 
-    //    return new Ip4RangeSet2(result.ToImmutableList());
-    //}
+                return;
+            }
+            else if (current.Value.FirstAddress > other.LastAddress) // уже прошли место - это означает что нет пересекающихся элементов и нечего исключать
+            {
+                _list.AddBefore(current, other);
+                return;
+            }
 
-    //public void Except(Ip4RangeSet2 other)
-    //{
-    //    ArgumentNullException.ThrowIfNull(other);
-    //    Ip4RangeSet2 result = this;
-    //    foreach (Ip4Range item in other._list)
-    //    {
-    //        result = result.Except(item);
-    //    }
-    //    return result;
-    //}
+            current = current.Next;
+        }
+    }
+
+    public void Except(Ip4RangeSet2 other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        foreach (Ip4Range item in other._list)
+        {
+            Except(item);
+        }
+    }
 
     //public void Intersect(Ip4Range other)
     //{
