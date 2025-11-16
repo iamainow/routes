@@ -7,8 +7,9 @@ using Ip4Parsers;
 
 namespace routes.Benchmarks;
 
+[SimpleJob(RuntimeMoniker.Net80)]
 [SimpleJob(RuntimeMoniker.Net90)]
-[SimpleJob(RuntimeMoniker.Net10_0)]
+[SimpleJob(RuntimeMoniker.Net10_0, baseline: true)]
 [MemoryDiagnoser]
 public class Ip4RangeSetBenchmarks
 {
@@ -17,7 +18,8 @@ public class Ip4RangeSetBenchmarks
     {
         var all = new Ip4RangeSet(Ip4SubnetParser.GetRanges("0.0.0.0/0"));
         var vpn = new Ip4RangeSet(Ip4SubnetParser.GetRanges("93.183.88.100"));
-        var bogon = new Ip4RangeSet([
+        var bogon = new Ip4RangeSet(new Ip4Range[]
+        {
             Ip4Subnet.Parse("0.0.0.0/8"), // "This" network
             Ip4Subnet.Parse("10.0.0.0/8"), // Private-use networks
             Ip4Subnet.Parse("100.64.0.0/10"), // Carrier-grade NAT
@@ -33,7 +35,7 @@ public class Ip4RangeSetBenchmarks
             Ip4Subnet.Parse("203.0.113.0/24"), // TEST-NET-3
             Ip4Subnet.Parse("224.0.0.0/4"), // Multicast
             Ip4Subnet.Parse("240.0.0.0/4"), // Reserved for future use
-        ]);
+        });
         var file = new Ip4RangeSet(Ip4SubnetParser.GetRanges("""
             2.56.24.0/22
             2.56.88.0/22

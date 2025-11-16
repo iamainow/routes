@@ -57,7 +57,8 @@ internal static class Program
 
     private static Ip4RangeSet bogon()
     {
-        return new Ip4RangeSet([
+        return new Ip4RangeSet(new Ip4Range[]
+        {
             Ip4Subnet.Parse("0.0.0.0/8"), // "This" network
             Ip4Subnet.Parse("10.0.0.0/8"), // Private-use networks
             Ip4Subnet.Parse("100.64.0.0/10"), // Carrier-grade NAT
@@ -73,7 +74,7 @@ internal static class Program
             Ip4Subnet.Parse("203.0.113.0/24"), // TEST-NET-3
             Ip4Subnet.Parse("224.0.0.0/4"), // Multicast
             Ip4Subnet.Parse("240.0.0.0/4"), // Reserved for future use
-        ]);
+        });
     }
 
     public static async Task Main(string[] args)
