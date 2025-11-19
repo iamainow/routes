@@ -28,4 +28,18 @@ BenchmarkRunner.Run<Ip4RangeSetBenchmarks>();
 | o10k      | NativeAOT 10.0 | NativeAOT 10.0 |           NA |          NA |          NA |         NA |       NA |       NA |        NA |
 | o100k     | NativeAOT 10.0 | NativeAOT 10.0 |           NA |          NA |          NA |         NA |       NA |       NA |        NA |
 | o1000k    | NativeAOT 10.0 | NativeAOT 10.0 |           NA |          NA |          NA |         NA |       NA |       NA |        NA |
+
+
+
+| Method    | Job            | Runtime        | Mean         | Error       | StdDev       | Gen0       | Gen1     | Gen2     | Allocated |
+|---------- |--------------- |--------------- |-------------:|------------:|-------------:|-----------:|---------:|---------:|----------:|
+| Realistic | .NET 10.0      | .NET 10.0      | 515,697.5 us | 9,794.04 us | 10,057.76 us |          - |        - |        - |   10.9 MB |
+| o10k      | .NET 10.0      | .NET 10.0      |     708.6 us |    13.30 us |     13.06 us |   138.6719 |   7.8125 |        - |   1.39 MB |
+| o100k     | .NET 10.0      | .NET 10.0      |   8,937.4 us |    93.43 us |     82.83 us |  1390.6250 |  31.2500 |        - |  14.01 MB |
+| o1000k    | .NET 10.0      | .NET 10.0      |  91,436.0 us | 1,765.48 us |  1,733.94 us | 13666.6667 | 833.3333 | 500.0000 | 139.65 MB |
+| Realistic | NativeAOT 10.0 | NativeAOT 10.0 |           NA |          NA |           NA |         NA |       NA |       NA |        NA |
+| o10k      | NativeAOT 10.0 | NativeAOT 10.0 |           NA |          NA |           NA |         NA |       NA |       NA |        NA |
+| o100k     | NativeAOT 10.0 | NativeAOT 10.0 |           NA |          NA |           NA |         NA |       NA |       NA |        NA |
+| o1000k    | NativeAOT 10.0 | NativeAOT 10.0 |           NA |          NA |           NA |         NA |       NA |       NA |        NA |
+
 */
