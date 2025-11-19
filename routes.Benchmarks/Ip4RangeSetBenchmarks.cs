@@ -1,5 +1,6 @@
 #pragma warning disable CA1822
 #pragma warning disable CA1515
+#pragma warning disable CA5394
 
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
@@ -15,10 +16,12 @@ public class Ip4RangeSetBenchmarks
 {
     private string _subnets = "";
     private Ip4Range[] _bogon = [];
+    private List<Ip4Range> ranges = new();
 
     [GlobalSetup]
     public async Task GlobalSetup()
     {
+        Random random = new(42);
         _subnets = await FetchAndParseRuAggregatedZoneAsync();
         _bogon = new Ip4Range[]
         {
@@ -38,6 +41,19 @@ public class Ip4RangeSetBenchmarks
             Ip4Subnet.Parse("224.0.0.0/4"), // Multicast
             Ip4Subnet.Parse("240.0.0.0/4"), // Reserved for future use
         };
+        ranges = Enumerable.Range(0, 1_000_000).Select(_ =>
+        {
+            var address1 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
+            var address2 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
+            if (address1 < address2)
+            {
+                return new Ip4Range(address1, address2);
+            }
+            else
+            {
+                return new Ip4Range(address2, address1);
+            }
+        }).ToList();
     }
 
     private static async Task<string> FetchAndParseRuAggregatedZoneAsync()
@@ -59,7 +75,7 @@ public class Ip4RangeSetBenchmarks
     }
 
     [Benchmark]
-    public Ip4RangeSet2 v2()
+    public Ip4RangeSet2 Realistic()
     {
         var all = new Ip4RangeSet2(Ip4SubnetParser.GetRanges("0.0.0.0/0"));
         var ip = new Ip4RangeSet2(Ip4SubnetParser.GetRanges("1.2.3.4"));
@@ -72,6 +88,64 @@ public class Ip4RangeSetBenchmarks
         result.Except(bogon);
         result.Except(subnets);
         result.Normalize();
+
+        return result;
+    }
+
+
+    [Benchmark]
+    public Ip4RangeSet2 o10k()
+    {
+        Ip4RangeSet2 result = new();
+        for (int index = 0; index < 10_000; index++)
+        {
+            if (index % 2 == 0)
+            {
+                result.Union(ranges[index]);
+            }
+            else
+            {
+                result.Except(ranges[index]);
+            }
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public Ip4RangeSet2 o100k()
+    {
+        Ip4RangeSet2 result = new();
+        for (int index = 0; index < 100_000; index++)
+        {
+            if (index % 2 == 0)
+            {
+                result.Union(ranges[index]);
+            }
+            else
+            {
+                result.Except(ranges[index]);
+            }
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public Ip4RangeSet2 o1000k()
+    {
+        Ip4RangeSet2 result = new();
+        for (int index = 0; index < 1_000_000; index++)
+        {
+            if (index % 2 == 0)
+            {
+                result.Union(ranges[index]);
+            }
+            else
+            {
+                result.Except(ranges[index]);
+            }
+        }
 
         return result;
     }
