@@ -20,9 +20,9 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         return count == 0 ? 0 : (number >> (32 - count)) << (32 - count);
     }
 
-    public static implicit operator Ip4RangeSet(Ip4Range range)
+    public static implicit operator Ip4RangeSet2(Ip4Range range)
     {
-        return new Ip4RangeSet(range);
+        return new Ip4RangeSet2(range);
     }
 
     public static readonly Ip4Range All = new(new Ip4Address(0x00000000), new Ip4Address(0xFFFFFFFF));
@@ -127,9 +127,9 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         }
     }
 
-    public Ip4RangeSet ToIp4RangeSet()
+    public Ip4RangeSet2 ToIp4RangeSet2()
     {
-        return new Ip4RangeSet(this);
+        return new Ip4RangeSet2(this);
     }
 
     public override string ToString()

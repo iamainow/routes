@@ -106,9 +106,9 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return address.ToIp4Subnet();
     }
 
-    public static implicit operator Ip4RangeSet(Ip4Address address)
+    public static implicit operator Ip4RangeSet2(Ip4Address address)
     {
-        return address.ToIp4RangeSet();
+        return address.ToIp4RangeSet2();
     }
 
     public static implicit operator IPAddress(Ip4Address address)
@@ -204,9 +204,9 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return new Ip4Subnet(this, Ip4Mask.SingleAddress);
     }
 
-    public Ip4RangeSet ToIp4RangeSet()
+    public Ip4RangeSet2 ToIp4RangeSet2()
     {
-        return new Ip4RangeSet(this);
+        return new Ip4RangeSet2(this);
     }
 
     public override string ToString()

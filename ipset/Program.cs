@@ -6,7 +6,7 @@ namespace ipops;
 
 internal static class Program
 {
-    private static Ip4RangeSet raw(IEnumerator<string> enumerator, Action<string?> errorWriteLine)
+    private static Ip4RangeSet2 raw(IEnumerator<string> enumerator, Action<string?> errorWriteLine)
     {
         if (!enumerator.MoveNext())
         {
@@ -14,10 +14,10 @@ internal static class Program
         }
 
         IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(enumerator.Current, errorWriteLine);
-        return new Ip4RangeSet(ranges);
+        return new Ip4RangeSet2(ranges);
     }
 
-    private static async Task<Ip4RangeSet> fileAsync(IEnumerator<string> enumerator, Action<string?> errorWriteLine)
+    private static async Task<Ip4RangeSet2> fileAsync(IEnumerator<string> enumerator, Action<string?> errorWriteLine)
     {
         if (!enumerator.MoveNext())
         {
@@ -27,37 +27,37 @@ internal static class Program
         using FileStream fileStream = File.Open(enumerator.Current, FileMode.Open, FileAccess.Read, FileShare.Read);
         using StreamReader streamReader = new(fileStream);
 
-        Ip4RangeSet result = new();
+        Ip4RangeSet2 result = new();
         string? line;
         while ((line = await streamReader.ReadLineAsync()) is not null)
         {
             IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
             foreach (Ip4Range range in ranges)
             {
-                result = result.Union(range);
+                result.Union(range);
             }
         }
         return result;
     }
 
-    private static Ip4RangeSet stdin(Action<string?> errorWriteLine)
+    private static Ip4RangeSet2 stdin(Action<string?> errorWriteLine)
     {
-        Ip4RangeSet result = new();
+        Ip4RangeSet2 result = new();
         string? line;
         while ((line = Console.ReadLine()) is not null)
         {
             IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
             foreach (Ip4Range range in ranges)
             {
-                result = result.Union(range);
+                result.Union(range);
             }
         }
         return result;
     }
 
-    private static Ip4RangeSet bogon()
+    private static Ip4RangeSet2 bogon()
     {
-        return new Ip4RangeSet(new Ip4Range[]
+        return new Ip4RangeSet2(new Ip4Range[]
         {
             Ip4Subnet.Parse("0.0.0.0/8"), // "This" network
             Ip4Subnet.Parse("10.0.0.0/8"), // Private-use networks
@@ -80,7 +80,7 @@ internal static class Program
     public static async Task Main(string[] args)
     {
         Action<string?> errorWriteLine = Console.IsErrorRedirected ? Console.Error.WriteLine : new AnsiColoredTextWriterWrapper(Console.Error, AnsiColor.Red).WriteLine;
-        Ip4RangeSet result = new();
+        Ip4RangeSet2 result = new();
         RangeSetPrintFormat printFormat = RangeSetPrintFormat.Subnet;
         string printPattern = "%subnet/%cidr";
 
@@ -118,14 +118,24 @@ internal static class Program
                     {
                         throw new ArgumentException("missing except argument, should use except [raw ips> | file <path> | - | local]");
                     }
-                    result = enumerator.Current switch
+                    switch (enumerator.Current)
                     {
-                        "raw" => result.Except(raw(enumerator, errorWriteLine)),
-                        "file" => result.Except(await fileAsync(enumerator, errorWriteLine)),
-                        "-" => result.Except(stdin(errorWriteLine)),
-                        "bogon" => result.Except(bogon()),
-                        _ => throw new ArgumentException($"unknown argument '{enumerator.Current}'"),
-                    };
+                        case "raw":
+                            result.Except(raw(enumerator, errorWriteLine));
+                            break;
+                        case "file":
+                            result.Except(await fileAsync(enumerator, errorWriteLine));
+                            break;
+                        case "-":
+                            result.Except(stdin(errorWriteLine));
+                            break;
+                        case "bogon":
+                            result.Except(bogon());
+                            break;
+                        default:
+                            throw new ArgumentException($"unknown argument '{enumerator.Current}'");
+                    }
+
                     break;
 
                 case "union":
@@ -133,14 +143,24 @@ internal static class Program
                     {
                         throw new ArgumentException("missing union argument, should use union [raw <ips> | file <path> | - | local]");
                     }
-                    result = enumerator.Current switch
+                    switch (enumerator.Current)
                     {
-                        "raw" => result.Union(raw(enumerator, errorWriteLine)),
-                        "file" => result.Union(await fileAsync(enumerator, errorWriteLine)),
-                        "-" => result.Union(stdin(errorWriteLine)),
-                        "bogon" => result.Union(bogon()),
-                        _ => throw new ArgumentException($"unknown argument '{enumerator.Current}'"),
-                    };
+                        case "raw":
+                            result.Union(raw(enumerator, errorWriteLine));
+                            break;
+                        case "file":
+                            result.Union(await fileAsync(enumerator, errorWriteLine));
+                            break;
+                        case "-":
+                            result.Union(stdin(errorWriteLine));
+                            break;
+                        case "bogon":
+                            result.Union(bogon());
+                            break;
+                        default:
+                            throw new ArgumentException($"unknown argument '{enumerator.Current}'");
+                    }
+
                     break;
 
                 case "simplify":
@@ -149,11 +169,11 @@ internal static class Program
                         throw new ArgumentException("missing simplify argument, should use simplify <number>");
                     }
                     uint simplifyRange = uint.Parse(enumerator.Current);
-                    result = result.Simplify(simplifyRange);
+                    result.Simplify(simplifyRange);
                     break;
 
                 case "normalize":
-                    result = result.Normalize();
+                    result.Normalize();
                     break;
 
                 case "print":

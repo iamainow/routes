@@ -306,7 +306,7 @@ public class Ip4AddressTest
     {
         var ip = new Ip4Address(100);
 
-        Ip4RangeSet set = ip;
+        Ip4RangeSet2 set = ip;
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);
@@ -341,7 +341,7 @@ public class Ip4AddressTest
     {
         var ip = new Ip4Address(100);
 
-        var set = ip.ToIp4RangeSet();
+        var set = ip.ToIp4RangeSet2();
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);

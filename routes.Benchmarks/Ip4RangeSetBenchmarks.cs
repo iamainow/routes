@@ -59,24 +59,6 @@ public class Ip4RangeSetBenchmarks
     }
 
     [Benchmark]
-    public Ip4RangeSet v1()
-    {
-        var all = new Ip4RangeSet(Ip4SubnetParser.GetRanges("0.0.0.0/0"));
-        var ip = new Ip4RangeSet(Ip4SubnetParser.GetRanges("1.2.3.4"));
-        var bogon = new Ip4RangeSet(_bogon);
-
-        var subnets = new Ip4RangeSet(Ip4SubnetParser.GetRanges(_subnets));
-
-        var result = all
-            .Except(ip)
-            .Except(bogon)
-            .Except(subnets)
-            .Normalize();
-
-        return result;
-    }
-
-    [Benchmark]
     public Ip4RangeSet2 v2()
     {
         var all = new Ip4RangeSet2(Ip4SubnetParser.GetRanges("0.0.0.0/0"));

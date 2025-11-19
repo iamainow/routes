@@ -6,7 +6,7 @@ namespace ipops;
 
 internal static class Ip4RangeSetSerializers
 {
-    public static string SerializeToAmneziaJson(Ip4RangeSet set)
+    public static string SerializeToAmneziaJson(Ip4RangeSet2 set)
     {
         AmneziaItem[] objectToSerialize = set.ToIp4Subnets()
             .Select(x => new AmneziaItem(x.ToCidrString()))

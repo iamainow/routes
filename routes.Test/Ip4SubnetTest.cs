@@ -187,7 +187,7 @@ public class Ip4SubnetTest
     {
         var subnet = Ip4Subnet.Parse("192.168.1.0/24");
 
-        var set = subnet.ToIp4RangeSet();
+        var set = subnet.ToIp4RangeSet2();
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);
@@ -283,7 +283,7 @@ public class Ip4SubnetTest
     {
         var subnet = Ip4Subnet.Parse("192.168.1.0/24");
 
-        Ip4RangeSet set = subnet;
+        Ip4RangeSet2 set = subnet;
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);
@@ -314,7 +314,7 @@ public class Ip4SubnetTest
     public void Constructor_WithAllValidCombinations_CreatesValidSubnets()
     {
         var address = new Ip4Address(192, 168, 0, 0);
-        
+
         // Test with Ip4Mask
         var subnet1 = new Ip4Subnet(address, new Ip4Mask(24));
         Assert.Equal(24, subnet1.Mask.Cidr);
