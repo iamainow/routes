@@ -21,10 +21,10 @@ public class Ip4RangeSetBenchmarks
     [GlobalSetup]
     public async Task GlobalSetup()
     {
-        Random random = new(42);
+        Random random = new();
         _subnets = await FetchAndParseRuAggregatedZoneAsync();
-        _bogon = new Ip4Range[]
-        {
+        _bogon =
+        [
             Ip4Subnet.Parse("0.0.0.0/8"), // "This" network
             Ip4Subnet.Parse("10.0.0.0/8"), // Private-use networks
             Ip4Subnet.Parse("100.64.0.0/10"), // Carrier-grade NAT
@@ -40,7 +40,7 @@ public class Ip4RangeSetBenchmarks
             Ip4Subnet.Parse("203.0.113.0/24"), // TEST-NET-3
             Ip4Subnet.Parse("224.0.0.0/4"), // Multicast
             Ip4Subnet.Parse("240.0.0.0/4"), // Reserved for future use
-        };
+        ];
         ranges = Enumerable.Range(0, 1_000_000).Select(_ =>
         {
             var address1 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
@@ -157,11 +157,12 @@ public class NoPowerPlanConfig : ManualConfig
     {
         // Explicitly use the user's current power plan to prevent BenchmarkDotNet
         // from changing the Windows power plan during benchmark execution
-        AddJob(Job.Default.DontEnforcePowerPlan().WithRuntime(CoreRuntime.Core10_0));
+        AddJob(Job.Default
+            .DontEnforcePowerPlan()
+            .WithRuntime(CoreRuntime.Core10_0));
 
-        AddJob(Job.Default.DontEnforcePowerPlan().WithRuntime(NativeAotRuntime.Net10_0));
-
-        // Also disable optimizations validator which can trigger power plan checks
-        //WithOptions(ConfigOptions.DisableOptimizationsValidator);
+        AddJob(Job.Default
+            .DontEnforcePowerPlan()
+            .WithRuntime(NativeAotRuntime.Net10_0));
     }
 }
