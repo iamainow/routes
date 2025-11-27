@@ -162,6 +162,6 @@ public class NoPowerPlanConfig : ManualConfig
         AddJob(Job.Default.DontEnforcePowerPlan().WithRuntime(NativeAotRuntime.Net10_0));
 
         // Also disable optimizations validator which can trigger power plan checks
-        WithOptions(ConfigOptions.DisableOptimizationsValidator);
+        //WithOptions(ConfigOptions.DisableOptimizationsValidator);
     }
 }
