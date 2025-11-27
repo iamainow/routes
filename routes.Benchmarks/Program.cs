@@ -1,9 +1,13 @@
 ﻿using BenchmarkDotNet.Running;
 using routes.Benchmarks;
 
+// Run benchmarks with configuration that prevents power plan changes
+// The NoPowerPlanConfig attribute on the benchmark class handles this
 BenchmarkRunner.Run<Ip4RangeSetBenchmarks>();
 
-// dotnet run --project routes.Benchmarks -c Release
+// To run: dotnet run --project routes.Benchmarks -c Release
+// Note: Power plan changes are disabled via the [Config(typeof(NoPowerPlanConfig))] attribute
+// on the Ip4RangeSetBenchmarks class to prevent Windows power plan modifications during benchmarking
 
 /*
 | Method | Job       | Runtime   | Mean       | Error    | StdDev   | Ratio | RatioSD | Gen0        | Gen1        | Gen2       | Allocated  | Alloc Ratio |
@@ -42,4 +46,20 @@ BenchmarkRunner.Run<Ip4RangeSetBenchmarks>();
 | o100k     | NativeAOT 10.0 | NativeAOT 10.0 |           NA |          NA |           NA |         NA |       NA |       NA |        NA |
 | o1000k    | NativeAOT 10.0 | NativeAOT 10.0 |           NA |          NA |           NA |         NA |       NA |       NA |        NA |
 
+
+
+| Method    | Job            | PowerPlanMode                        | Runtime        | Mean         | Error        | StdDev       | Gen0       | Gen1     | Gen2     | Allocated |
+|---------- |--------------- |------------------------------------- |--------------- |-------------:|-------------:|-------------:|-----------:|---------:|---------:|----------:|
+| Realistic | Job-YIJHXA     | 67b4a053-3646-4532-affd-0535c9ea82a7 | NativeAOT 10.0 | 564,019.6 us | 11,166.50 us |  9,898.81 us |  1000.0000 |        - |        - |   10.9 MB |
+| o10k      | Job-YIJHXA     | 67b4a053-3646-4532-affd-0535c9ea82a7 | NativeAOT 10.0 |   1,049.6 us |     18.45 us |     16.35 us |   132.8125 |   5.8594 |        - |   1.33 MB |
+| o100k     | Job-YIJHXA     | 67b4a053-3646-4532-affd-0535c9ea82a7 | NativeAOT 10.0 |  13,014.1 us |    184.48 us |    154.05 us |  1343.7500 |  78.1250 |        - |  13.44 MB |
+| o1000k    | Job-YIJHXA     | 67b4a053-3646-4532-affd-0535c9ea82a7 | NativeAOT 10.0 | 135,857.6 us |  2,683.82 us |  3,762.34 us | 13500.0000 | 750.0000 | 250.0000 | 133.93 MB |
+| Realistic | .NET 10.0      | 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c | .NET 10.0      | 515,647.9 us |  9,025.23 us |  8,000.63 us |  1000.0000 |        - |        - |   10.9 MB |
+| o10k      | .NET 10.0      | 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c | .NET 10.0      |     706.6 us |     11.95 us |     13.28 us |   138.6719 |   7.8125 |        - |   1.39 MB |
+| o100k     | .NET 10.0      | 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c | .NET 10.0      |   8,877.9 us |    125.36 us |    104.68 us |  1390.6250 |  31.2500 |        - |  14.01 MB |
+| o1000k    | .NET 10.0      | 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c | .NET 10.0      |  94,099.1 us |  1,794.84 us |  2,740.91 us | 14166.6667 | 500.0000 | 166.6667 | 139.65 MB |
+| Realistic | NativeAOT 10.0 | 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c | NativeAOT 10.0 | 570,658.5 us | 11,387.24 us | 13,555.70 us |  1000.0000 |        - |        - |   10.9 MB |
+| o10k      | NativeAOT 10.0 | 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c | NativeAOT 10.0 |   1,041.6 us |     17.69 us |     14.77 us |   132.8125 |   5.8594 |        - |   1.33 MB |
+| o100k     | NativeAOT 10.0 | 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c | NativeAOT 10.0 |  13,270.5 us |    258.15 us |    241.47 us |  1343.7500 |  78.1250 |        - |  13.44 MB |
+| o1000k    | NativeAOT 10.0 | 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c | NativeAOT 10.0 | 135,801.7 us |  2,697.88 us |  4,725.11 us | 13500.0000 | 750.0000 | 250.0000 | 133.93 MB |
 */
