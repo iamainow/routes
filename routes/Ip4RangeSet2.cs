@@ -146,27 +146,126 @@ public class Ip4RangeSet2
         }
     }
 
-    private enum ComparisonResult
+    private enum GeneralComparisonResult
     {
-        LessThan = -1,
+        NonOverlapping_LessThan = -1,
         Overlaps = 0,
-        GreaterThan = 1
-
+        NonOverlapping_GreaterThan = 1,
     }
 
-    private static ComparisonResult Except2_Comparison(Ip4Range first, Ip4Range second)
+    private static GeneralComparisonResult GeneralComparison(Ip4Range first, Ip4Range second)
     {
         if (first.LastAddress < second.FirstAddress)
         {
-            return ComparisonResult.LessThan;
+            return GeneralComparisonResult.NonOverlapping_LessThan;
         }
         else if (first.FirstAddress > second.LastAddress)
         {
-            return ComparisonResult.GreaterThan;
+            return GeneralComparisonResult.NonOverlapping_GreaterThan;
         }
         else
         {
-            return ComparisonResult.Overlaps;
+            return GeneralComparisonResult.Overlaps;
+        }
+    }
+
+    private enum OverlappingComparisonResult
+    {
+        /// <summary>
+        ///   [___]
+        /// [___]
+        /// </summary>
+        Overlaps_LL,
+        /// <summary>
+        ///     [___]
+        /// [_______]
+        /// </summary>
+        Overlaps_LE,
+        /// <summary>
+        ///    [___]
+        /// [_________]
+        /// </summary>
+        Overlaps_LR,
+        /// <summary>
+        /// [_______]
+        /// [___]
+        /// </summary>
+        Overlaps_EL,
+        /// <summary>
+        /// [___]
+        /// [___]
+        /// </summary>
+        Overlaps_EE,
+        /// <summary>
+        /// [___]
+        /// [_______]
+        /// </summary>
+        Overlaps_ER,
+        /// <summary>
+        /// [_________]
+        ///    [___]
+        /// </summary>
+        Overlaps_RL,
+        /// <summary>
+        /// [_______]
+        ///     [___]
+        /// </summary>
+        Overlaps_RE,
+        /// <summary>
+        /// [___]
+        ///   [___]
+        /// </summary>
+        Overlaps_RR,
+    }
+
+    private static OverlappingComparisonResult OverlappingComparison(Ip4Range first, Ip4Range second)
+    {
+        var leftCompare = first.FirstAddress.CompareTo(second.FirstAddress);
+        var rightCompare = first.LastAddress.CompareTo(second.LastAddress);
+        if (leftCompare < 0)
+        {
+            if (rightCompare < 0)
+            {
+                return OverlappingComparisonResult.Overlaps_LL;
+            }
+            else if (rightCompare > 0)
+            {
+                return OverlappingComparisonResult.Overlaps_LR;
+            }
+            else
+            {
+                return OverlappingComparisonResult.Overlaps_LE;
+            }
+        }
+        else if (leftCompare > 0)
+        {
+            if (rightCompare < 0)
+            {
+                return OverlappingComparisonResult.Overlaps_RL;
+            }
+            else if (rightCompare > 0)
+            {
+                return OverlappingComparisonResult.Overlaps_RR;
+            }
+            else
+            {
+                return OverlappingComparisonResult.Overlaps_RE;
+            }
+        }
+        else
+        {
+            if (rightCompare < 0)
+            {
+                return OverlappingComparisonResult.Overlaps_EL;
+            }
+            else if (rightCompare > 0)
+            {
+                return OverlappingComparisonResult.Overlaps_ER;
+            }
+            else
+            {
+                return OverlappingComparisonResult.Overlaps_EE;
+            }
         }
     }
 
@@ -179,17 +278,17 @@ public class Ip4RangeSet2
 
         while (current is not null && currentOther is not null)
         {
-            switch (Except2_Comparison(current.Value, currentOther.Value))
+            switch (GeneralComparison(current.Value, currentOther.Value))
             {
-                case ComparisonResult.LessThan: // current < currentOther
+                case GeneralComparisonResult.NonOverlapping_LessThan: // current < currentOther
                     current = current.Next;
                     break;
 
-                case ComparisonResult.GreaterThan: // current > currentOther
+                case GeneralComparisonResult.NonOverlapping_GreaterThan: // current > currentOther
                     currentOther = currentOther.Next;
                     break;
 
-                case ComparisonResult.Overlaps:
+                case GeneralComparisonResult.Overlaps:
                     var newElements = current.Value.IntersectableExcept(currentOther.Value);
                     switch (newElements.Length)
                     {
