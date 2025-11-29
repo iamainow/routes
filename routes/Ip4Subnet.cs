@@ -50,7 +50,7 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
         }
     }
 
-    public static readonly Ip4Subnet All = new(new Ip4Address(0x00000000), Ip4Mask.Full);
+    public static readonly Ip4Subnet All = new(new Ip4Address(0x00000000), Ip4Mask.All);
 
     public Ip4Address FirstAddress { get; }
     public Ip4Mask Mask { get; }
@@ -130,5 +130,38 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     public bool Equals(Ip4Subnet other)
     {
         return FirstAddress.Equals(other.FirstAddress) && Mask.Equals(other.Mask);
+    }
+
+    public Ip4Subnet GetSupernet()
+    {
+        if (!HasSupernet())
+        {
+            throw new InvalidOperationException("The subnet is the all-encompassing subnet and has no super-subnet.");
+        }
+        var mask = new Ip4Mask(Mask.Cidr - 1);
+        return new Ip4Subnet(new Ip4Address(FirstAddress.ToUInt32() & mask.AsUInt32()), mask);
+    }
+
+    public bool HasSupernet()
+    {
+        return this.Mask != Ip4Mask.All;
+    }
+
+    public Ip4Subnet[] GetSubnets()
+    {
+        if (!HasSubnets())
+        {
+            throw new InvalidOperationException("The subnet is a single address and has no subnets.");
+        }
+
+        var newMask = new Ip4Mask(Mask.Cidr + 1);
+        var firstSubnet = new Ip4Subnet(FirstAddress, newMask);
+        var secondSubnet = new Ip4Subnet(new Ip4Address(firstSubnet.LastAddress.ToUInt32() + 1), newMask);
+        return [firstSubnet, secondSubnet];
+    }
+
+    public bool HasSubnets()
+    {
+        return this.Mask != Ip4Mask.SingleAddress;
     }
 }

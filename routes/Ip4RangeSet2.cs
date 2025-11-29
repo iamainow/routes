@@ -44,49 +44,32 @@ public class Ip4RangeSet2
         }
     }
 
-    public static IEnumerable<LinkedListNode<Ip4Range>> AsEnumerableLinkedListNode(LinkedListNode<Ip4Range>? startFrom)
-    {
-        var current = startFrom;
-        while (current is not null)
-        {
-            yield return current;
-            current = current.Next;
-        }
-    }
-
-    public IEnumerable<LinkedListNode<Ip4Range>> AsEnumerableLinkedListNode()
+    public void Union(Ip4Range other)
     {
         var current = _list.First;
         while (current is not null)
         {
-            yield return current;
+            if (current.Value.IsIntersects(other))
+            {
+                var unioned = current.Value.IntersectableUnion(other);
+                var next = current.Next;
+                while (next is not null && next.Value.IsIntersects(unioned))
+                {
+                    unioned = unioned.IntersectableUnion(next.Value);
+                    var toRemove = next;
+                    next = next.Next;
+                    _list.Remove(toRemove);
+                }
+                current.Value = unioned;
+                return;
+            }
+            else if (current.Value.FirstAddress > other.LastAddress)
+            {
+                _list.AddBefore(current, other);
+                return;
+            }
             current = current.Next;
         }
-    }
-
-    public void Union(Ip4Range other)
-    {
-        foreach (var node in AsEnumerableLinkedListNode())
-        {
-            if (node.Value.IsIntersects(other))
-            {
-                var newElement = node.Value.IntersectableUnion(other);
-                // режим прохода до последнего пересекающегося и объединения их
-                foreach (var intersectableNode in AsEnumerableLinkedListNode(node.Next).TakeWhile(x => x.Value.IsIntersects(newElement)))
-                {
-                    newElement = newElement.IntersectableUnion(intersectableNode.Value);
-                }
-
-                node.Value = newElement;
-                return;
-            }
-            else if (node.Value.FirstAddress > other.LastAddress) // уже прошли место вставки - это означает что вставляем перед текущим и нет пересекающихся элементов
-            {
-                _list.AddBefore(node, other);
-                return;
-            }
-        }
-
         _list.AddLast(other);
     }
 

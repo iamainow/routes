@@ -373,7 +373,7 @@ public class Ip4MaskTest
     [Fact]
     public void StaticFields_HaveCorrectValues()
     {
-        Assert.Equal(0, Ip4Mask.Full.Cidr);
+        Assert.Equal(0, Ip4Mask.All.Cidr);
         Assert.Equal(32, Ip4Mask.SingleAddress.Cidr);
     }
 

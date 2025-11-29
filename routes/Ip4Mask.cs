@@ -8,7 +8,7 @@ namespace routes;
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Ip4Mask : IEquatable<Ip4Mask>
 {
-    public static readonly Ip4Mask Full = new(0x00000000);
+    public static readonly Ip4Mask All = new(0x00000000);
     public static readonly Ip4Mask SingleAddress = new(0xFFFFFFFF);
 
     /// <param name="text">x.x.x.x format</param>
