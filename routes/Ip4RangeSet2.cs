@@ -9,7 +9,7 @@ public class Ip4RangeSet2
     public static Ip4RangeSet2 Empty => new();
     public static Ip4RangeSet2 All => new(Ip4Range.All);
 
-    private readonly LinkedList<Ip4Range> _list; // sorted by FirstAddress
+    private readonly LinkedList<Ip4Range> _list; // sorted by FirstAddress and elements not overlapping
 
     public Ip4RangeSet2()
     {
@@ -139,7 +139,6 @@ public class Ip4RangeSet2
             }
             else if (current.Value.FirstAddress > other.LastAddress) // already passed the intersection point - this means there are no overlapping elements and nothing to exclude
             {
-                _list.AddBefore(current, other);
                 return;
             }
 
@@ -147,12 +146,73 @@ public class Ip4RangeSet2
         }
     }
 
+    private enum ComparisonResult
+    {
+        LessThan = -1,
+        Overlaps = 0,
+        GreaterThan = 1
+
+    }
+
+    private static ComparisonResult Except2_Comparison(Ip4Range first, Ip4Range second)
+    {
+        if (first.LastAddress < second.FirstAddress)
+        {
+            return ComparisonResult.LessThan;
+        }
+        else if (first.FirstAddress > second.LastAddress)
+        {
+            return ComparisonResult.GreaterThan;
+        }
+        else
+        {
+            return ComparisonResult.Overlaps;
+        }
+    }
+
     public void Except(Ip4RangeSet2 other)
     {
         ArgumentNullException.ThrowIfNull(other);
-        foreach (Ip4Range item in other._list)
+
+        var current = _list.First;
+        var currentOther = other._list.First;
+
+        while (current is not null && currentOther is not null)
         {
-            Except(item);
+            switch (Except2_Comparison(current.Value, currentOther.Value))
+            {
+                case ComparisonResult.LessThan: // current < currentOther
+                    current = current.Next;
+                    break;
+
+                case ComparisonResult.GreaterThan: // current > currentOther
+                    currentOther = currentOther.Next;
+                    break;
+
+                case ComparisonResult.Overlaps:
+                    var newElements = current.Value.IntersectableExcept(currentOther.Value);
+                    switch (newElements.Length)
+                    {
+                        case 0:
+                            var toDelete = current;
+                            current = current.Next;
+                            _list.Remove(toDelete);
+                            break;
+                        case 1:
+                            current.Value = newElements[0];
+                            break;
+                        case 2:
+                            _list.AddBefore(current, newElements[0]);
+                            current.Value = newElements[1];
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                    break;
+
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 
