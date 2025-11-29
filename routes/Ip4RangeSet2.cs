@@ -115,7 +115,7 @@ public class Ip4RangeSet2
 
                 return;
             }
-            else if (current.Value.FirstAddress > other.LastAddress) // уже прошли место - это означает что нет пересекающихся элементов и нечего исключать
+            else if (current.Value.FirstAddress > other.LastAddress) // already passed the intersection point - this means there are no overlapping elements and nothing to exclude
             {
                 _list.AddBefore(current, other);
                 return;
