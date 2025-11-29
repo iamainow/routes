@@ -9,7 +9,7 @@ public class Ip4RangeSet2
     public static Ip4RangeSet2 Empty => new();
     public static Ip4RangeSet2 All => new(Ip4Range.All);
 
-    private readonly LinkedList<Ip4Range> _list;
+    private readonly LinkedList<Ip4Range> _list; // sorted by FirstAddress
 
     public Ip4RangeSet2()
     {
@@ -76,9 +76,31 @@ public class Ip4RangeSet2
     public void Union(Ip4RangeSet2 other)
     {
         ArgumentNullException.ThrowIfNull(other);
-        foreach (Ip4Range item in other._list)
+        List<Ip4Range> allRanges = new List<Ip4Range>(this._list);
+        allRanges.AddRange(other._list);
+        allRanges.Sort((a, b) => a.FirstAddress.CompareTo(b.FirstAddress));
+        LinkedList<Ip4Range> newList = new LinkedList<Ip4Range>();
+        if (allRanges.Count > 0)
         {
-            Union(item);
+            Ip4Range current = allRanges[0];
+            for (int i = 1; i < allRanges.Count; i++)
+            {
+                if (current.IsIntersects(allRanges[i]))
+                {
+                    current = current.IntersectableUnion(allRanges[i]);
+                }
+                else
+                {
+                    newList.AddLast(current);
+                    current = allRanges[i];
+                }
+            }
+            newList.AddLast(current);
+        }
+        this._list.Clear();
+        foreach (Ip4Range range in newList)
+        {
+            this._list.AddLast(range);
         }
     }
 
