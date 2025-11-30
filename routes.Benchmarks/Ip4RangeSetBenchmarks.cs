@@ -1,3 +1,4 @@
+#pragma warning disable CA1002
 #pragma warning disable CA1822
 #pragma warning disable CA1515
 #pragma warning disable CA5394
@@ -17,6 +18,7 @@ public class Ip4RangeSetBenchmarks
     private string _subnets = "";
     private Ip4Range[] _bogon = [];
     private List<Ip4Range> ranges = new();
+    private (Ip4RangeSet2, Ip4RangeSet2)[][] sets = new (Ip4RangeSet2, Ip4RangeSet2)[16][];
 
     [GlobalSetup]
     public async Task GlobalSetup()
@@ -41,7 +43,7 @@ public class Ip4RangeSetBenchmarks
             Ip4Subnet.Parse("224.0.0.0/4"), // Multicast
             Ip4Subnet.Parse("240.0.0.0/4"), // Reserved for future use
         ];
-        ranges = Enumerable.Range(0, 1_000_000).Select(_ =>
+        ranges = Enumerable.Range(0, 1 << 20).Select(_ =>
         {
             var address1 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
             var address2 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
@@ -54,6 +56,24 @@ public class Ip4RangeSetBenchmarks
                 return new Ip4Range(address2, address1);
             }
         }).ToList();
+
+        IEnumerable<Ip4Range> getAndMoveNext(List<Ip4Range>.Enumerator enumerator, int size)
+        {
+            var result = enumerator.Current;
+            for (int i = 0; i < size; i++)
+            {
+                var temp = enumerator.Current;
+                enumerator.MoveNext();
+                yield return temp;
+            }
+        }
+        for (int index = 0; index < sets.Length; index++)
+        {
+            var enumerator = ranges.GetEnumerator();
+            int size = 1 << index;
+            int retries = 1 << (20 - 1 - index);
+            sets[index] = Enumerable.Range(0, retries).Select(_ => (new Ip4RangeSet2(getAndMoveNext(enumerator, size)), new Ip4RangeSet2(getAndMoveNext(enumerator, size)))).ToArray();
+        }
     }
 
     private static async Task<string> FetchAndParseRuAggregatedZoneAsync()
@@ -92,59 +112,169 @@ public class Ip4RangeSetBenchmarks
         return result;
     }
 
-
     [Benchmark]
-    public Ip4RangeSet2 o10k()
+    public List<Ip4RangeSet2> Union1x1()
     {
-        Ip4RangeSet2 result = new();
-        for (int index = 0; index < 10_000; index++)
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[1].Take(100);
+        foreach (var (t1, t2) in set)
         {
-            if (index % 2 == 0)
-            {
-                result.Union(ranges[index]);
-            }
-            else
-            {
-                result.Except(ranges[index]);
-            }
+            t1.Union(t2);
         }
 
         return result;
     }
 
     [Benchmark]
-    public Ip4RangeSet2 o100k()
+    public List<Ip4RangeSet2> Union2x2()
     {
-        Ip4RangeSet2 result = new();
-        for (int index = 0; index < 100_000; index++)
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[2].Take(100);
+        foreach (var (t1, t2) in set)
         {
-            if (index % 2 == 0)
-            {
-                result.Union(ranges[index]);
-            }
-            else
-            {
-                result.Except(ranges[index]);
-            }
+            t1.Union(t2);
         }
 
         return result;
     }
 
     [Benchmark]
-    public Ip4RangeSet2 o1000k()
+    public List<Ip4RangeSet2> Union3x3()
     {
-        Ip4RangeSet2 result = new();
-        for (int index = 0; index < 1_000_000; index++)
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[3].Take(100);
+        foreach (var (t1, t2) in set)
         {
-            if (index % 2 == 0)
-            {
-                result.Union(ranges[index]);
-            }
-            else
-            {
-                result.Except(ranges[index]);
-            }
+            t1.Union(t2);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public List<Ip4RangeSet2> Union4x4()
+    {
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[4].Take(100);
+        foreach (var (t1, t2) in set)
+        {
+            t1.Union(t2);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public List<Ip4RangeSet2> Union5x5()
+    {
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[5].Take(100);
+        foreach (var (t1, t2) in set)
+        {
+            t1.Union(t2);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public List<Ip4RangeSet2> Union6x6()
+    {
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[6].Take(100);
+        foreach (var (t1, t2) in set)
+        {
+            t1.Union(t2);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public List<Ip4RangeSet2> Union7x7()
+    {
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[7].Take(100);
+        foreach (var (t1, t2) in set)
+        {
+            t1.Union(t2);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public List<Ip4RangeSet2> Union8x8()
+    {
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[8].Take(100);
+        foreach (var (t1, t2) in set)
+        {
+            t1.Union(t2);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public List<Ip4RangeSet2> Union9x9()
+    {
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[9].Take(100);
+        foreach (var (t1, t2) in set)
+        {
+            t1.Union(t2);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public List<Ip4RangeSet2> Union10x10()
+    {
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[10].Take(100);
+        foreach (var (t1, t2) in set)
+        {
+            t1.Union(t2);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public List<Ip4RangeSet2> Union11x11()
+    {
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[11].Take(100);
+        foreach (var (t1, t2) in set)
+        {
+            t1.Union(t2);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public List<Ip4RangeSet2> Union12x12()
+    {
+        List<Ip4RangeSet2> result = [];
+
+        var set = sets[12].Take(100);
+        foreach (var (t1, t2) in set)
+        {
+            t1.Union(t2);
         }
 
         return result;

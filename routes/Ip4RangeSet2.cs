@@ -273,18 +273,23 @@ public class Ip4RangeSet2
     {
         ArgumentNullException.ThrowIfNull(other);
 
-        var current = _list.First;
-        var currentOther = other._list.First;
+        if (_list.First is null) return;
+        LinkedListNode<Ip4Range> current = _list.First;
 
-        while (current is not null && currentOther is not null)
+        if (other._list.First is null) return;
+        LinkedListNode<Ip4Range> currentOther = other._list.First;
+
+        while (true)
         {
             switch (GeneralComparison(current.Value, currentOther.Value))
             {
                 case GeneralComparisonResult.NonOverlapping_LessThan: // current < currentOther
+                    if (current.Next is null) return;
                     current = current.Next;
                     break;
 
                 case GeneralComparisonResult.NonOverlapping_GreaterThan: // current > currentOther
+                    if (currentOther.Next is null) return;
                     currentOther = currentOther.Next;
                     break;
 
@@ -293,9 +298,17 @@ public class Ip4RangeSet2
                     switch (newElements.Length)
                     {
                         case 0:
-                            var toDelete = current;
-                            current = current.Next;
-                            _list.Remove(toDelete);
+                            if (current.Next is null)
+                            {
+                                _list.Remove(current);
+                                return;
+                            }
+                            else
+                            {
+                                var toDelete = current;
+                                current = current.Next;
+                                _list.Remove(toDelete);
+                            }
                             break;
                         case 1:
                             current.Value = newElements[0];
