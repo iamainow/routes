@@ -114,37 +114,6 @@ public class Ip4RangeSet2
         }
     }
 
-    public void Union2(Ip4RangeSet2 other)
-    {
-        ArgumentNullException.ThrowIfNull(other);
-        List<Ip4Range> allRanges = new List<Ip4Range>(this._list);
-        allRanges.AddRange(other._list);
-        allRanges.Sort((a, b) => a.FirstAddress.CompareTo(b.FirstAddress));
-        LinkedList<Ip4Range> newList = new LinkedList<Ip4Range>();
-        if (allRanges.Count > 0)
-        {
-            Ip4Range current = allRanges[0];
-            for (int i = 1; i < allRanges.Count; i++)
-            {
-                if (current.IsIntersects(allRanges[i]))
-                {
-                    current = current.IntersectableUnion(allRanges[i]);
-                }
-                else
-                {
-                    newList.AddLast(current);
-                    current = allRanges[i];
-                }
-            }
-            newList.AddLast(current);
-        }
-        this._list.Clear();
-        foreach (Ip4Range range in newList)
-        {
-            this._list.AddLast(range);
-        }
-    }
-
     public void Except(Ip4Range other)
     {
         var current = _list.First;
@@ -187,130 +156,55 @@ public class Ip4RangeSet2
         }
     }
 
-    private enum GeneralComparisonResult
-    {
-        NonOverlapping_LessThan = -1,
-        Overlaps = 0,
-        NonOverlapping_GreaterThan = 1,
-    }
 
-    private static GeneralComparisonResult GeneralComparison(Ip4Range first, Ip4Range second)
-    {
-        if (first.LastAddress < second.FirstAddress)
-        {
-            return GeneralComparisonResult.NonOverlapping_LessThan;
-        }
-        else if (first.FirstAddress > second.LastAddress)
-        {
-            return GeneralComparisonResult.NonOverlapping_GreaterThan;
-        }
-        else
-        {
-            return GeneralComparisonResult.Overlaps;
-        }
-    }
-
-    private enum OverlappingComparisonResult
-    {
-        /// <summary>
-        ///   [___]
-        /// [___]
-        /// </summary>
-        Overlaps_LL,
-        /// <summary>
-        ///     [___]
-        /// [_______]
-        /// </summary>
-        Overlaps_LE,
-        /// <summary>
-        ///    [___]
-        /// [_________]
-        /// </summary>
-        Overlaps_LR,
-        /// <summary>
-        /// [_______]
-        /// [___]
-        /// </summary>
-        Overlaps_EL,
-        /// <summary>
-        /// [___]
-        /// [___]
-        /// </summary>
-        Overlaps_EE,
-        /// <summary>
-        /// [___]
-        /// [_______]
-        /// </summary>
-        Overlaps_ER,
-        /// <summary>
-        /// [_________]
-        ///    [___]
-        /// </summary>
-        Overlaps_RL,
-        /// <summary>
-        /// [_______]
-        ///     [___]
-        /// </summary>
-        Overlaps_RE,
-        /// <summary>
-        /// [___]
-        ///   [___]
-        /// </summary>
-        Overlaps_RR,
-    }
-
-    private static OverlappingComparisonResult OverlappingComparison(Ip4Range first, Ip4Range second)
-    {
-        var leftCompare = first.FirstAddress.CompareTo(second.FirstAddress);
-        var rightCompare = first.LastAddress.CompareTo(second.LastAddress);
-        if (leftCompare < 0)
-        {
-            if (rightCompare < 0)
-            {
-                return OverlappingComparisonResult.Overlaps_LL;
-            }
-            else if (rightCompare > 0)
-            {
-                return OverlappingComparisonResult.Overlaps_LR;
-            }
-            else
-            {
-                return OverlappingComparisonResult.Overlaps_LE;
-            }
-        }
-        else if (leftCompare > 0)
-        {
-            if (rightCompare < 0)
-            {
-                return OverlappingComparisonResult.Overlaps_RL;
-            }
-            else if (rightCompare > 0)
-            {
-                return OverlappingComparisonResult.Overlaps_RR;
-            }
-            else
-            {
-                return OverlappingComparisonResult.Overlaps_RE;
-            }
-        }
-        else
-        {
-            if (rightCompare < 0)
-            {
-                return OverlappingComparisonResult.Overlaps_EL;
-            }
-            else if (rightCompare > 0)
-            {
-                return OverlappingComparisonResult.Overlaps_ER;
-            }
-            else
-            {
-                return OverlappingComparisonResult.Overlaps_EE;
-            }
-        }
-    }
 
     public void Except(Ip4RangeSet2 other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+
+        var current = _list.First;
+        var currentOther = other._list.First;
+
+        while (current is not null && currentOther is not null)
+        {
+            switch (Ip4Range.GeneralComparison(current.Value, currentOther.Value))
+            {
+                case GeneralComparisonResult.NonOverlappingLessThan: // current < currentOther
+                    current = current.Next;
+                    break;
+
+                case GeneralComparisonResult.NonOverlappingGreaterThan: // current > currentOther
+                    currentOther = currentOther.Next;
+                    break;
+
+                case GeneralComparisonResult.Overlaps:
+                    var newElements = current.Value.IntersectableExcept(currentOther.Value);
+                    switch (newElements.Length)
+                    {
+                        case 0:
+                            var toDelete = current;
+                            current = current.Next;
+                            _list.Remove(toDelete);
+                            break;
+                        case 1:
+                            current.Value = newElements[0];
+                            break;
+                        case 2:
+                            _list.AddBefore(current, newElements[0]);
+                            current.Value = newElements[1];
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                    break;
+
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+    }
+
+    public void Except2(Ip4RangeSet2 other)
     {
         ArgumentNullException.ThrowIfNull(other);
 
@@ -322,14 +216,14 @@ public class Ip4RangeSet2
 
         while (true)
         {
-            switch (GeneralComparison(current.Value, currentOther.Value))
+            switch (Ip4Range.GeneralComparison(current.Value, currentOther.Value))
             {
-                case GeneralComparisonResult.NonOverlapping_LessThan: // current < currentOther
+                case GeneralComparisonResult.NonOverlappingLessThan: // current < currentOther
                     if (current.Next is null) return;
                     current = current.Next;
                     break;
 
-                case GeneralComparisonResult.NonOverlapping_GreaterThan: // current > currentOther
+                case GeneralComparisonResult.NonOverlappingGreaterThan: // current > currentOther
                     if (currentOther.Next is null) return;
                     currentOther = currentOther.Next;
                     break;
