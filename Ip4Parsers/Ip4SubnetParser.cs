@@ -8,56 +8,59 @@ public static partial class Ip4SubnetParser
     [GeneratedRegex(@"(?:(?<rangebegin>\d+\.\d+\.\d+\.\d+)\s*\-\s*(?<rangeend>\d+\.\d+\.\d+\.\d+)|(?<cidrip>\d+\.\d+\.\d+\.\d+)(?<cidrmask>\/\d+)|(?<ip>\d+\.\d+\.\d+\.\d+))")]
     public static partial Regex RangeOrCidrOrIp();
 
-    public static IEnumerable<Ip4Range> GetRanges(string text, Action<string>? errorWriter = null)
+    public static IEnumerable<Ip4Range> GetRanges(string texts, Action<string>? errorWriter = null)
     {
-        ArgumentException.ThrowIfNullOrEmpty(text);
+        ArgumentException.ThrowIfNullOrEmpty(texts);
 
-        MatchCollection matches = RangeOrCidrOrIp().Matches(text);
-        foreach (Match match in matches)
+        foreach (string text in texts.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
-            if (match.Success)
+            MatchCollection matches = RangeOrCidrOrIp().Matches(text);
+            foreach (Match match in matches)
             {
-                if (match.Groups["rangebegin"].Success && match.Groups["rangeend"].Success)
+                if (match.Success)
                 {
-                    if (!Ip4Address.TryParse(match.Groups["rangebegin"].Value, out Ip4Address begin))
+                    if (match.Groups["rangebegin"].Success && match.Groups["rangeend"].Success)
                     {
-                        errorWriter?.Invoke($"error parsing '{match.Groups["rangebegin"].Value}' as 'rangebegin' ip address");
-                        continue;
-                    }
+                        if (!Ip4Address.TryParse(match.Groups["rangebegin"].Value, out Ip4Address begin))
+                        {
+                            errorWriter?.Invoke($"error parsing '{match.Groups["rangebegin"].Value}' as 'rangebegin' ip address");
+                            continue;
+                        }
 
-                    if (!Ip4Address.TryParse(match.Groups["rangeend"].Value, out Ip4Address end))
+                        if (!Ip4Address.TryParse(match.Groups["rangeend"].Value, out Ip4Address end))
+                        {
+                            errorWriter?.Invoke($"error parsing '{match.Groups["rangeend"].Value}' as 'rangeend' ip address");
+                            continue;
+                        }
+
+                        yield return new Ip4Range(begin, end);
+                    }
+                    else if (match.Groups["cidrip"].Success && match.Groups["cidrmask"].Success)
                     {
-                        errorWriter?.Invoke($"error parsing '{match.Groups["rangeend"].Value}' as 'rangeend' ip address");
-                        continue;
-                    }
+                        if (!Ip4Address.TryParse(match.Groups["cidrip"].Value, out Ip4Address ip))
+                        {
+                            errorWriter?.Invoke($"error parsing '{match.Groups["cidrip"].Value}' as 'cidrip' ip address");
+                            continue;
+                        }
 
-                    yield return new Ip4Range(begin, end);
-                }
-                else if (match.Groups["cidrip"].Success && match.Groups["cidrmask"].Success)
-                {
-                    if (!Ip4Address.TryParse(match.Groups["cidrip"].Value, out Ip4Address ip))
+                        if (!Ip4Mask.TryParseCidrString(match.Groups["cidrmask"].Value, out Ip4Mask mask))
+                        {
+                            errorWriter?.Invoke($"error parsing '{match.Groups["cidrmask"].Value}' as 'cidrmask' subnet mask");
+                            continue;
+                        }
+
+                        yield return new Ip4Subnet(ip, mask);
+                    }
+                    else if (match.Groups["ip"].Success)
                     {
-                        errorWriter?.Invoke($"error parsing '{match.Groups["cidrip"].Value}' as 'cidrip' ip address");
-                        continue;
-                    }
+                        if (!Ip4Address.TryParse(match.Groups["ip"].Value, out Ip4Address ip))
+                        {
+                            errorWriter?.Invoke($"error parsing '{match.Groups["ip"].Value}' as 'ip' ip address");
+                            continue;
+                        }
 
-                    if (!Ip4Mask.TryParseCidrString(match.Groups["cidrmask"].Value, out Ip4Mask mask))
-                    {
-                        errorWriter?.Invoke($"error parsing '{match.Groups["cidrmask"].Value}' as 'cidrmask' subnet mask");
-                        continue;
+                        yield return ip;
                     }
-
-                    yield return new Ip4Subnet(ip, mask);
-                }
-                else if (match.Groups["ip"].Success)
-                {
-                    if (!Ip4Address.TryParse(match.Groups["ip"].Value, out Ip4Address ip))
-                    {
-                        errorWriter?.Invoke($"error parsing '{match.Groups["ip"].Value}' as 'ip' ip address");
-                        continue;
-                    }
-
-                    yield return ip;
                 }
             }
         }
