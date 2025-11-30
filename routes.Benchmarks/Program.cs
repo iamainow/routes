@@ -19,17 +19,12 @@ BenchmarkRunner.Run<Ip4RangeSetBenchmarks>();
 | o100k     | NativeAOT 10.0 |   3,275.3 us |    29.96 us |    28.02 us |  285.1563 |  2924.75 KB |
 | o1000k    | NativeAOT 10.0 |  34,838.4 us |   444.76 us |   416.03 us | 2800.0000 | 29214.46 KB |
 
-| Method        | Runtime        | Mean       | Error     | StdDev    | Gen0      | Allocated |
-|-------------- |--------------- |-----------:|----------:|----------:|----------:|----------:|
-| Realistic     | .NET 10.0      | 393.552 ms | 5.5662 ms | 4.9343 ms | 1000.0000 |  10.51 MB |
-| Union3Except1 | .NET 10.0      |   6.469 ms | 0.0552 ms | 0.0516 ms | 1695.3125 |  16.94 MB |
-| Union3Except2 | .NET 10.0      |   6.382 ms | 0.0367 ms | 0.0326 ms | 1671.8750 |  16.68 MB |
-| Union3Except3 | .NET 10.0      |   6.560 ms | 0.0600 ms | 0.0561 ms | 1757.8125 |  17.59 MB |
-| Union3Except4 | .NET 10.0      |   6.223 ms | 0.0577 ms | 0.0511 ms | 1679.6875 |  16.76 MB |
-| Realistic     | NativeAOT 10.0 | 395.424 ms | 7.3715 ms | 7.5700 ms | 1000.0000 |  10.52 MB |
-| Union3Except1 | NativeAOT 10.0 |   7.463 ms | 0.0576 ms | 0.0538 ms | 1617.1875 |  16.19 MB |
-| Union3Except2 | NativeAOT 10.0 |   7.669 ms | 0.0497 ms | 0.0465 ms | 1710.9375 |  17.09 MB |
-| Union3Except3 | NativeAOT 10.0 |   7.508 ms | 0.0406 ms | 0.0380 ms | 1671.8750 |  16.71 MB |
-| Union3Except4 | NativeAOT 10.0 |   7.527 ms | 0.0597 ms | 0.0529 ms | 1648.4375 |  16.46 MB |
-
+| Method                 | Mean       | Error     | StdDev    | Gen0      | Allocated |
+|----------------------- |-----------:|----------:|----------:|----------:|----------:|
+| Realistic              | 336.843 ms | 6.4444 ms | 8.3795 ms | 1000.0000 |  12.27 MB |
+| RealisticWithoutParser |  61.410 ms | 1.2264 ms | 1.6372 ms |         - |   1.04 MB |
+| Union3Except1          |   7.021 ms | 0.1377 ms | 0.1791 ms | 1640.6250 |  16.36 MB |
+| Union3Except2          |   6.964 ms | 0.1385 ms | 0.1849 ms | 1632.8125 |  16.35 MB |
+| Union3Except3          |   7.047 ms | 0.0891 ms | 0.0790 ms | 1664.0625 |  16.61 MB |
+| Union3Except4          |   7.149 ms | 0.1033 ms | 0.0967 ms | 1750.0000 |  17.48 MB |
 */
