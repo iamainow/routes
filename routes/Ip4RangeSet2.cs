@@ -9,7 +9,8 @@ public class Ip4RangeSet2
     public static Ip4RangeSet2 Empty => new();
     public static Ip4RangeSet2 All => new(Ip4Range.All);
 
-    private readonly LinkedList<Ip4Range> _list; // sorted by FirstAddress and elements not overlapping
+    // sorted by FirstAddress, elements not overlapping
+    private readonly LinkedList<Ip4Range> _list;
 
     public Ip4RangeSet2()
     {
@@ -44,6 +45,15 @@ public class Ip4RangeSet2
         }
     }
 
+    public Ip4RangeSet2(Ip4RangeSet2 set) : this()
+    {
+        ArgumentNullException.ThrowIfNull(set);
+        foreach (Ip4Range range in set._list)
+        {
+            this._list.AddLast(range);
+        }
+    }
+
     public void Union(Ip4Range other)
     {
         var current = _list.First;
@@ -74,6 +84,37 @@ public class Ip4RangeSet2
     }
 
     public void Union(Ip4RangeSet2 other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        List<Ip4Range> allRanges = new List<Ip4Range>(this._list);
+        allRanges.AddRange(other._list);
+        allRanges.Sort((a, b) => a.FirstAddress.CompareTo(b.FirstAddress));
+        LinkedList<Ip4Range> newList = new LinkedList<Ip4Range>();
+        if (allRanges.Count > 0)
+        {
+            Ip4Range current = allRanges[0];
+            for (int i = 1; i < allRanges.Count; i++)
+            {
+                if (current.IsIntersects(allRanges[i]))
+                {
+                    current = current.IntersectableUnion(allRanges[i]);
+                }
+                else
+                {
+                    newList.AddLast(current);
+                    current = allRanges[i];
+                }
+            }
+            newList.AddLast(current);
+        }
+        this._list.Clear();
+        foreach (Ip4Range range in newList)
+        {
+            this._list.AddLast(range);
+        }
+    }
+
+    public void Union2(Ip4RangeSet2 other)
     {
         ArgumentNullException.ThrowIfNull(other);
         List<Ip4Range> allRanges = new List<Ip4Range>(this._list);
@@ -273,18 +314,23 @@ public class Ip4RangeSet2
     {
         ArgumentNullException.ThrowIfNull(other);
 
-        var current = _list.First;
-        var currentOther = other._list.First;
+        if (_list.First is null) return;
+        LinkedListNode<Ip4Range> current = _list.First;
 
-        while (current is not null && currentOther is not null)
+        if (other._list.First is null) return;
+        LinkedListNode<Ip4Range> currentOther = other._list.First;
+
+        while (true)
         {
             switch (GeneralComparison(current.Value, currentOther.Value))
             {
                 case GeneralComparisonResult.NonOverlapping_LessThan: // current < currentOther
+                    if (current.Next is null) return;
                     current = current.Next;
                     break;
 
                 case GeneralComparisonResult.NonOverlapping_GreaterThan: // current > currentOther
+                    if (currentOther.Next is null) return;
                     currentOther = currentOther.Next;
                     break;
 
@@ -293,9 +339,17 @@ public class Ip4RangeSet2
                     switch (newElements.Length)
                     {
                         case 0:
-                            var toDelete = current;
-                            current = current.Next;
-                            _list.Remove(toDelete);
+                            if (current.Next is null)
+                            {
+                                _list.Remove(current);
+                                return;
+                            }
+                            else
+                            {
+                                var toDelete = current;
+                                current = current.Next;
+                                _list.Remove(toDelete);
+                            }
                             break;
                         case 1:
                             current.Value = newElements[0];
