@@ -221,13 +221,8 @@ public class Ip4RangeSet2Test
         set1.Union(set2);
         set1.Union(set3);
 
-        // Assert: before Normalize, should have 3 ranges
-        var beforeNormalize = set1.ToIp4Ranges().ToArray();
-        Assert.Equal(3, beforeNormalize.Length);
-
-        // After Normalize, should merge to single range
-        set1.Normalize();
-        var ranges = set1.ToIp4Ranges();
+        // Assert: should merge to single range
+        var ranges = set1.ToIp4Ranges().ToArray();
         Assert.Single(ranges);
         Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
         Assert.Equal(new Ip4Address(40), ranges[0].LastAddress);

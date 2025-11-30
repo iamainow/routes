@@ -5,79 +5,33 @@ namespace routes;
 [DebuggerDisplay("{ToString(),nq}")]
 public readonly struct Ip4Range : IEquatable<Ip4Range>
 {
-    public static GeneralComparisonResult GeneralComparison(Ip4Range first, Ip4Range second)
+    public static int GeneralComparison(Ip4Range first, Ip4Range second)
     {
         if (first.LastAddress < second.FirstAddress)
         {
-            return GeneralComparisonResult.NonOverlappingLessThan;
+            return -1;
         }
         else if (first.FirstAddress > second.LastAddress)
         {
-            return GeneralComparisonResult.NonOverlappingGreaterThan;
+            return 1;
         }
         else
         {
-            return GeneralComparisonResult.Overlaps;
+            return 0;
         }
     }
 
-    public static OverlappingComparisonResult OverlappingComparison(Ip4Range first, Ip4Range second)
+    public static (int, int) OverlappingComparison(Ip4Range first, Ip4Range second)
     {
-        var leftCompare = first.FirstAddress.CompareTo(second.FirstAddress);
-        var rightCompare = first.LastAddress.CompareTo(second.LastAddress);
-        if (leftCompare < 0)
-        {
-            if (rightCompare < 0)
-            {
-                return OverlappingComparisonResult.OverlapsLL;
-            }
-            else if (rightCompare > 0)
-            {
-                return OverlappingComparisonResult.OverlapsLR;
-            }
-            else
-            {
-                return OverlappingComparisonResult.OverlapsLE;
-            }
-        }
-        else if (leftCompare > 0)
-        {
-            if (rightCompare < 0)
-            {
-                return OverlappingComparisonResult.OverlapsRL;
-            }
-            else if (rightCompare > 0)
-            {
-                return OverlappingComparisonResult.OverlapsRR;
-            }
-            else
-            {
-                return OverlappingComparisonResult.OverlapsRE;
-            }
-        }
-        else
-        {
-            if (rightCompare < 0)
-            {
-                return OverlappingComparisonResult.OverlapsEL;
-            }
-            else if (rightCompare > 0)
-            {
-                return OverlappingComparisonResult.OverlapsER;
-            }
-            else
-            {
-                return OverlappingComparisonResult.OverlapsEE;
-            }
-        }
+        return (first.FirstAddress.CompareTo(second.FirstAddress), first.LastAddress.CompareTo(second.LastAddress));
     }
 
-    public GeneralComparisonResult GeneralComparison(Ip4Range second)
+    public int GeneralComparison(Ip4Range second)
     {
         return GeneralComparison(this, second);
     }
 
-    public OverlappingComparisonResult OverlappingComparison(Ip4Range second)
+    public (int, int) OverlappingComparison(Ip4Range second)
     {
         return OverlappingComparison(this, second);
     }
