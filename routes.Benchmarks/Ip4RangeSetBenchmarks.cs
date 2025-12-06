@@ -113,66 +113,6 @@ public class Ip4RangeSetBenchmarks
     }
 
     [Benchmark]
-    public Ip4RangeSet2 Union3Except1()
-    {
-        Random random = new();
-        Ip4RangeSet2 result = new();
-        for (int index = 0; index < 100_000; index++)
-        {
-            if (random.NextDouble() < 0.5d)
-            {
-                result.Union3(rangeSetsBy10[index]);
-            }
-            else
-            {
-                result.Except1(rangeSetsBy10[index]);
-            }
-        }
-
-        return result;
-    }
-
-    [Benchmark]
-    public Ip4RangeSet2 Union3Except2()
-    {
-        Random random = new();
-        Ip4RangeSet2 result = new();
-        for (int index = 0; index < 100_000; index++)
-        {
-            if (random.NextDouble() < 0.5d)
-            {
-                result.Union3(rangeSetsBy10[index]);
-            }
-            else
-            {
-                result.Except2(rangeSetsBy10[index]);
-            }
-        }
-
-        return result;
-    }
-
-    [Benchmark]
-    public Ip4RangeSet2 Union3Except3()
-    {
-        Random random = new();
-        Ip4RangeSet2 result = new();
-        for (int index = 0; index < 100_000; index++)
-        {
-            if (random.NextDouble() < 0.5d)
-            {
-                result.Union3(rangeSetsBy10[index]);
-            }
-            else
-            {
-                result.Except3(rangeSetsBy10[index]);
-            }
-        }
-
-        return result;
-    }
-
-    [Benchmark]
     public Ip4RangeSet2 Union3Except4()
     {
         Random random = new();
@@ -203,8 +143,8 @@ public class NoPowerPlanConfig : ManualConfig
             .DontEnforcePowerPlan()
             .WithRuntime(CoreRuntime.Core10_0));
 
-        //AddJob(Job.Default
-        //    .DontEnforcePowerPlan()
-        //    .WithRuntime(NativeAotRuntime.Net10_0));
+        AddJob(Job.Default
+            .DontEnforcePowerPlan()
+            .WithRuntime(NativeAotRuntime.Net10_0));
     }
 }

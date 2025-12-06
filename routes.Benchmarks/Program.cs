@@ -28,24 +28,14 @@ BenchmarkRunner.Run<Ip4RangeSetBenchmarks>();
 | Union3Except3          |   7.047 ms | 0.0891 ms | 0.0790 ms | 1664.0625 |  16.61 MB |
 | Union3Except4          |   7.149 ms | 0.1033 ms | 0.0967 ms | 1750.0000 |  17.48 MB |
 
-| Method                 | Mean       | Error     | StdDev    | Gen0      | Allocated |
-|----------------------- |-----------:|----------:|----------:|----------:|----------:|
-| Realistic              | 347.440 ms | 6.5509 ms | 6.7273 ms | 1000.0000 |  12.27 MB |
-| RealisticWithoutParser |  61.642 ms | 0.5825 ms | 0.5163 ms |         - |   1.04 MB |
-| Union3Except1          |   7.229 ms | 0.1437 ms | 0.1869 ms | 1703.1250 |  17.01 MB |
-| Union32Except1         |   7.408 ms | 0.1264 ms | 0.1120 ms | 1750.0000 |  17.52 MB |
-| Union3Except2          |   7.318 ms | 0.1154 ms | 0.1023 ms | 1671.8750 |  16.76 MB |
-| Union3Except3          |   7.473 ms | 0.1383 ms | 0.1480 ms | 1750.0000 |  17.47 MB |
-| Union3Except4          |   6.881 ms | 0.1344 ms | 0.1320 ms | 1656.2500 |  16.58 MB |
-
-| Method                 | Mean       | Error     | StdDev    | Gen0      | Gen1     | Allocated |
-|----------------------- |-----------:|----------:|----------:|----------:|---------:|----------:|
-| Realistic              | 6,192.4 us |  57.61 us |  51.07 us | 1226.5625 | 570.3125 |  12.24 MB |
-| RealisticWithoutParser |   431.2 us |   8.23 us |   7.30 us |  101.5625 |  50.2930 |   1.02 MB |
-| Union3Except1          | 7,540.4 us | 143.48 us | 147.35 us | 1718.7500 |        - |  17.17 MB |
-| Union3Except2          | 7,417.3 us | 146.55 us | 168.77 us | 1742.1875 |        - |  17.37 MB |
-| Union3Except3          | 7,287.6 us | 104.65 us |  97.89 us | 1664.0625 |        - |  16.63 MB |
-| Union3Except4          | 7,155.9 us | 134.43 us | 125.75 us | 1703.1250 |        - |  17.01 MB |
+| Method                 | Runtime        | Mean       | Error     | StdDev    | Gen0      | Gen1     | Allocated |
+|----------------------- |--------------- |-----------:|----------:|----------:|----------:|---------:|----------:|
+| Realistic              | .NET 10.0      | 6,077.0 us |  32.72 us |  27.32 us | 1226.5625 | 570.3125 |  12.24 MB |
+| RealisticWithoutParser | .NET 10.0      |   398.2 us |   4.26 us |   3.78 us |  101.5625 |  50.2930 |   1.02 MB |
+| Union3Except4          | .NET 10.0      | 7,278.7 us | 144.51 us | 154.63 us | 1742.1875 |        - |  17.38 MB |
+| Realistic              | NativeAOT 10.0 | 7,036.8 us |  79.99 us |  74.82 us | 1226.5625 | 570.3125 |  12.24 MB |
+| RealisticWithoutParser | NativeAOT 10.0 |   574.4 us |   7.66 us |   7.17 us |  101.5625 |  43.9453 |   1.02 MB |
+| Union3Except4          | NativeAOT 10.0 | 8,614.1 us | 168.09 us | 186.83 us | 1750.0000 |        - |  17.47 MB |
 
 
 */
