@@ -767,4 +767,978 @@ public class Ip4RangeSet2Test
     }
 
     #endregion
+
+    #region Except(Ip4Range) Tests
+
+    [Fact]
+    public void Except_Ip4Range_CompletelyOverlapping_RemovesRange()
+    {
+        // Arrange: [10-30] except [10-30] should result in empty set
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+
+        // Act
+        set.Except(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+
+        // Assert
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void Except_Ip4Range_PartialOverlapAtStart_TruncatesRange()
+    {
+        // Arrange: [10-30] except [5-20] should result in [21-30]
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+
+        // Act
+        set.Except(new Ip4Range(new Ip4Address(5), new Ip4Address(20)));
+
+        // Assert
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(21), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(30), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_Ip4Range_PartialOverlapAtEnd_TruncatesRange()
+    {
+        // Arrange: [10-30] except [20-40] should result in [10-19]
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+
+        // Act
+        set.Except(new Ip4Range(new Ip4Address(20), new Ip4Address(40)));
+
+        // Assert
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(19), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_Ip4Range_MiddleOverlap_SplitsIntoTwoRanges()
+    {
+        // Arrange: [10-30] except [15-20] should result in [10-14] and [21-30]
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+
+        // Act
+        set.Except(new Ip4Range(new Ip4Address(15), new Ip4Address(20)));
+
+        // Assert
+        var ranges = set.ToIp4Ranges().ToArray();
+        Assert.Equal(2, ranges.Length);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(14), ranges[0].LastAddress);
+        Assert.Equal(new Ip4Address(21), ranges[1].FirstAddress);
+        Assert.Equal(new Ip4Address(30), ranges[1].LastAddress);
+    }
+
+    [Fact]
+    public void Except_Ip4Range_Disjoint_NoChange()
+    {
+        // Arrange: [10-20] except [30-40] should remain [10-20]
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+
+        // Act
+        set.Except(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
+
+        // Assert
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(20), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_Ip4Range_MultipleRanges_RemovesFromMultiple()
+    {
+        // Arrange: [10-20], [30-40], [50-60] except [15-55] should result in [10-14] and [56-60]
+        var set = new Ip4RangeSet2(new[]
+        {
+            new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
+            new Ip4Range(new Ip4Address(30), new Ip4Address(40)),
+            new Ip4Range(new Ip4Address(50), new Ip4Address(60))
+        });
+
+        // Act
+        set.Except(new Ip4Range(new Ip4Address(15), new Ip4Address(55)));
+
+        // Assert
+        var ranges = set.ToIp4Ranges().ToArray();
+        Assert.Equal(2, ranges.Length);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(14), ranges[0].LastAddress);
+        Assert.Equal(new Ip4Address(56), ranges[1].FirstAddress);
+        Assert.Equal(new Ip4Address(60), ranges[1].LastAddress);
+    }
+
+    [Fact]
+    public void Except_Ip4Range_EmptySet_RemainsEmpty()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2();
+
+        // Act
+        set.Except(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+
+        // Assert
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void Except_Ip4Range_ExceedingRange_RemovesOverlappingPortion()
+    {
+        // Arrange: [10-20] except [0-100] should result in empty set
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+
+        // Act
+        set.Except(new Ip4Range(new Ip4Address(0), new Ip4Address(100)));
+
+        // Assert
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    #endregion
+
+    #region Except(Ip4RangeSet2) Tests
+
+    [Fact]
+    public void Except_Ip4RangeSet2_NullSet_ThrowsArgumentNullException()
+    {
+        var set = new Ip4RangeSet2();
+
+        Assert.Throws<ArgumentNullException>(() => set.Except((Ip4RangeSet2)null!));
+    }
+
+    [Fact]
+    public void Except_Ip4RangeSet2_EmptySet_NoChange()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var emptySet = new Ip4RangeSet2();
+
+        // Act
+        set.Except(emptySet);
+
+        // Assert
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(20), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_Ip4RangeSet2_EmptySetExceptingNonEmpty_RemainsEmpty()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2();
+        var otherSet = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+
+        // Act
+        set.Except(otherSet);
+
+        // Assert
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void Except_Ip4RangeSet2_CompleteOverlap_RemovesAll()
+    {
+        // Arrange: [10-20] except [10-20] should result in empty set
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var otherSet = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+
+        // Act
+        set.Except(otherSet);
+
+        // Assert
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void Except_Ip4RangeSet2_MultipleRanges_RemovesOverlapping()
+    {
+        // Arrange: [10-20], [30-40], [50-60] except [15-35], [55-65]
+        var set = new Ip4RangeSet2(new[]
+        {
+            new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
+            new Ip4Range(new Ip4Address(30), new Ip4Address(40)),
+            new Ip4Range(new Ip4Address(50), new Ip4Address(60))
+        });
+        var otherSet = new Ip4RangeSet2(new[]
+        {
+            new Ip4Range(new Ip4Address(15), new Ip4Address(35)),
+            new Ip4Range(new Ip4Address(55), new Ip4Address(65))
+        });
+
+        // Act
+        set.Except(otherSet);
+
+        // Assert
+        var ranges = set.ToIp4Ranges().ToArray();
+        Assert.Equal(3, ranges.Length);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(14), ranges[0].LastAddress);
+        Assert.Equal(new Ip4Address(36), ranges[1].FirstAddress);
+        Assert.Equal(new Ip4Address(40), ranges[1].LastAddress);
+        Assert.Equal(new Ip4Address(50), ranges[2].FirstAddress);
+        Assert.Equal(new Ip4Address(54), ranges[2].LastAddress);
+    }
+
+    [Fact]
+    public void Except_Ip4RangeSet2_DisjointRanges_NoChange()
+    {
+        // Arrange: [10-20], [30-40] except [50-60], [70-80]
+        var set = new Ip4RangeSet2(new[]
+        {
+            new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
+            new Ip4Range(new Ip4Address(30), new Ip4Address(40))
+        });
+        var otherSet = new Ip4RangeSet2(new[]
+        {
+            new Ip4Range(new Ip4Address(50), new Ip4Address(60)),
+            new Ip4Range(new Ip4Address(70), new Ip4Address(80))
+        });
+
+        // Act
+        set.Except(otherSet);
+
+        // Assert
+        var ranges = set.ToIp4Ranges().ToArray();
+        Assert.Equal(2, ranges.Length);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(20), ranges[0].LastAddress);
+        Assert.Equal(new Ip4Address(30), ranges[1].FirstAddress);
+        Assert.Equal(new Ip4Address(40), ranges[1].LastAddress);
+    }
+
+    [Fact]
+    public void Except_Ip4RangeSet2_PartialOverlaps_RemovesCorrectly()
+    {
+        // Arrange: [10-30] except [20-25]
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+        var otherSet = new Ip4RangeSet2(new Ip4Range(new Ip4Address(20), new Ip4Address(25)));
+
+        // Act
+        set.Except(otherSet);
+
+        // Assert
+        var ranges = set.ToIp4Ranges().ToArray();
+        Assert.Equal(2, ranges.Length);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(19), ranges[0].LastAddress);
+        Assert.Equal(new Ip4Address(26), ranges[1].FirstAddress);
+        Assert.Equal(new Ip4Address(30), ranges[1].LastAddress);
+    }
+
+    #endregion
+
+    #region ExpandSet Tests
+
+    [Fact]
+    public void ExpandSet_SmallGap_MergesRanges()
+    {
+        // Arrange: [10-20] and [23-30] with gap of 2 (21-22)
+        var set = new Ip4RangeSet2();
+        set.Union(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        set.Union(new Ip4Range(new Ip4Address(23), new Ip4Address(30)));
+
+        // Act: expand with delta=2 should merge
+        set.ExpandSet(2, out bool wasListChanged);
+
+        // Assert
+        Assert.True(wasListChanged);
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(30), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void ExpandSet_LargeGap_DoesNotMerge()
+    {
+        // Arrange: [10-20] and [30-40] with gap of 9 (21-29)
+        var set = new Ip4RangeSet2();
+        set.Union(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        set.Union(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
+
+        // Act: expand with delta=5 should not merge (gap > delta)
+        set.ExpandSet(5, out bool wasListChanged);
+
+        // Assert
+        Assert.False(wasListChanged);
+        var ranges = set.ToIp4Ranges().ToArray();
+        Assert.Equal(2, ranges.Length);
+    }
+
+    [Fact]
+    public void ExpandSet_DeltaZero_MergesAdjacentOnly()
+    {
+        // Arrange: [10-20] and [21-30] are adjacent
+        var set = new Ip4RangeSet2();
+        set.Union(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        set.Union(new Ip4Range(new Ip4Address(21), new Ip4Address(30)));
+
+        // Act
+        set.ExpandSet(0, out bool wasListChanged);
+
+        // Assert
+        Assert.True(wasListChanged);
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(30), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void ExpandSet_MultipleGaps_MergesAll()
+    {
+        // Arrange: [10-12], [14-16], [18-20] with gaps of 1
+        var set = new Ip4RangeSet2();
+        set.Union(new Ip4Range(new Ip4Address(10), new Ip4Address(12)));
+        set.Union(new Ip4Range(new Ip4Address(14), new Ip4Address(16)));
+        set.Union(new Ip4Range(new Ip4Address(18), new Ip4Address(20)));
+
+        // Act: delta=1 should merge all
+        set.ExpandSet(1, out bool wasListChanged);
+
+        // Assert
+        Assert.True(wasListChanged);
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(20), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void ExpandSet_EmptySet_NoChange()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2();
+
+        // Act
+        set.ExpandSet(10, out bool wasListChanged);
+
+        // Assert
+        Assert.False(wasListChanged);
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void ExpandSet_SingleRange_NoChange()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+
+        // Act
+        set.ExpandSet(10, out bool wasListChanged);
+
+        // Assert
+        Assert.False(wasListChanged);
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+    }
+
+    [Fact]
+    public void ExpandSet_ExactGapSize_Merges()
+    {
+        // Arrange: [10-20] and [25-30] with gap of 4 (21-24)
+        var set = new Ip4RangeSet2();
+        set.Union(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        set.Union(new Ip4Range(new Ip4Address(25), new Ip4Address(30)));
+
+        // Act: delta=4 should merge (gap size = delta)
+        set.ExpandSet(4, out bool wasListChanged);
+
+        // Assert
+        Assert.True(wasListChanged);
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+    }
+
+    #endregion
+
+    #region ShrinkSet Tests
+
+    [Fact]
+    public void ShrinkSet_SmallRanges_RemovesThem()
+    {
+        // Arrange: [10-12] (size 3), [20-30] (size 11), [40-42] (size 3)
+        var set = new Ip4RangeSet2();
+        set.Union(new Ip4Range(new Ip4Address(10), new Ip4Address(12)));
+        set.Union(new Ip4Range(new Ip4Address(20), new Ip4Address(30)));
+        set.Union(new Ip4Range(new Ip4Address(40), new Ip4Address(42)));
+
+        // Act: delta=5 should remove ranges with size <= 5
+        set.ShrinkSet(5, out bool wasListChanged);
+
+        // Assert
+        Assert.True(wasListChanged);
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(20), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(30), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void ShrinkSet_AllRangesLarge_NoChange()
+    {
+        // Arrange: [10-20] (size 11), [30-40] (size 11)
+        var set = new Ip4RangeSet2();
+        set.Union(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        set.Union(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
+
+        // Act: delta=5 should not remove any ranges
+        set.ShrinkSet(5, out bool wasListChanged);
+
+        // Assert
+        Assert.False(wasListChanged);
+        var ranges = set.ToIp4Ranges().ToArray();
+        Assert.Equal(2, ranges.Length);
+    }
+
+    [Fact]
+    public void ShrinkSet_AllRangesSmall_RemovesAll()
+    {
+        // Arrange: [10-12] (size 3), [20-22] (size 3)
+        var set = new Ip4RangeSet2();
+        set.Union(new Ip4Range(new Ip4Address(10), new Ip4Address(12)));
+        set.Union(new Ip4Range(new Ip4Address(20), new Ip4Address(22)));
+
+        // Act: delta=5 should remove all ranges
+        set.ShrinkSet(5, out bool wasListChanged);
+
+        // Assert
+        Assert.True(wasListChanged);
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void ShrinkSet_ExactSize_Removes()
+    {
+        // Arrange: [10-14] (size 5)
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(14)));
+
+        // Act: delta=5 should remove (size <= delta)
+        set.ShrinkSet(5, out bool wasListChanged);
+
+        // Assert
+        Assert.True(wasListChanged);
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void ShrinkSet_EmptySet_NoChange()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2();
+
+        // Act
+        set.ShrinkSet(10, out bool wasListChanged);
+
+        // Assert
+        Assert.False(wasListChanged);
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void ShrinkSet_SingleAddressRange_RemovesWithDeltaOne()
+    {
+        // Arrange: [10-10] (size 1)
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(10)));
+
+        // Act: delta=1 should remove
+        set.ShrinkSet(1, out bool wasListChanged);
+
+        // Assert
+        Assert.True(wasListChanged);
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void ShrinkSet_DeltaZero_NoChange()
+    {
+        // Arrange: any range has size >= 1
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(10)));
+
+        // Act: delta=0 should not remove any ranges (size > 0)
+        set.ShrinkSet(0, out bool wasListChanged);
+
+        // Assert
+        Assert.False(wasListChanged);
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+    }
+
+    #endregion
+
+    #region Static Properties Tests
+
+    [Fact]
+    public void Empty_ReturnsEmptySet()
+    {
+        // Act
+        var emptySet = Ip4RangeSet2.Empty;
+
+        // Assert
+        Assert.NotNull(emptySet);
+        Assert.Empty(emptySet.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void All_ReturnsFullIpRange()
+    {
+        // Act
+        var allSet = Ip4RangeSet2.All;
+
+        // Assert
+        Assert.NotNull(allSet);
+        var ranges = allSet.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(0), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(uint.MaxValue), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void Empty_MultipleCallsReturnDifferentInstances()
+    {
+        // Act
+        var empty1 = Ip4RangeSet2.Empty;
+        var empty2 = Ip4RangeSet2.Empty;
+
+        // Assert: should be different instances
+        Assert.NotSame(empty1, empty2);
+    }
+
+    [Fact]
+    public void All_MultipleCallsReturnDifferentInstances()
+    {
+        // Act
+        var all1 = Ip4RangeSet2.All;
+        var all2 = Ip4RangeSet2.All;
+
+        // Assert: should be different instances
+        Assert.NotSame(all1, all2);
+    }
+
+    #endregion
+
+    #region Copy Constructor Tests
+
+    [Fact]
+    public void Constructor_CopyFromSet_CreatesDeepCopy()
+    {
+        // Arrange
+        var original = new Ip4RangeSet2(new[]
+        {
+            new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
+            new Ip4Range(new Ip4Address(30), new Ip4Address(40))
+        });
+
+        // Act
+        var copy = new Ip4RangeSet2(original);
+
+        // Assert: verify deep copy
+        var originalRanges = original.ToIp4Ranges().ToArray();
+        var copyRanges = copy.ToIp4Ranges().ToArray();
+        Assert.Equal(originalRanges.Length, copyRanges.Length);
+        for (int i = 0; i < originalRanges.Length; i++)
+        {
+            Assert.Equal(originalRanges[i].FirstAddress, copyRanges[i].FirstAddress);
+            Assert.Equal(originalRanges[i].LastAddress, copyRanges[i].LastAddress);
+        }
+    }
+
+    [Fact]
+    public void Constructor_CopyFromSet_ModifyingCopyDoesNotAffectOriginal()
+    {
+        // Arrange
+        var original = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var copy = new Ip4RangeSet2(original);
+
+        // Act: modify copy
+        copy.Union(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
+
+        // Assert: original should be unchanged
+        var originalRanges = original.ToIp4Ranges();
+        Assert.Single(originalRanges);
+        Assert.Equal(new Ip4Address(10), originalRanges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(20), originalRanges[0].LastAddress);
+
+        var copyRanges = copy.ToIp4Ranges().ToArray();
+        Assert.Equal(2, copyRanges.Length);
+    }
+
+    [Fact]
+    public void Constructor_CopyFromEmptySet_CreatesEmptyCopy()
+    {
+        // Arrange
+        var original = new Ip4RangeSet2();
+
+        // Act
+        var copy = new Ip4RangeSet2(original);
+
+        // Assert
+        Assert.Empty(copy.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void Constructor_CopyFromNull_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => new Ip4RangeSet2((Ip4RangeSet2)null!));
+    }
+
+    #endregion
+
+    #region ToIp4Subnets Tests
+
+    [Fact]
+    public void ToIp4Subnets_SingleRange_ReturnsSubnets()
+    {
+        // Arrange: 192.168.0.0 - 192.168.0.255 should convert to subnets
+        var set = new Ip4RangeSet2(new Ip4Range(
+            Ip4Address.Parse("192.168.0.0"),
+            Ip4Address.Parse("192.168.0.255")));
+
+        // Act
+        var subnets = set.ToIp4Subnets();
+
+        // Assert
+        Assert.NotEmpty(subnets);
+        // Verify all subnets cover the range
+        ulong totalAddresses = (ulong)subnets.Sum(s => (decimal)s.Count);
+        Assert.Equal(256UL, totalAddresses);
+    }
+
+    [Fact]
+    public void ToIp4Subnets_MultipleRanges_ReturnsAllSubnets()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2(new[]
+        {
+            new Ip4Range(Ip4Address.Parse("10.0.0.0"), Ip4Address.Parse("10.0.0.255")),
+            new Ip4Range(Ip4Address.Parse("192.168.1.0"), Ip4Address.Parse("192.168.1.255"))
+        });
+
+        // Act
+        var subnets = set.ToIp4Subnets();
+
+        // Assert
+        Assert.NotEmpty(subnets);
+        ulong totalAddresses = (ulong)subnets.Sum(s => (decimal)s.Count);
+        Assert.Equal(512UL, totalAddresses); // 256 + 256
+    }
+
+    [Fact]
+    public void ToIp4Subnets_EmptySet_ReturnsEmptyArray()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2();
+
+        // Act
+        var subnets = set.ToIp4Subnets();
+
+        // Assert
+        Assert.Empty(subnets);
+    }
+
+    [Fact]
+    public void ToIp4Subnets_SmallRange_ReturnsCorrectSubnets()
+    {
+        // Arrange: small range that should produce specific subnets
+        var set = new Ip4RangeSet2(new Ip4Range(
+            Ip4Address.Parse("10.0.0.0"),
+            Ip4Address.Parse("10.0.0.7")));
+
+        // Act
+        var subnets = set.ToIp4Subnets();
+
+        // Assert
+        Assert.NotEmpty(subnets);
+        ulong totalAddresses = (ulong)subnets.Sum(s => (decimal)s.Count);
+        Assert.Equal(8UL, totalAddresses);
+    }
+
+    #endregion
+
+    #region MinimizeSubnets Tests
+
+    [Fact]
+    public void MinimizeSubnets_FiltersByDelta_ReturnsLargerSubnets()
+    {
+        // Arrange: create set with various subnet sizes
+        var set = new Ip4RangeSet2(new[]
+        {
+            new Ip4Range(Ip4Address.Parse("10.0.0.0"), Ip4Address.Parse("10.0.0.255")),    // 256 addresses
+            new Ip4Range(Ip4Address.Parse("192.168.0.0"), Ip4Address.Parse("192.168.0.7"))  // 8 addresses
+        });
+
+        // Act: filter out subnets with count <= 100
+        var minimized = set.MinimizeSubnets(100);
+
+        // Assert: should only keep larger subnets
+        var subnets = minimized.ToIp4Subnets();
+        Assert.All(subnets, s => Assert.True(s.Count > 100));
+    }
+
+    [Fact]
+    public void MinimizeSubnets_DeltaZero_ReturnsAllSubnets()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2(new Ip4Range(
+            Ip4Address.Parse("10.0.0.0"),
+            Ip4Address.Parse("10.0.0.255")));
+
+        // Act
+        var minimized = set.MinimizeSubnets(0);
+
+        // Assert: all subnets should be included
+        var originalSubnets = set.ToIp4Subnets();
+        var minimizedSubnets = minimized.ToIp4Subnets();
+        Assert.Equal(originalSubnets.Length, minimizedSubnets.Length);
+    }
+
+    [Fact]
+    public void MinimizeSubnets_EmptySet_ReturnsEmptySet()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2();
+
+        // Act
+        var minimized = set.MinimizeSubnets(10);
+
+        // Assert
+        Assert.Empty(minimized.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void MinimizeSubnets_HighDelta_RemovesAllSmallSubnets()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2(new Ip4Range(
+            Ip4Address.Parse("10.0.0.0"),
+            Ip4Address.Parse("10.0.0.31")));
+
+        // Act: use very high delta
+        var minimized = set.MinimizeSubnets(1000);
+
+        // Assert: should remove all subnets smaller than delta
+        var subnets = minimized.ToIp4Subnets();
+        Assert.All(subnets, s => Assert.True(s.Count > 1000));
+    }
+
+    #endregion
+
+    #region ToString Tests
+
+    [Fact]
+    public void ToString_EmptySet_ReturnsEmptyString()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2();
+
+        // Act
+        var result = set.ToString();
+
+        // Assert
+        Assert.Equal(string.Empty, result);
+    }
+
+    [Fact]
+    public void ToString_SingleRange_ReturnsRangeString()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+
+        // Act
+        var result = set.ToString();
+
+        // Assert
+        Assert.NotEmpty(result);
+        Assert.Contains("10", result);
+        Assert.Contains("20", result);
+    }
+
+    [Fact]
+    public void ToString_MultipleRanges_ReturnsAllRanges()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2(new[]
+        {
+            new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
+            new Ip4Range(new Ip4Address(30), new Ip4Address(40))
+        });
+
+        // Act
+        var result = set.ToString();
+
+        // Assert
+        Assert.NotEmpty(result);
+        // Should contain both ranges
+        var lines = result.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(2, lines.Length);
+    }
+
+    [Fact]
+    public void ToString_ContainsNewlines()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2(new[]
+        {
+            new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
+            new Ip4Range(new Ip4Address(30), new Ip4Address(40))
+        });
+
+        // Act
+        var result = set.ToString();
+
+        // Assert: should contain line breaks
+        Assert.Contains(Environment.NewLine, result);
+    }
+
+    #endregion
+
+    #region Edge Cases and Boundary Tests
+
+    [Fact]
+    public void Union_WithNullArray_ThrowsArgumentNullException()
+    {
+        var set = new Ip4RangeSet2();
+
+        Assert.Throws<ArgumentNullException>(() => set.Union((Ip4Range[])null!));
+    }
+
+    [Fact]
+    public void Union_WithNullEnumerable_ThrowsArgumentNullException()
+    {
+        var set = new Ip4RangeSet2();
+
+        Assert.Throws<ArgumentNullException>(() => set.Union((IEnumerable<Ip4Range>)null!));
+    }
+
+    [Fact]
+    public void Union_WithNullSubnetEnumerable_ThrowsArgumentNullException()
+    {
+        var set = new Ip4RangeSet2();
+
+        Assert.Throws<ArgumentNullException>(() => set.Union((IEnumerable<Ip4Subnet>)null!));
+    }
+
+    [Fact]
+    public void Operations_AtMinimumIpAddress_WorkCorrectly()
+    {
+        // Arrange: range starting at 0.0.0.0
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(0), new Ip4Address(100)));
+
+        // Act & Assert: should handle minimum address
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(0), ranges[0].FirstAddress);
+    }
+
+    [Fact]
+    public void Operations_AtMaximumIpAddress_WorkCorrectly()
+    {
+        // Arrange: range ending at 255.255.255.255
+        var set = new Ip4RangeSet2(new Ip4Range(
+            new Ip4Address(uint.MaxValue - 100),
+            new Ip4Address(uint.MaxValue)));
+
+        // Act & Assert: should handle maximum address
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(uint.MaxValue), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void Union_FullIpRange_WorksCorrectly()
+    {
+        // Arrange: union with entire IP range
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(1000), new Ip4Address(2000)));
+
+        // Act: union with full range
+        set.Union(Ip4Range.All);
+
+        // Assert: should result in full range
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(0), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(uint.MaxValue), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_FullIpRange_ResultsInEmptySet()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(1000), new Ip4Address(2000)));
+
+        // Act: except entire IP range
+        set.Except(Ip4Range.All);
+
+        // Assert: should be empty
+        Assert.Empty(set.ToIp4Ranges());
+    }
+
+    [Fact]
+    public void LargeRangeOperations_PerformCorrectly()
+    {
+        // Arrange: large ranges for performance testing
+        var set = new Ip4RangeSet2(new Ip4Range(
+            new Ip4Address(0),
+            new Ip4Address(10_000_000)));
+
+        // Act: union with another large range
+        set.Union(new Ip4Range(
+            new Ip4Address(5_000_000),
+            new Ip4Address(15_000_000)));
+
+        // Assert: should merge correctly
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(0), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(15_000_000), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void ExpandSet_NearMaxValue_HandlesOverflowCorrectly()
+    {
+        // Arrange: ranges near maximum IP address with gap of 9 (addresses 4294967195-4294967204)
+        var set = new Ip4RangeSet2();
+        set.Union(new Ip4Range(
+            new Ip4Address(uint.MaxValue - 100),
+            new Ip4Address(uint.MaxValue - 50)));
+        set.Union(new Ip4Range(
+            new Ip4Address(uint.MaxValue - 40),
+            new Ip4Address(uint.MaxValue)));
+
+        // Act: expand with delta=10 to merge the gap
+        set.ExpandSet(10, out bool wasListChanged);
+
+        // Assert: should merge without overflow
+        Assert.True(wasListChanged);
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+    }
+
+    [Fact]
+    public void MultipleOperations_MaintainsSortedOrder()
+    {
+        // Arrange
+        var set = new Ip4RangeSet2();
+
+        // Act: perform multiple operations
+        set.Union(new Ip4Range(new Ip4Address(50), new Ip4Address(60)));
+        set.Union(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        set.Union(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
+        set.Except(new Ip4Range(new Ip4Address(35), new Ip4Address(55)));
+
+        // Assert: ranges should be in sorted order
+        var ranges = set.ToIp4Ranges().ToArray();
+        for (int i = 0; i < ranges.Length - 1; i++)
+        {
+            Assert.True(ranges[i].LastAddress < ranges[i + 1].FirstAddress);
+        }
+    }
+
+    #endregion
 }
