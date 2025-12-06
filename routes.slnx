@@ -12,6 +12,7 @@
   <Project Path="Ip4Parsers/Ip4Parsers.csproj" Id="5fc83869-6073-4120-9e2f-f419393309db" />
   <Project Path="Ip4RangeSetDifferenceCalculator/Ip4RangeSetDifferenceCalculator.csproj" Id="0145d941-c406-4003-843f-94f499f87aef" />
   <Project Path="routes.Benchmarks/routes.Benchmarks.csproj" />
+  <Project Path="routes.PerfomanceProfiles/routes.PerfomanceProfiles.csproj" Id="7799b992-19dc-4188-878d-a45e1da593d6" />
   <Project Path="routes.Test/routes.Test.csproj" />
   <Project Path="routes/routes.csproj" />
   <Project Path="routeTable/NativeMethods.Windows.csproj" Id="ed2a6324-edfd-4998-846d-aca0da4d9afa" />

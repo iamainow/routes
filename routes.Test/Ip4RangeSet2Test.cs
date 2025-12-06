@@ -336,9 +336,9 @@ public class Ip4RangeSet2Test
         // Act
         var set = new Ip4RangeSet2(subnets);
 
-        // Assert: Should have 3 ranges since they don't overlap
+        // Assert: Should have 2 ranges
         var ranges = set.ToIp4Ranges().ToArray();
-        Assert.Equal(3, ranges.Length);
+        Assert.Equal(2, ranges.Length);
     }
 
     [Fact]

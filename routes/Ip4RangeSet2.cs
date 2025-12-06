@@ -27,31 +27,28 @@ public class Ip4RangeSet2
         _list.AddFirst(subnet);
     }
 
+    public Ip4RangeSet2(Ip4Range[] ranges) : this()
+    {
+        ArgumentNullException.ThrowIfNull(ranges);
+        Union(ranges);
+    }
+
     public Ip4RangeSet2(IEnumerable<Ip4Range> ranges) : this()
     {
         ArgumentNullException.ThrowIfNull(ranges);
-        foreach (Ip4Range range in ranges)
-        {
-            this.Union(range);
-        }
+        Union(ranges);
     }
 
     public Ip4RangeSet2(IEnumerable<Ip4Subnet> subnets) : this()
     {
         ArgumentNullException.ThrowIfNull(subnets);
-        foreach (Ip4Subnet subnet in subnets)
-        {
-            this.Union(subnet);
-        }
+        this.Union(subnets);
     }
 
     public Ip4RangeSet2(Ip4RangeSet2 set) : this()
     {
         ArgumentNullException.ThrowIfNull(set);
-        foreach (Ip4Range range in set._list)
-        {
-            this._list.AddLast(range);
-        }
+        this._list = new LinkedList<Ip4Range>(set._list);
     }
 
     public void Union(Ip4Range other)
@@ -89,27 +86,21 @@ public class Ip4RangeSet2
     {
         ArgumentNullException.ThrowIfNull(other);
 
+        if (other._list.First is null)
+        {
+            return;
+        }
+
+        if (_list.First is null)
+        {
+            _list = new LinkedList<Ip4Range>(other._list);
+            return;
+        }
+
         var current = _list.First;
         var currentOther = other._list.First;
 
         LinkedList<Ip4Range> result = new();
-
-        if (currentOther is null)
-        {
-            return;
-        }
-
-        if (current is null)
-        {
-            do
-            {
-                _list.AddLast(currentOther.Value);
-                currentOther = currentOther.Next;
-            }
-            while (currentOther is not null);
-
-            return;
-        }
 
         if (current.Value.FirstAddress < currentOther.Value.FirstAddress)
         {
@@ -155,6 +146,7 @@ public class Ip4RangeSet2
                 {
                     result.AddLast(currentOther.Value);
                 }
+
                 currentOther = currentOther.Next;
             }
         }
@@ -191,7 +183,161 @@ public class Ip4RangeSet2
             {
                 result.AddLast(currentOther.Value);
             }
+
             currentOther = currentOther.Next;
+        }
+
+        this._list = result;
+    }
+
+    public void Union(Ip4Range[] ranges)
+    {
+        ArgumentNullException.ThrowIfNull(ranges);
+
+        Ip4Range[] temp = new Ip4Range[ranges.Length];
+        Array.Copy(ranges, temp, temp.Length);
+
+        Array.Sort(temp, Ip4RangeComparer.Instance);
+
+        InternalUnionSortedRanges(temp);
+    }
+
+    public void Union(IEnumerable<Ip4Range> ranges)
+    {
+        ArgumentNullException.ThrowIfNull(ranges);
+
+        Ip4Range[] temp = ranges.ToArray();
+
+        Array.Sort(temp, Ip4RangeComparer.Instance);
+
+        InternalUnionSortedRanges(temp);
+    }
+
+    public void Union(IEnumerable<Ip4Subnet> subnets)
+    {
+        ArgumentNullException.ThrowIfNull(subnets);
+
+        Ip4Range[] temp = subnets.Select(x => x.ToIp4Range()).ToArray();
+
+        Array.Sort(temp, Ip4RangeComparer.Instance);
+
+        InternalUnionSortedRanges(temp);
+    }
+
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+    private void InternalUnionSortedRanges(IEnumerable<Ip4Range> sortedRanges)
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+    {
+        using IEnumerator<Ip4Range> sortedRangesEnumerator = sortedRanges.GetEnumerator();
+        bool sortedRangesValueExists = sortedRangesEnumerator.MoveNext();
+        if (!sortedRangesValueExists) // 0 elements
+        {
+            return;
+        }
+
+        var current = _list.First;
+
+        LinkedList<Ip4Range> result = new();
+
+        if (current is not null && sortedRangesValueExists)
+        {
+            if (current.Value.FirstAddress < sortedRangesEnumerator.Current.FirstAddress)
+            {
+                result.AddFirst(current.Value);
+                current = current.Next;
+            }
+            else
+            {
+                result.AddFirst(sortedRangesEnumerator.Current);
+                sortedRangesValueExists = sortedRangesEnumerator.MoveNext();
+            }
+        }
+        else
+        {
+            if (current is not null)
+            {
+                result.AddFirst(current.Value);
+                current = current.Next;
+            }
+            else
+            {
+                result.AddFirst(sortedRangesEnumerator.Current);
+                sortedRangesValueExists = sortedRangesEnumerator.MoveNext();
+            }
+        }
+
+        while (current is not null && sortedRangesValueExists)
+        {
+            if (current.Value.FirstAddress < sortedRangesEnumerator.Current.FirstAddress)
+            {
+                if (result.Last!.Value.IsIntersects(current.Value))
+                {
+                    result.Last.Value = result.Last.Value.IntersectableUnion(current.Value);
+                }
+                else if (result.Last!.Value.LastAddress.ToUInt32() + 1 == current.Value.FirstAddress.ToUInt32())
+                {
+                    result.Last.Value = new Ip4Range(result.Last!.Value.FirstAddress, current.Value.LastAddress);
+                }
+                else
+                {
+                    result.AddLast(current.Value);
+                }
+
+                current = current.Next;
+            }
+            else
+            {
+                if (result.Last!.Value.IsIntersects(sortedRangesEnumerator.Current))
+                {
+                    result.Last.Value = result.Last.Value.IntersectableUnion(sortedRangesEnumerator.Current);
+                }
+                else if (result.Last!.Value.LastAddress.ToUInt32() + 1 == sortedRangesEnumerator.Current.FirstAddress.ToUInt32())
+                {
+                    result.Last.Value = new Ip4Range(result.Last!.Value.FirstAddress, sortedRangesEnumerator.Current.LastAddress);
+                }
+                else
+                {
+                    result.AddLast(sortedRangesEnumerator.Current);
+                }
+
+                sortedRangesValueExists = sortedRangesEnumerator.MoveNext();
+            }
+        }
+
+        while (current is not null)
+        {
+            if (result.Last!.Value.IsIntersects(current.Value))
+            {
+                result.Last.Value = result.Last.Value.IntersectableUnion(current.Value);
+            }
+            else if (result.Last!.Value.LastAddress.ToUInt32() + 1 == current.Value.FirstAddress.ToUInt32())
+            {
+                result.Last.Value = new Ip4Range(result.Last!.Value.FirstAddress, current.Value.LastAddress);
+            }
+            else
+            {
+                result.AddLast(current.Value);
+            }
+
+            current = current.Next;
+        }
+
+        while (sortedRangesValueExists)
+        {
+            if (result.Last!.Value.IsIntersects(sortedRangesEnumerator.Current))
+            {
+                result.Last.Value = result.Last.Value.IntersectableUnion(sortedRangesEnumerator.Current);
+            }
+            else if (result.Last!.Value.LastAddress.ToUInt32() + 1 == sortedRangesEnumerator.Current.FirstAddress.ToUInt32())
+            {
+                result.Last.Value = new Ip4Range(result.Last!.Value.FirstAddress, sortedRangesEnumerator.Current.LastAddress);
+            }
+            else
+            {
+                result.AddLast(sortedRangesEnumerator.Current);
+            }
+
+            sortedRangesValueExists = sortedRangesEnumerator.MoveNext();
         }
 
         this._list = result;

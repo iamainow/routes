@@ -17,7 +17,7 @@ public class Ip4RangeSetBenchmarks
     private string _subnetsText = "";
     private Ip4Subnet[] _subnets = [];
     private Ip4Range[] _bogon = [];
-    private List<Ip4RangeSet2> rangeSetsBy10 = new();
+    private List<Ip4RangeSet2> rangeSetsBy10 = [];
 
     [GlobalSetup]
     public async Task GlobalSetup()
