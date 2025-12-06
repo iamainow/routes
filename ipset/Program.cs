@@ -32,10 +32,7 @@ internal static class Program
         while ((line = await streamReader.ReadLineAsync()) is not null)
         {
             IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
-            foreach (Ip4Range range in ranges)
-            {
-                result.Union(range);
-            }
+            result.Union(ranges);
         }
         return result;
     }
@@ -47,10 +44,7 @@ internal static class Program
         while ((line = Console.ReadLine()) is not null)
         {
             IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
-            foreach (Ip4Range range in ranges)
-            {
-                result.Union(range);
-            }
+            result.Union(ranges);
         }
         return result;
     }
@@ -169,11 +163,11 @@ internal static class Program
                         throw new ArgumentException("missing simplify argument, should use simplify <number>");
                     }
                     uint simplifyRange = uint.Parse(enumerator.Current);
-                    result.Simplify(simplifyRange);
+                    result.MinimizeSubnets(simplifyRange);
                     break;
 
                 case "normalize":
-                    result.Normalize();
+                    // obsolete; should remove in next versions
                     break;
 
                 case "print":

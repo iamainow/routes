@@ -91,7 +91,6 @@ public class Ip4RangeSetBenchmarks
         result.Except(ip);
         result.Except(bogon);
         result.Except(subnets);
-        result.Normalize();
 
         return result;
     }
@@ -109,7 +108,6 @@ public class Ip4RangeSetBenchmarks
         result.Except(ip);
         result.Except(bogon);
         result.Except(subnets);
-        result.Normalize();
 
         return result;
     }

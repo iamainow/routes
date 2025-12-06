@@ -51,35 +51,6 @@ public class Ip4RangeSet2
         this._list = new LinkedList<Ip4Range>(set._list);
     }
 
-    public void Union(Ip4Range other)
-    {
-        var current = _list.First;
-        while (current is not null)
-        {
-            if (current.Value.IsIntersects(other))
-            {
-                var unioned = current.Value.IntersectableUnion(other);
-                var next = current.Next;
-                while (next is not null && next.Value.IsIntersects(unioned))
-                {
-                    unioned = unioned.IntersectableUnion(next.Value);
-                    var toRemove = next;
-                    next = next.Next;
-                    _list.Remove(toRemove);
-                }
-                current.Value = unioned;
-                return;
-            }
-            else if (current.Value.FirstAddress > other.LastAddress)
-            {
-                _list.AddBefore(current, other);
-                return;
-            }
-            current = current.Next;
-        }
-        _list.AddLast(other);
-    }
-
     public void Union(Ip4RangeSet2 other) => Union3(other);
 
     public void Union3(Ip4RangeSet2 other)
@@ -343,48 +314,6 @@ public class Ip4RangeSet2
         this._list = result;
     }
 
-    public void Except(Ip4Range other)
-    {
-        var current = _list.First;
-        while (current is not null)
-        {
-            if (current.Value.IsIntersects(other))
-            {
-                while (current is not null && current.Value.IsIntersects(other))
-                {
-                    var newElements = current.Value.IntersectableExcept(other);
-                    switch (newElements.Length)
-                    {
-                        case 0:
-                            var toDelete = current;
-                            current = current.Next;
-                            _list.Remove(toDelete);
-                            break;
-                        case 1:
-                            current.Value = newElements[0];
-                            current = current.Next;
-                            break;
-                        case 2:
-                            _list.AddBefore(current, newElements[0]);
-                            current.Value = newElements[1];
-                            current = current.Next;
-                            break;
-                        default:
-                            throw new NotImplementedException();
-                    }
-                }
-
-                return;
-            }
-            else if (current.Value.FirstAddress > other.LastAddress) // already passed the intersection point - this means there are no overlapping elements and nothing to exclude
-            {
-                return;
-            }
-
-            current = current.Next;
-        }
-    }
-
     public void Except(Ip4RangeSet2 other) => Except4(other);
 
     public void Except1(Ip4RangeSet2 other)
@@ -626,95 +555,6 @@ public class Ip4RangeSet2
     //    }
     //    return result;
     //}
-
-    private static bool ExpandSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
-    {
-        bool wasListChanged = false;
-        LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
-        while (current is not null && current.Next is not null)
-        {
-            LinkedListNode<Ip4Range> next = current.Next;
-            // if gap between neighbors equals or more than delta, union them
-            if ((ulong)(uint)current.Value.LastAddress + delta + 1 >= (uint)next.Value.FirstAddress)
-            {
-                current.Value = new Ip4Range(current.Value.FirstAddress, next.Value.LastAddress);
-                sortedLinkedList.Remove(next);
-                wasListChanged = true;
-            }
-            else
-            {
-                current = current.Next;
-            }
-        }
-
-        return wasListChanged;
-    }
-
-    public void ExpandSet(uint delta, out bool wasListChanged)
-    {
-        wasListChanged = ExpandSortedLinkedList(this._list, delta);
-    }
-
-    private static bool ShrinkSortedLinkedList(LinkedList<Ip4Range> sortedLinkedList, uint delta)
-    {
-        bool wasElementRemoved = false;
-        LinkedListNode<Ip4Range>? current = sortedLinkedList.First;
-        while (current is not null)
-        {
-            // if current range is equals or smaller than delta, remove it
-            if (current.Value.Count <= delta)
-            {
-                LinkedListNode<Ip4Range> toDelete = current;
-                current = current.Next;
-                sortedLinkedList.Remove(toDelete);
-                wasElementRemoved = true;
-            }
-            else
-            {
-                current = current.Next;
-            }
-        }
-
-        return wasElementRemoved;
-    }
-
-    public void ShrinkSet(uint delta, out bool wasListChanged)
-    {
-        wasListChanged = ShrinkSortedLinkedList(this._list, delta);
-    }
-
-    public void Simplify(uint delta)
-    {
-        while (this._list.Count >= 2)
-        {
-            ulong minSize = this.ToIp4Ranges().Min(x => x.Count);
-
-            var temp = All;
-            temp.Except(this);
-
-            ulong minGap = temp.ToIp4Ranges().Min(x => x.Count);
-
-            if (minSize <= minGap && minSize <= delta && minSize <= uint.MaxValue)
-            {
-                ShrinkSet((uint)minSize, out _);
-                continue;
-            }
-            else if (minGap <= minSize && minGap <= delta && minGap <= uint.MaxValue)
-            {
-                ExpandSet((uint)minGap, out _);
-                continue;
-            }
-            else
-            {
-                break;
-            }
-        }
-    }
-
-    public void Normalize()
-    {
-        ExpandSet(0, out _);
-    }
 
     public Ip4RangeSet2 MinimizeSubnets(uint delta)
     {

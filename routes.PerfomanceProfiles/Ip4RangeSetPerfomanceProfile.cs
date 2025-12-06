@@ -82,7 +82,6 @@ internal sealed class Ip4RangeSetPerfomanceProfile
         result.Except(ip);
         result.Except(bogon);
         result.Except(subnets);
-        result.Normalize();
 
         return result;
     }
