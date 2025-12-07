@@ -151,6 +151,26 @@ public class Ip4RangeSetBenchmarks
 
         return result;
     }
+
+    [Benchmark]
+    public Ip4RangeSet2 Union5Except4()
+    {
+        Random random = new();
+        Ip4RangeSet2 result = new();
+        for (int index = 0; index < 100_000; index++)
+        {
+            if (random.NextDouble() < 0.5d)
+            {
+                result.Union5(rangeSetsBy10[index]);
+            }
+            else
+            {
+                result.Except4(rangeSetsBy10[index]);
+            }
+        }
+
+        return result;
+    }
 }
 
 public class NoPowerPlanConfig : ManualConfig
