@@ -54,4 +54,16 @@ BenchmarkRunner.Run<Ip4RangeSetBenchmarks>();
 | Union3Except4          | 6,747.4 us | 95.81 us | 80.01 us | 1679.6875 |        - | 17174.29 KB |
 | Union4Except4          | 1,718.7 us | 16.86 us | 14.95 us |   23.4375 |        - |   248.26 KB |
 
+| Method                 | Mean       | Error    | StdDev   | Gen0      | Gen1     | Allocated   |
+|----------------------- |-----------:|---------:|---------:|----------:|---------:|------------:|
+| Realistic              | 6,242.3 us | 68.32 us | 63.91 us | 1226.5625 | 570.3125 | 12532.37 KB |
+| RealisticWithoutParser |   387.0 us |  3.69 us |  3.45 us |  101.5625 |  50.2930 |  1039.55 KB |
+| Union4Except4          | 1,728.7 us | 21.08 us | 19.72 us |   25.3906 |        - |   270.89 KB |
+| Union5Except4          | 1,632.7 us | 32.33 us | 28.66 us |   17.5781 |        - |   187.09 KB |
+
+| Method                 | Mean       | Error    | StdDev   | Gen0      | Gen1     | Allocated   |
+|----------------------- |-----------:|---------:|---------:|----------:|---------:|------------:|
+| Realistic              | 5,845.3 us | 42.65 us | 33.30 us | 1226.5625 | 570.3125 | 12532.37 KB |
+| RealisticWithoutParser |   382.0 us |  7.12 us |  6.66 us |  101.5625 |  49.8047 |  1039.55 KB |
+| UnionExcept            | 1,847.1 us | 31.28 us | 27.73 us |   29.2969 |        - |   300.64 KB |
 */
