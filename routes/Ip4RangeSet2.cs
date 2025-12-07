@@ -51,7 +51,127 @@ public class Ip4RangeSet2
         this._list = new LinkedList<Ip4Range>(set._list);
     }
 
-    public void Union(Ip4RangeSet2 other) => Union3(other);
+    public void Union(Ip4RangeSet2 other) => Union4(other);
+
+    public void Union4(Ip4RangeSet2 other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+
+        if (_list.First is null)
+        {
+            var currOther = other._list.First;
+            while (currOther is not null)
+            {
+                _list.AddLast(currOther.Value);
+                currOther = currOther.Next;
+            }
+            return;
+        }
+        LinkedListNode<Ip4Range> current = _list.First;
+
+        if (other._list.First is null) return;
+        LinkedListNode<Ip4Range> currentOther = other._list.First;
+
+        while (true)
+        {
+            if (current.Value.LastAddress.ToUInt32() + 1L < currentOther.Value.FirstAddress.ToUInt32()) // [current]   [currentOther]
+            {
+                if (current.Next is null)
+                {
+                    var currOther = currentOther;
+                    while (currOther is not null)
+                    {
+                        _list.AddLast(currOther.Value);
+                        currOther = currOther.Next;
+                    }
+                    return;
+                }
+                current = current.Next;
+            }
+            else if (current.Value.LastAddress.ToUInt32() + 1L == currentOther.Value.FirstAddress.ToUInt32()) // [current][currentOther]
+            {
+                current.Value = new Ip4Range(current.Value.FirstAddress, currentOther.Value.LastAddress);
+                if (current.Next is null)
+                {
+                    var currOther = currentOther.Next;
+                    while (currOther is not null)
+                    {
+                        _list.AddLast(currOther.Value);
+                        currOther = currOther.Next;
+                    }
+                    return;
+                }
+                else
+                {
+                    current = current.Next;
+                }
+            }
+            else if (current.Value.FirstAddress.ToUInt32() > currentOther.Value.LastAddress.ToUInt32() + 1L) // [currentOther]   [current]
+            {
+                if (currentOther.Next is null) return;
+                currentOther = currentOther.Next;
+            }
+            else if (current.Value.FirstAddress.ToUInt32() == currentOther.Value.LastAddress.ToUInt32() + 1L) // [currentOther][current]
+            {
+                current.Value = new Ip4Range(currentOther.Value.FirstAddress, current.Value.LastAddress);
+                if (currentOther.Next is null)
+                {
+                    return;
+                }
+                else
+                {
+                    currentOther = currentOther.Next;
+                }
+            }
+            else
+            {
+                var newElement = current.Value.IntersectableUnion(currentOther.Value);
+                bool moveOther = current.Value.LastAddress >= currentOther.Value.LastAddress;
+                current.Value = newElement;
+                if (moveOther)
+                {
+                    if (currentOther.Next is null)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        currentOther = currentOther.Next;
+                    }
+                }
+                else
+                {
+                    if (current.Next is null)
+                    {
+                        var currOther = currentOther.Next;
+                        while (currOther is not null)
+                        {
+                            _list.AddLast(currOther.Value);
+                            currOther = currOther.Next;
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        if (current.Value.IsIntersects(current.Next.Value))
+                        {
+                            do
+#pragma warning disable CA1508 // Avoid dead conditional code
+                            {
+                                current.Value = current.Value.IntersectableUnion(current.Next.Value);
+                                _list.Remove(current.Next);
+                            } while (current.Next is not null && current.Value.IsIntersects(current.Next.Value));
+#pragma warning restore CA1508 // Avoid dead conditional code
+                        }
+                        else
+                        {
+                            current = current.Next;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     public void Union3(Ip4RangeSet2 other)
     {

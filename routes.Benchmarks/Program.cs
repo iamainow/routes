@@ -46,4 +46,12 @@ BenchmarkRunner.Run<Ip4RangeSetBenchmarks>();
 | Realistic              | NativeAOT 10.0 | 7,036.8 us |  79.99 us |  74.82 us | 1226.5625 | 570.3125 |  12.24 MB |
 | RealisticWithoutParser | NativeAOT 10.0 |   574.4 us |   7.66 us |   7.17 us |  101.5625 |  43.9453 |   1.02 MB |
 | Union3Except4          | NativeAOT 10.0 | 8,614.1 us | 168.09 us | 186.83 us | 1750.0000 |        - |  17.47 MB |
+
+| Method                 | Mean       | Error    | StdDev   | Gen0      | Gen1     | Allocated   |
+|----------------------- |-----------:|---------:|---------:|----------:|---------:|------------:|
+| Realistic              | 5,875.9 us | 65.52 us | 58.08 us | 1226.5625 | 570.3125 | 12532.37 KB |
+| RealisticWithoutParser |   381.8 us |  5.04 us |  4.71 us |  101.5625 |  50.2930 |  1039.55 KB |
+| Union3Except4          | 6,747.4 us | 95.81 us | 80.01 us | 1679.6875 |        - | 17174.29 KB |
+| Union4Except4          | 1,718.7 us | 16.86 us | 14.95 us |   23.4375 |        - |   248.26 KB |
+
 */
