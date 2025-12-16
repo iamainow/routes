@@ -68,51 +68,27 @@ public class Ip4ParsersBenchmarks
     }
 
     [Benchmark]
-    public Ip4Range[] RealisticGetRanges1()
+    public Ip4Range[] RealisticGetRanges3()
     {
-        return Ip4SubnetParser.GetRanges1(_subnetsText).ToArray();
+        return Ip4SubnetParser.GetRanges3(_subnetsText).ToArray();
     }
 
     [Benchmark]
-    public Ip4Range[] RealisticGetRanges2()
+    public Ip4Range[] PareseAddressesByGetRanges3()
     {
-        return Ip4SubnetParser.GetRanges2(_subnetsText).ToArray();
+        return Ip4SubnetParser.GetRanges3(addressesString).ToArray();
     }
 
     [Benchmark]
-    public Ip4Range[] PareseAddressesByGetRanges1()
+    public Ip4Range[] PareseRangesByGetRanges3()
     {
-        return Ip4SubnetParser.GetRanges1(addressesString).ToArray();
+        return Ip4SubnetParser.GetRanges3(rangesString).ToArray();
     }
 
     [Benchmark]
-    public Ip4Range[] PareseAddressesByGetRanges2()
+    public Ip4Range[] PareseSubnetsByGetRanges3()
     {
-        return Ip4SubnetParser.GetRanges2(addressesString).ToArray();
-    }
-
-    [Benchmark]
-    public Ip4Range[] PareseRangesByGetRanges1()
-    {
-        return Ip4SubnetParser.GetRanges1(rangesString).ToArray();
-    }
-
-    [Benchmark]
-    public Ip4Range[] PareseRangesByGetRanges2()
-    {
-        return Ip4SubnetParser.GetRanges2(rangesString).ToArray();
-    }
-
-    [Benchmark]
-    public Ip4Range[] PareseSubnetsByGetRanges1()
-    {
-        return Ip4SubnetParser.GetRanges1(subnetsString).ToArray();
-    }
-
-    [Benchmark]
-    public Ip4Range[] PareseSubnetsByGetRanges2()
-    {
-        return Ip4SubnetParser.GetRanges2(subnetsString).ToArray();
+        return Ip4SubnetParser.GetRanges3(subnetsString).ToArray();
     }
 }
 
