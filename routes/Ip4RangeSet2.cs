@@ -175,6 +175,8 @@ public class Ip4RangeSet2
 
     public void Union(Ip4RangeSet2 other)
     {
+#pragma warning disable IDE0010 // Add missing cases
+#pragma warning disable CA1508 // Avoid dead conditional code
         ArgumentNullException.ThrowIfNull(other);
 
         if (_list.First is null)
@@ -196,7 +198,6 @@ public class Ip4RangeSet2
         {
             if (currentOther.Value.FirstAddress > current.Value.LastAddress)
             {
-#pragma warning disable IDE0010 // Add missing cases
                 switch ((currentOther.Value.FirstAddress.ToUInt32() - current.Value.LastAddress.ToUInt32()).CompareTo(1U))
                 {
                     case > 0:
@@ -235,12 +236,10 @@ public class Ip4RangeSet2
                             continue;
                         }
                 }
-#pragma warning restore IDE0010 // Add missing cases
             }
 
             if (current.Value.FirstAddress > currentOther.Value.LastAddress)
             {
-#pragma warning disable IDE0010 // Add missing cases
                 switch ((current.Value.FirstAddress.ToUInt32() - currentOther.Value.LastAddress.ToUInt32()).CompareTo(1U))
                 {
                     case > 0:
@@ -259,7 +258,6 @@ public class Ip4RangeSet2
                         }
                         continue;
                 }
-#pragma warning restore IDE0010 // Add missing cases
             }
             {
                 var newElement = current.Value.IntersectableUnion(currentOther.Value);
@@ -294,12 +292,11 @@ public class Ip4RangeSet2
                         if (current.Value.IsIntersects(current.Next.Value))
                         {
                             do
-#pragma warning disable CA1508 // Avoid dead conditional code
                             {
                                 current.Value = current.Value.IntersectableUnion(current.Next.Value);
                                 _list.Remove(current.Next);
                             } while (current.Next is not null && current.Value.IsIntersects(current.Next.Value));
-#pragma warning restore CA1508 // Avoid dead conditional code
+
                             continue;
                         }
                         else
@@ -311,6 +308,8 @@ public class Ip4RangeSet2
                 }
             }
         }
+#pragma warning restore CA1508 // Avoid dead conditional code
+#pragma warning restore IDE0010 // Add missing cases
     }
 
     public void Union(Ip4Range[] ranges)

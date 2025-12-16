@@ -66,4 +66,19 @@ BenchmarkRunner.Run<Ip4RangeSetBenchmarks>();
 | Realistic              | 5,845.3 us | 42.65 us | 33.30 us | 1226.5625 | 570.3125 | 12532.37 KB |
 | RealisticWithoutParser |   382.0 us |  7.12 us |  6.66 us |  101.5625 |  49.8047 |  1039.55 KB |
 | UnionExcept            | 1,847.1 us | 31.28 us | 27.73 us |   29.2969 |        - |   300.64 KB |
+
+| Method                    | Mean         | Error      | StdDev     | Gen0      | Gen1     | Allocated   |
+|-------------------------- |-------------:|-----------:|-----------:|----------:|---------:|------------:|
+| Realistic                 |  6,310.12 us | 105.281 us |  98.480 us | 1226.5625 | 570.3125 | 12532.37 KB |
+| RealisticWithoutParser    |    396.00 us |   5.780 us |   4.826 us |  101.5625 |  50.2930 |  1039.55 KB |
+| UnionDisjointBaseline     |     35.13 us |   0.677 us |   0.665 us |   12.5122 |        - |   128.19 KB |
+| UnionDisjointOptimized    |     70.23 us |   1.336 us |   1.539 us |   26.0010 |   0.1221 |   266.47 KB |
+| UnionOverlappingBaseline  |     42.07 us |   0.762 us |   0.713 us |   12.0850 |        - |    123.5 KB |
+| UnionOverlappingOptimized |     42.84 us |   0.841 us |   1.359 us |   17.3340 |   0.0610 |   177.41 KB |
+| ExceptMixedBaseline       |     39.31 us |   0.514 us |   0.456 us |   16.2964 |   0.0610 |   166.47 KB |
+| ExceptMixedOptimized      |     66.49 us |   1.295 us |   2.234 us |   24.7803 |   0.1221 |   253.19 KB |
+| MixedLoopBaseline         |  5,581.81 us |  85.569 us |  80.041 us | 2000.0000 |        - | 20435.53 KB |
+| MixedLoopOptimized        | 19,187.01 us | 374.366 us | 445.656 us | 6968.7500 |        - | 71460.43 KB |
+| UnionExcept               |  1,857.68 us |  34.284 us |  42.104 us |   23.4375 |        - |   254.05 KB |
+
 */

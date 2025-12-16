@@ -195,7 +195,7 @@ internal static class Program
             Ip4RangeSet2 ip4RangeSet = new();
             while ((line = Console.ReadLine()) != null)
             {
-                IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line, errorTextWriterWrapper.WriteLine);
+                IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
                 Ip4RangeSet2 rangesSet = new(ranges);
 
                 ip4RangeSet.Union(rangesSet);

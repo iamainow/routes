@@ -7,15 +7,12 @@ namespace routes.PerfomanceProfiles;
 internal sealed class Ip4RangeSetPerfomanceProfile
 {
     private string _subnetsText = "";
-    private Ip4Subnet[] _subnets = [];
     private Ip4Range[] _bogon = [];
-    private List<Ip4RangeSet2> rangeSetsBy10 = [];
 
     public async Task GlobalSetup()
     {
         Random random = new();
         _subnetsText = await FetchAndParseRuAggregatedZoneAsync();
-        _subnets = Ip4SubnetParser.GetSubnets(_subnetsText, null).ToArray();
         _bogon =
         [
             Ip4Subnet.Parse("0.0.0.0/8"), // "This" network
@@ -34,22 +31,6 @@ internal sealed class Ip4RangeSetPerfomanceProfile
             Ip4Subnet.Parse("224.0.0.0/4"), // Multicast
             Ip4Subnet.Parse("240.0.0.0/4"), // Reserved for future use
         ];
-        List<Ip4Range> ranges = Enumerable.Range(0, 1_000_000).Select(_ =>
-        {
-
-            var address1 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
-            var address2 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
-            if (address1 < address2)
-            {
-                return new Ip4Range(address1, address2);
-            }
-            else
-            {
-                return new Ip4Range(address2, address1);
-            }
-        }).ToList();
-
-        rangeSetsBy10 = ranges.Chunk(10).Select(chunk => new Ip4RangeSet2(chunk)).ToList();
     }
 
     private static async Task<string> FetchAndParseRuAggregatedZoneAsync()

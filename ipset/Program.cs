@@ -1,23 +1,22 @@
-﻿using AnsiColoredWriters;
-using Ip4Parsers;
+﻿using Ip4Parsers;
 using routes;
 
 namespace ipops;
 
 internal static class Program
 {
-    private static Ip4RangeSet2 raw(IEnumerator<string> enumerator, Action<string?> errorWriteLine)
+    private static Ip4RangeSet2 raw(IEnumerator<string> enumerator)
     {
         if (!enumerator.MoveNext())
         {
             throw new ArgumentException("missing raw argument, should use raw <ips|subnets|ip ranges>");
         }
 
-        IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(enumerator.Current, errorWriteLine);
+        IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(enumerator.Current);
         return new Ip4RangeSet2(ranges);
     }
 
-    private static async Task<Ip4RangeSet2> fileAsync(IEnumerator<string> enumerator, Action<string?> errorWriteLine)
+    private static async Task<Ip4RangeSet2> fileAsync(IEnumerator<string> enumerator)
     {
         if (!enumerator.MoveNext())
         {
@@ -31,19 +30,19 @@ internal static class Program
         string? line;
         while ((line = await streamReader.ReadLineAsync()) is not null)
         {
-            IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
+            IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
             result.Union(ranges);
         }
         return result;
     }
 
-    private static Ip4RangeSet2 stdin(Action<string?> errorWriteLine)
+    private static Ip4RangeSet2 stdin()
     {
         Ip4RangeSet2 result = new();
         string? line;
         while ((line = Console.ReadLine()) is not null)
         {
-            IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line, errorWriteLine);
+            IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
             result.Union(ranges);
         }
         return result;
@@ -73,7 +72,6 @@ internal static class Program
 
     public static async Task Main(string[] args)
     {
-        Action<string?> errorWriteLine = Console.IsErrorRedirected ? Console.Error.WriteLine : new AnsiColoredTextWriterWrapper(Console.Error, AnsiColor.Red).WriteLine;
         Ip4RangeSet2 result = new();
         RangeSetPrintFormat printFormat = RangeSetPrintFormat.Subnet;
         string printPattern = "%subnet/%cidr";
@@ -92,15 +90,15 @@ internal static class Program
             switch (enumerator.Current)
             {
                 case "raw":
-                    result = raw(enumerator, errorWriteLine);
+                    result = raw(enumerator);
                     break;
 
                 case "file":
-                    result = await fileAsync(enumerator, errorWriteLine);
+                    result = await fileAsync(enumerator);
                     break;
 
                 case "-":
-                    result = stdin(errorWriteLine);
+                    result = stdin();
                     break;
 
                 case "bogon":
@@ -115,13 +113,13 @@ internal static class Program
                     switch (enumerator.Current)
                     {
                         case "raw":
-                            result.Except(raw(enumerator, errorWriteLine));
+                            result.Except(raw(enumerator));
                             break;
                         case "file":
-                            result.Except(await fileAsync(enumerator, errorWriteLine));
+                            result.Except(await fileAsync(enumerator));
                             break;
                         case "-":
-                            result.Except(stdin(errorWriteLine));
+                            result.Except(stdin());
                             break;
                         case "bogon":
                             result.Except(bogon());
@@ -140,13 +138,13 @@ internal static class Program
                     switch (enumerator.Current)
                     {
                         case "raw":
-                            result.Union(raw(enumerator, errorWriteLine));
+                            result.Union(raw(enumerator));
                             break;
                         case "file":
-                            result.Union(await fileAsync(enumerator, errorWriteLine));
+                            result.Union(await fileAsync(enumerator));
                             break;
                         case "-":
-                            result.Union(stdin(errorWriteLine));
+                            result.Union(stdin());
                             break;
                         case "bogon":
                             result.Union(bogon());

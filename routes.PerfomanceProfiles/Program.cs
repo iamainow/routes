@@ -6,7 +6,7 @@ await profile.GlobalSetup();
 
 Ip4RangeSet2 result = new();
 
-for (int t = 0; t < 10; t++)
+for (int t = 0; t < 1000; t++)
 {
     result.Union(profile.Realistic());
 }
