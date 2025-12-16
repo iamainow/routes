@@ -100,7 +100,7 @@ internal static class Program
 
         IPAddress gatewayIp = networkInterface.GetPrimaryGateway(() => table.Value) ?? throw new InvalidOperationException("PrimaryGateway is null");
 
-        RouteWithMetricDto[] currentRoutes = Ip4RouteTable.GetRouteTable()
+        RouteWithMetricDto[] currentRoutes = table.Value
             .Where(x => x.InterfaceIndex == interfaceIndex)
             .Where(x => x.Metric == metric)
             .Select(x => new RouteWithMetricDto(new RouteWithoutMetricDto(x.DestinationIP, x.SubnetMask, x.GatewayIP), x.Metric))
