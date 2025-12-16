@@ -9,6 +9,7 @@
     <File Path="Directory.Packages.props" />
   </Folder>
   <Project Path="AnsiColoredWriter/AnsiColoredWriters.csproj" Id="cdee56b4-61b2-4da9-8125-6cdf2f15a3ce" />
+  <Project Path="Ip4Parsers.Benchmarks/Ip4Parsers.Benchmarks.csproj" Id="c91736a9-a36b-49bb-a178-e95e8bf6c988" />
   <Project Path="Ip4Parsers.Test/Ip4Parsers.Test.csproj" Id="0859ff16-70ea-4edd-b15c-a6489d1609e3" />
   <Project Path="Ip4Parsers/Ip4Parsers.csproj" Id="5fc83869-6073-4120-9e2f-f419393309db" />
   <Project Path="Ip4RangeSetDifferenceCalculator/Ip4RangeSetDifferenceCalculator.csproj" Id="0145d941-c406-4003-843f-94f499f87aef" />

@@ -51,6 +51,58 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return true;
     }
 
+    public static bool TryParse(ReadOnlySpan<char> text, out Ip4Address result)
+    {
+        var enumerator = text.Split('.');
+
+        if (!enumerator.MoveNext())
+        {
+            result = default;
+            return false;
+        }
+        if (!byte.TryParse(text[enumerator.Current], out byte b1))
+        {
+            result = default;
+            return false;
+        }
+
+        if (!enumerator.MoveNext())
+        {
+            result = default;
+            return false;
+        }
+        if (!byte.TryParse(text[enumerator.Current], out byte b2))
+        {
+            result = default;
+            return false;
+        }
+
+        if (!enumerator.MoveNext())
+        {
+            result = default;
+            return false;
+        }
+        if (!byte.TryParse(text[enumerator.Current], out byte b3))
+        {
+            result = default;
+            return false;
+        }
+
+        if (!enumerator.MoveNext())
+        {
+            result = default;
+            return false;
+        }
+        if (!byte.TryParse(text[enumerator.Current], out byte b4))
+        {
+            result = default;
+            return false;
+        }
+
+        result = new Ip4Address(b1, b2, b3, b4);
+        return true;
+    }
+
     public static Ip4Address Min(Ip4Address left, Ip4Address right)
     {
         return left < right ? left : right;
