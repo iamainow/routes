@@ -87,4 +87,11 @@ BenchmarkRunner.Run<Ip4RangeSetBenchmarks>();
 | RealisticWithoutParser |   382.0 us |  5.54 us |  5.18 us | 101.5625 | 49.8047 |       - | 1039.45 KB |
 | UnionExcept            | 1,804.7 us | 31.93 us | 28.31 us |  27.3438 |       - |       - |  280.72 KB |
 
+| Method                 | Mean       | Error    | StdDev   | Gen0     | Gen1    | Gen2    | Allocated  |
+|----------------------- |-----------:|---------:|---------:|---------:|--------:|--------:|-----------:|
+| Realistic              | 1,811.8 us | 20.14 us | 16.82 us | 130.8594 | 64.4531 | 11.7188 |  1362.7 KB |
+| RealisticWithoutParser |   381.5 us |  5.05 us |  4.72 us | 101.5625 | 50.2930 |       - | 1039.45 KB |
+| UnionExcept            | 1,769.7 us | 29.28 us | 27.39 us |  25.3906 |       - |       - |  270.42 KB |
+
+
 */

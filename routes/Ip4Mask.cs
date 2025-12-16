@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace routes;
@@ -101,6 +102,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
         return false;
     }
 
+    /// <exception cref="ArgumentException"></exception>
     private static uint GetMaskByCidr(int cidr)
     {
         return cidr switch
@@ -141,45 +143,23 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
             _ => throw new ArgumentException($"cidr invalid value: {cidr}", nameof(cidr))
         };
     }
+
+    private static bool IsValidMask(uint mask)
+    {
+        return BitOperations.TrailingZeroCount(mask) + BitOperations.LeadingZeroCount(~mask) == 32;
+    }
+
+    /// <exception cref="ArgumentException"></exception>
+    private static void ValidateMask(uint mask)
+    {
+        if (!IsValidMask(mask))
+        {
+            throw new ArgumentException($"mask invalid value: {mask:x2}", nameof(mask));
+        }
+    }
     private static int GetCidrByMask(uint mask)
     {
-        return mask switch
-        {
-            0x00000000 => 0,
-            0x80000000 => 1,
-            0xC0000000 => 2,
-            0xE0000000 => 3,
-            0xF0000000 => 4,
-            0xF8000000 => 5,
-            0xFC000000 => 6,
-            0xFE000000 => 7,
-            0xFF000000 => 8,
-            0xFF800000 => 9,
-            0xFFC00000 => 10,
-            0xFFE00000 => 11,
-            0xFFF00000 => 12,
-            0xFFF80000 => 13,
-            0xFFFC0000 => 14,
-            0xFFFE0000 => 15,
-            0xFFFF0000 => 16,
-            0xFFFF8000 => 17,
-            0xFFFFC000 => 18,
-            0xFFFFE000 => 19,
-            0xFFFFF000 => 20,
-            0xFFFFF800 => 21,
-            0xFFFFFC00 => 22,
-            0xFFFFFE00 => 23,
-            0xFFFFFF00 => 24,
-            0xFFFFFF80 => 25,
-            0xFFFFFFC0 => 26,
-            0xFFFFFFE0 => 27,
-            0xFFFFFFF0 => 28,
-            0xFFFFFFF8 => 29,
-            0xFFFFFFFC => 30,
-            0xFFFFFFFE => 31,
-            0xFFFFFFFF => 32,
-            _ => throw new ArgumentException($"mask invalid value: {mask:x2}", nameof(mask))
-        };
+        return 32 - BitOperations.TrailingZeroCount(mask);
     }
 
     public static Ip4Mask FromIPAddress(IPAddress address)
@@ -214,10 +194,11 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
 
     public ulong Count => 0x100000000UL - _mask;
 
+    /// <exception cref="ArgumentException"></exception>
     public Ip4Mask(uint mask)
     {
         _mask = mask;
-        _ = GetCidrByMask(_mask); // validation
+        ValidateMask(mask);
     }
 
     /// <exception cref="ArgumentException"></exception>
@@ -226,15 +207,17 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
         _mask = GetMaskByCidr(cidr);
     }
 
+    /// <exception cref="ArgumentException"></exception>
     public Ip4Mask(byte byte1, byte byte2, byte byte3, byte byte4)
     {
         _byte1 = byte1;
         _byte2 = byte2;
         _byte3 = byte3;
         _byte4 = byte4;
-        _ = GetCidrByMask(_mask); // validation
+        ValidateMask(_mask);
     }
 
+    /// <exception cref="ArgumentException"></exception>
     public Ip4Mask(byte[] bytes)
     {
         if (bytes is null)
@@ -251,6 +234,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
         _byte2 = bytes[1];
         _byte3 = bytes[2];
         _byte4 = bytes[3];
+        ValidateMask(_mask);
     }
 
     public uint AsUInt32()
