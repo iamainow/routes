@@ -1,11 +1,11 @@
-﻿using Ip4Parsers;
+using Ip4Parsers;
 using routes;
 
 namespace ipops;
 
 internal static class Program
 {
-    private static Ip4RangeSet2 raw(IEnumerator<string> enumerator)
+    private static Ip4RangeSet raw(IEnumerator<string> enumerator)
     {
         if (!enumerator.MoveNext())
         {
@@ -13,10 +13,10 @@ internal static class Program
         }
 
         IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(enumerator.Current);
-        return new Ip4RangeSet2(ranges);
+        return new Ip4RangeSet(ranges);
     }
 
-    private static async Task<Ip4RangeSet2> fileAsync(IEnumerator<string> enumerator)
+    private static async Task<Ip4RangeSet> fileAsync(IEnumerator<string> enumerator)
     {
         if (!enumerator.MoveNext())
         {
@@ -26,7 +26,7 @@ internal static class Program
         using FileStream fileStream = File.Open(enumerator.Current, FileMode.Open, FileAccess.Read, FileShare.Read);
         using StreamReader streamReader = new(fileStream);
 
-        Ip4RangeSet2 result = new();
+        Ip4RangeSet result = new();
         string? line;
         while ((line = await streamReader.ReadLineAsync()) is not null)
         {
@@ -36,9 +36,9 @@ internal static class Program
         return result;
     }
 
-    private static Ip4RangeSet2 stdin()
+    private static Ip4RangeSet stdin()
     {
-        Ip4RangeSet2 result = new();
+        Ip4RangeSet result = new();
         string? line;
         while ((line = Console.ReadLine()) is not null)
         {
@@ -48,9 +48,9 @@ internal static class Program
         return result;
     }
 
-    private static Ip4RangeSet2 bogon()
+    private static Ip4RangeSet bogon()
     {
-        return new Ip4RangeSet2(
+        return new Ip4RangeSet(
         [
             Ip4Subnet.Parse("0.0.0.0/8"), // "This" network
             Ip4Subnet.Parse("10.0.0.0/8"), // Private-use networks
@@ -72,7 +72,7 @@ internal static class Program
 
     public static async Task Main(string[] args)
     {
-        Ip4RangeSet2 result = new();
+        Ip4RangeSet result = new();
         RangeSetPrintFormat printFormat = RangeSetPrintFormat.Subnet;
         string printPattern = "%subnet/%cidr";
 

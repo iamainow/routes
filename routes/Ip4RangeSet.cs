@@ -1,59 +1,59 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text;
 
 namespace routes;
 
 [DebuggerDisplay("{_list.Count,nq} ip ranges")]
-public class Ip4RangeSet2
+public class Ip4RangeSet
 {
-    public static Ip4RangeSet2 Empty => new();
-    public static Ip4RangeSet2 All => new(Ip4Range.All);
+    public static Ip4RangeSet Empty => new();
+    public static Ip4RangeSet All => new(Ip4Range.All);
 
     // sorted by FirstAddress, elements not overlapping
     private LinkedList<Ip4Range> _list;
 
-    public Ip4RangeSet2()
+    public Ip4RangeSet()
     {
         _list = new();
     }
 
-    public Ip4RangeSet2(Ip4Range ip4Range) : this()
+    public Ip4RangeSet(Ip4Range ip4Range) : this()
     {
         _list.AddFirst(ip4Range);
     }
 
-    public Ip4RangeSet2(Ip4Subnet subnet) : this()
+    public Ip4RangeSet(Ip4Subnet subnet) : this()
     {
         _list.AddFirst(subnet);
     }
 
-    public Ip4RangeSet2(Ip4Range[] ranges) : this()
+    public Ip4RangeSet(Ip4Range[] ranges) : this()
     {
         ArgumentNullException.ThrowIfNull(ranges);
         Union(ranges);
     }
 
-    public Ip4RangeSet2(IEnumerable<Ip4Range> ranges) : this()
+    public Ip4RangeSet(IEnumerable<Ip4Range> ranges) : this()
     {
         ArgumentNullException.ThrowIfNull(ranges);
         Union(ranges);
     }
 
-    public Ip4RangeSet2(IEnumerable<Ip4Subnet> subnets) : this()
+    public Ip4RangeSet(IEnumerable<Ip4Subnet> subnets) : this()
     {
         ArgumentNullException.ThrowIfNull(subnets);
         this.Union(subnets);
     }
 
-    public Ip4RangeSet2(Ip4RangeSet2 set) : this()
+    public Ip4RangeSet(Ip4RangeSet set) : this()
     {
         ArgumentNullException.ThrowIfNull(set);
         this._list = new LinkedList<Ip4Range>(set._list);
     }
 
-    //public void Union(Ip4RangeSet2 other) => Union5(other);
+    //public void Union(Ip4RangeSet other) => Union5(other);
 
-    public void Union4(Ip4RangeSet2 other)
+    public void Union4(Ip4RangeSet other)
     {
         ArgumentNullException.ThrowIfNull(other);
 
@@ -173,7 +173,7 @@ public class Ip4RangeSet2
         }
     }
 
-    public void Union(Ip4RangeSet2 other)
+    public void Union(Ip4RangeSet other)
     {
 #pragma warning disable IDE0010 // Add missing cases
 #pragma warning disable CA1508 // Avoid dead conditional code
@@ -465,9 +465,9 @@ public class Ip4RangeSet2
         this._list = result;
     }
 
-    //public void Except(Ip4RangeSet2 other) => Except4(other);
+    //public void Except(Ip4RangeSet other) => Except4(other);
 
-    public void Except(Ip4RangeSet2 other)
+    public void Except(Ip4RangeSet other)
     {
         ArgumentNullException.ThrowIfNull(other);
 
@@ -530,13 +530,13 @@ public class Ip4RangeSet2
     //        }
     //    }
 
-    //    return new Ip4RangeSet2(result.ToImmutableList());
+    //    return new Ip4RangeSet(result.ToImmutableList());
     //}
 
-    //public void Intersect(Ip4RangeSet2 other)
+    //public void Intersect(Ip4RangeSet other)
     //{
     //    ArgumentNullException.ThrowIfNull(other);
-    //    Ip4RangeSet2 result = new();
+    //    Ip4RangeSet result = new();
     //    foreach (Ip4Range item in other._list)
     //    {
     //        result = result.Union(Intersect(item));
@@ -544,9 +544,9 @@ public class Ip4RangeSet2
     //    return result;
     //}
 
-    public Ip4RangeSet2 MinimizeSubnets(uint delta)
+    public Ip4RangeSet MinimizeSubnets(uint delta)
     {
-        return new Ip4RangeSet2(ToIp4Subnets().Where(x => x.Count > delta));
+        return new Ip4RangeSet(ToIp4Subnets().Where(x => x.Count > delta));
     }
 
     public Ip4Range[] ToIp4Ranges()

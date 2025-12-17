@@ -1,6 +1,6 @@
 namespace routes.Test;
 
-public class Ip4RangeSet2Test
+public class Ip4RangeSetTest
 {
     [Fact]
     public void Union_Overlapping_MergesIntoSingleRange()
@@ -8,7 +8,7 @@ public class Ip4RangeSet2Test
         // Arrange
         var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
         var r2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
-        var set = new Ip4RangeSet2(r1);
+        var set = new Ip4RangeSet(r1);
 
         // Act
         set.Union(r2);
@@ -26,7 +26,7 @@ public class Ip4RangeSet2Test
         // Arrange
         var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
         var r2 = new Ip4Range(new Ip4Address(22), new Ip4Address(30));
-        var set = new Ip4RangeSet2(r1);
+        var set = new Ip4RangeSet(r1);
 
         // Act
         set.Union(r2);
@@ -42,18 +42,18 @@ public class Ip4RangeSet2Test
 
 
     [Fact]
-    public void Union_WithIp4RangeSet2_NullSet_ThrowsArgumentNullException()
+    public void Union_WithIp4RangeSet_NullSet_ThrowsArgumentNullException()
     {
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
-        Assert.Throws<ArgumentNullException>(() => set.Union((Ip4RangeSet2)null!));
+        Assert.Throws<ArgumentNullException>(() => set.Union((Ip4RangeSet)null!));
     }
 
     [Fact]
-    public void Union_WithIp4RangeSet2_CombinesTwoSets()
+    public void Union_WithIp4RangeSet_CombinesTwoSets()
     {
-        var set1 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
-        var set2 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
+        var set1 = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set2 = new Ip4RangeSet(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
 
         set1.Union(set2);
 
@@ -66,15 +66,15 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Union_WithIp4RangeSet2_MultipleRangesOverlapping()
+    public void Union_WithIp4RangeSet_MultipleRangesOverlapping()
     {
         // Arrange: set1 has [10-20] and [40-50], set2 has [15-35]
-        var set1 = new Ip4RangeSet2(new[]
+        var set1 = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(40), new Ip4Address(50))
         });
-        var set2 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(15), new Ip4Address(35)));
+        var set2 = new Ip4RangeSet(new Ip4Range(new Ip4Address(15), new Ip4Address(35)));
 
         // Act
         set1.Union(set2);
@@ -89,11 +89,11 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Union_WithIp4RangeSet2_CompletelyOverlappingRanges()
+    public void Union_WithIp4RangeSet_CompletelyOverlappingRanges()
     {
         // Arrange: set1 has [10-50], set2 has [15-25]
-        var set1 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(50)));
-        var set2 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(15), new Ip4Address(25)));
+        var set1 = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(50)));
+        var set2 = new Ip4RangeSet(new Ip4Range(new Ip4Address(15), new Ip4Address(25)));
 
         // Act
         set1.Union(set2);
@@ -106,11 +106,11 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Union_WithIp4RangeSet2_EmptySet_DoesNothing()
+    public void Union_WithIp4RangeSet_EmptySet_DoesNothing()
     {
         // Arrange
-        var set1 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
-        var set2 = new Ip4RangeSet2();
+        var set1 = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set2 = new Ip4RangeSet();
 
         // Act
         set1.Union(set2);
@@ -123,11 +123,11 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Union_WithIp4RangeSet2_EmptySetUnioningNonEmpty()
+    public void Union_WithIp4RangeSet_EmptySetUnioningNonEmpty()
     {
         // Arrange
-        var set1 = new Ip4RangeSet2();
-        var set2 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set1 = new Ip4RangeSet();
+        var set2 = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
 
         // Act
         set1.Union(set2);
@@ -140,15 +140,15 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Union_WithIp4RangeSet2_MultipleDisjointRanges()
+    public void Union_WithIp4RangeSet_MultipleDisjointRanges()
     {
         // Arrange: set1 has [10-20], [40-50], set2 has [60-70], [80-90]
-        var set1 = new Ip4RangeSet2(new[]
+        var set1 = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(40), new Ip4Address(50))
         });
-        var set2 = new Ip4RangeSet2(new[]
+        var set2 = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(60), new Ip4Address(70)),
             new Ip4Range(new Ip4Address(80), new Ip4Address(90))
@@ -171,11 +171,11 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Union_WithIp4RangeSet2_PartialOverlap()
+    public void Union_WithIp4RangeSet_PartialOverlap()
     {
         // Arrange: set1 has [10-30], set2 has [20-40]
-        var set1 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
-        var set2 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(20), new Ip4Address(40)));
+        var set1 = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+        var set2 = new Ip4RangeSet(new Ip4Range(new Ip4Address(20), new Ip4Address(40)));
 
         // Act
         set1.Union(set2);
@@ -188,12 +188,12 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Union_WithIp4RangeSet2_AdjacentRangesBridgesTogetherAfterMultipleUnions()
+    public void Union_WithIp4RangeSet_AdjacentRangesBridgesTogetherAfterMultipleUnions()
     {
         // Arrange: set1 has [10-20], set2 has [21-30], set3 has [31-40]
-        var set1 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
-        var set2 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(21), new Ip4Address(30)));
-        var set3 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(31), new Ip4Address(40)));
+        var set1 = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set2 = new Ip4RangeSet(new Ip4Range(new Ip4Address(21), new Ip4Address(30)));
+        var set3 = new Ip4RangeSet(new Ip4Range(new Ip4Address(31), new Ip4Address(40)));
 
         // Act
         set1.Union(set2);
@@ -207,11 +207,11 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Union_WithIp4RangeSet2_LargeAndSmallRanges()
+    public void Union_WithIp4RangeSet_LargeAndSmallRanges()
     {
         // Arrange: set1 has [0-1000000], set2 has [100-200]
-        var set1 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(0), new Ip4Address(1000000)));
-        var set2 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(100), new Ip4Address(200)));
+        var set1 = new Ip4RangeSet(new Ip4Range(new Ip4Address(0), new Ip4Address(1000000)));
+        var set2 = new Ip4RangeSet(new Ip4Range(new Ip4Address(100), new Ip4Address(200)));
 
         // Act
         set1.Union(set2);
@@ -224,15 +224,15 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Union_WithIp4RangeSet2_ConstructorWithMultipleRanges()
+    public void Union_WithIp4RangeSet_ConstructorWithMultipleRanges()
     {
         // Arrange: set1 constructed with multiple overlapping ranges, set2 with separate range
-        var set1 = new Ip4RangeSet2(new[]
+        var set1 = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(15), new Ip4Address(25))
         });
-        var set2 = new Ip4RangeSet2(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
+        var set2 = new Ip4RangeSet(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
 
         // Act
         set1.Union(set2);
@@ -250,7 +250,7 @@ public class Ip4RangeSet2Test
     [Fact]
     public void Constructor_Empty_CreatesEmptySet()
     {
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
         Assert.Empty(set.ToIp4Ranges());
     }
@@ -260,7 +260,7 @@ public class Ip4RangeSet2Test
     {
         var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
 
-        var set = new Ip4RangeSet2(range);
+        var set = new Ip4RangeSet(range);
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);
@@ -272,7 +272,7 @@ public class Ip4RangeSet2Test
     {
         var subnet = Ip4Subnet.Parse("192.168.1.0/24");
 
-        var set = new Ip4RangeSet2(subnet);
+        var set = new Ip4RangeSet(subnet);
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);
@@ -290,7 +290,7 @@ public class Ip4RangeSet2Test
             new Ip4Range(new Ip4Address(30), new Ip4Address(40))
         };
 
-        var set = new Ip4RangeSet2(ranges);
+        var set = new Ip4RangeSet(ranges);
 
         var result = set.ToIp4Ranges().ToArray();
         Assert.Equal(2, result.Length);
@@ -312,7 +312,7 @@ public class Ip4RangeSet2Test
         };
 
         // Act
-        var set = new Ip4RangeSet2(subnets);
+        var set = new Ip4RangeSet(subnets);
 
         // Assert: Should have 2 ranges
         var ranges = set.ToIp4Ranges().ToArray();
@@ -322,13 +322,13 @@ public class Ip4RangeSet2Test
     [Fact]
     public void Constructor_FromRangeEnumerable_NullEnumerable_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new Ip4RangeSet2((IEnumerable<Ip4Range>)null!));
+        Assert.Throws<ArgumentNullException>(() => new Ip4RangeSet((IEnumerable<Ip4Range>)null!));
     }
 
     [Fact]
     public void Constructor_FromSubnetEnumerable_NullEnumerable_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new Ip4RangeSet2((IEnumerable<Ip4Subnet>)null!));
+        Assert.Throws<ArgumentNullException>(() => new Ip4RangeSet((IEnumerable<Ip4Subnet>)null!));
     }
 
 
@@ -338,7 +338,7 @@ public class Ip4RangeSet2Test
     public void Except_Ip4Range_CompletelyOverlapping_RemovesRange()
     {
         // Arrange: [10-30] except [10-30] should result in empty set
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
 
         // Act
         set.Except(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
@@ -351,7 +351,7 @@ public class Ip4RangeSet2Test
     public void Except_Ip4Range_PartialOverlapAtStart_TruncatesRange()
     {
         // Arrange: [10-30] except [5-20] should result in [21-30]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
 
         // Act
         set.Except(new Ip4Range(new Ip4Address(5), new Ip4Address(20)));
@@ -367,7 +367,7 @@ public class Ip4RangeSet2Test
     public void Except_Ip4Range_PartialOverlapAtEnd_TruncatesRange()
     {
         // Arrange: [10-30] except [20-40] should result in [10-19]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
 
         // Act
         set.Except(new Ip4Range(new Ip4Address(20), new Ip4Address(40)));
@@ -383,7 +383,7 @@ public class Ip4RangeSet2Test
     public void Except_Ip4Range_MiddleOverlap_SplitsIntoTwoRanges()
     {
         // Arrange: [10-30] except [15-20] should result in [10-14] and [21-30]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
 
         // Act
         set.Except(new Ip4Range(new Ip4Address(15), new Ip4Address(20)));
@@ -401,7 +401,7 @@ public class Ip4RangeSet2Test
     public void Except_Ip4Range_Disjoint_NoChange()
     {
         // Arrange: [10-20] except [30-40] should remain [10-20]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
 
         // Act
         set.Except(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
@@ -417,7 +417,7 @@ public class Ip4RangeSet2Test
     public void Except_Ip4Range_MultipleRanges_RemovesFromMultiple()
     {
         // Arrange: [10-20], [30-40], [50-60] except [15-55] should result in [10-14] and [56-60]
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(30), new Ip4Address(40)),
@@ -440,7 +440,7 @@ public class Ip4RangeSet2Test
     public void Except_Ip4Range_EmptySet_RemainsEmpty()
     {
         // Arrange
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
         // Act
         set.Except(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
@@ -453,7 +453,7 @@ public class Ip4RangeSet2Test
     public void Except_Ip4Range_ExceedingRange_RemovesOverlappingPortion()
     {
         // Arrange: [10-20] except [0-100] should result in empty set
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
 
         // Act
         set.Except(new Ip4Range(new Ip4Address(0), new Ip4Address(100)));
@@ -464,22 +464,22 @@ public class Ip4RangeSet2Test
 
     #endregion
 
-    #region Except(Ip4RangeSet2) Tests
+    #region Except(Ip4RangeSet) Tests
 
     [Fact]
-    public void Except_Ip4RangeSet2_NullSet_ThrowsArgumentNullException()
+    public void Except_Ip4RangeSet_NullSet_ThrowsArgumentNullException()
     {
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
-        Assert.Throws<ArgumentNullException>(() => set.Except((Ip4RangeSet2)null!));
+        Assert.Throws<ArgumentNullException>(() => set.Except((Ip4RangeSet)null!));
     }
 
     [Fact]
-    public void Except_Ip4RangeSet2_EmptySet_NoChange()
+    public void Except_Ip4RangeSet_EmptySet_NoChange()
     {
         // Arrange
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
-        var emptySet = new Ip4RangeSet2();
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var emptySet = new Ip4RangeSet();
 
         // Act
         set.Except(emptySet);
@@ -492,11 +492,11 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Except_Ip4RangeSet2_EmptySetExceptingNonEmpty_RemainsEmpty()
+    public void Except_Ip4RangeSet_EmptySetExceptingNonEmpty_RemainsEmpty()
     {
         // Arrange
-        var set = new Ip4RangeSet2();
-        var otherSet = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set = new Ip4RangeSet();
+        var otherSet = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
 
         // Act
         set.Except(otherSet);
@@ -506,11 +506,11 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Except_Ip4RangeSet2_CompleteOverlap_RemovesAll()
+    public void Except_Ip4RangeSet_CompleteOverlap_RemovesAll()
     {
         // Arrange: [10-20] except [10-20] should result in empty set
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
-        var otherSet = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var otherSet = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
 
         // Act
         set.Except(otherSet);
@@ -520,16 +520,16 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Except_Ip4RangeSet2_MultipleRanges_RemovesOverlapping()
+    public void Except_Ip4RangeSet_MultipleRanges_RemovesOverlapping()
     {
         // Arrange: [10-20], [30-40], [50-60] except [15-35], [55-65]
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(30), new Ip4Address(40)),
             new Ip4Range(new Ip4Address(50), new Ip4Address(60))
         });
-        var otherSet = new Ip4RangeSet2(new[]
+        var otherSet = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(15), new Ip4Address(35)),
             new Ip4Range(new Ip4Address(55), new Ip4Address(65))
@@ -550,15 +550,15 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Except_Ip4RangeSet2_DisjointRanges_NoChange()
+    public void Except_Ip4RangeSet_DisjointRanges_NoChange()
     {
         // Arrange: [10-20], [30-40] except [50-60], [70-80]
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(30), new Ip4Address(40))
         });
-        var otherSet = new Ip4RangeSet2(new[]
+        var otherSet = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(50), new Ip4Address(60)),
             new Ip4Range(new Ip4Address(70), new Ip4Address(80))
@@ -577,11 +577,11 @@ public class Ip4RangeSet2Test
     }
 
     [Fact]
-    public void Except_Ip4RangeSet2_PartialOverlaps_RemovesCorrectly()
+    public void Except_Ip4RangeSet_PartialOverlaps_RemovesCorrectly()
     {
         // Arrange: [10-30] except [20-25]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
-        var otherSet = new Ip4RangeSet2(new Ip4Range(new Ip4Address(20), new Ip4Address(25)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+        var otherSet = new Ip4RangeSet(new Ip4Range(new Ip4Address(20), new Ip4Address(25)));
 
         // Act
         set.Except(otherSet);
@@ -604,7 +604,7 @@ public class Ip4RangeSet2Test
     public void Empty_ReturnsEmptySet()
     {
         // Act
-        var emptySet = Ip4RangeSet2.Empty;
+        var emptySet = Ip4RangeSet.Empty;
 
         // Assert
         Assert.NotNull(emptySet);
@@ -615,7 +615,7 @@ public class Ip4RangeSet2Test
     public void All_ReturnsFullIpRange()
     {
         // Act
-        var allSet = Ip4RangeSet2.All;
+        var allSet = Ip4RangeSet.All;
 
         // Assert
         Assert.NotNull(allSet);
@@ -629,8 +629,8 @@ public class Ip4RangeSet2Test
     public void Empty_MultipleCallsReturnDifferentInstances()
     {
         // Act
-        var empty1 = Ip4RangeSet2.Empty;
-        var empty2 = Ip4RangeSet2.Empty;
+        var empty1 = Ip4RangeSet.Empty;
+        var empty2 = Ip4RangeSet.Empty;
 
         // Assert: should be different instances
         Assert.NotSame(empty1, empty2);
@@ -640,8 +640,8 @@ public class Ip4RangeSet2Test
     public void All_MultipleCallsReturnDifferentInstances()
     {
         // Act
-        var all1 = Ip4RangeSet2.All;
-        var all2 = Ip4RangeSet2.All;
+        var all1 = Ip4RangeSet.All;
+        var all2 = Ip4RangeSet.All;
 
         // Assert: should be different instances
         Assert.NotSame(all1, all2);
@@ -655,14 +655,14 @@ public class Ip4RangeSet2Test
     public void Constructor_CopyFromSet_CreatesDeepCopy()
     {
         // Arrange
-        var original = new Ip4RangeSet2(new[]
+        var original = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(30), new Ip4Address(40))
         });
 
         // Act
-        var copy = new Ip4RangeSet2(original);
+        var copy = new Ip4RangeSet(original);
 
         // Assert: verify deep copy
         var originalRanges = original.ToIp4Ranges().ToArray();
@@ -679,8 +679,8 @@ public class Ip4RangeSet2Test
     public void Constructor_CopyFromSet_ModifyingCopyDoesNotAffectOriginal()
     {
         // Arrange
-        var original = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
-        var copy = new Ip4RangeSet2(original);
+        var original = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var copy = new Ip4RangeSet(original);
 
         // Act: modify copy
         copy.Union(new Ip4Range(new Ip4Address(30), new Ip4Address(40)));
@@ -699,10 +699,10 @@ public class Ip4RangeSet2Test
     public void Constructor_CopyFromEmptySet_CreatesEmptyCopy()
     {
         // Arrange
-        var original = new Ip4RangeSet2();
+        var original = new Ip4RangeSet();
 
         // Act
-        var copy = new Ip4RangeSet2(original);
+        var copy = new Ip4RangeSet(original);
 
         // Assert
         Assert.Empty(copy.ToIp4Ranges());
@@ -711,7 +711,7 @@ public class Ip4RangeSet2Test
     [Fact]
     public void Constructor_CopyFromNull_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new Ip4RangeSet2((Ip4RangeSet2)null!));
+        Assert.Throws<ArgumentNullException>(() => new Ip4RangeSet((Ip4RangeSet)null!));
     }
 
     #endregion
@@ -722,7 +722,7 @@ public class Ip4RangeSet2Test
     public void ToIp4Subnets_SingleRange_ReturnsSubnets()
     {
         // Arrange: 192.168.0.0 - 192.168.0.255 should convert to subnets
-        var set = new Ip4RangeSet2(new Ip4Range(
+        var set = new Ip4RangeSet(new Ip4Range(
             Ip4Address.Parse("192.168.0.0"),
             Ip4Address.Parse("192.168.0.255")));
 
@@ -740,7 +740,7 @@ public class Ip4RangeSet2Test
     public void ToIp4Subnets_MultipleRanges_ReturnsAllSubnets()
     {
         // Arrange
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(Ip4Address.Parse("10.0.0.0"), Ip4Address.Parse("10.0.0.255")),
             new Ip4Range(Ip4Address.Parse("192.168.1.0"), Ip4Address.Parse("192.168.1.255"))
@@ -759,7 +759,7 @@ public class Ip4RangeSet2Test
     public void ToIp4Subnets_EmptySet_ReturnsEmptyArray()
     {
         // Arrange
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
         // Act
         var subnets = set.ToIp4Subnets();
@@ -772,7 +772,7 @@ public class Ip4RangeSet2Test
     public void ToIp4Subnets_SmallRange_ReturnsCorrectSubnets()
     {
         // Arrange: small range that should produce specific subnets
-        var set = new Ip4RangeSet2(new Ip4Range(
+        var set = new Ip4RangeSet(new Ip4Range(
             Ip4Address.Parse("10.0.0.0"),
             Ip4Address.Parse("10.0.0.7")));
 
@@ -793,7 +793,7 @@ public class Ip4RangeSet2Test
     public void MinimizeSubnets_FiltersByDelta_ReturnsLargerSubnets()
     {
         // Arrange: create set with various subnet sizes
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(Ip4Address.Parse("10.0.0.0"), Ip4Address.Parse("10.0.0.255")),    // 256 addresses
             new Ip4Range(Ip4Address.Parse("192.168.0.0"), Ip4Address.Parse("192.168.0.7"))  // 8 addresses
@@ -811,7 +811,7 @@ public class Ip4RangeSet2Test
     public void MinimizeSubnets_DeltaZero_ReturnsAllSubnets()
     {
         // Arrange
-        var set = new Ip4RangeSet2(new Ip4Range(
+        var set = new Ip4RangeSet(new Ip4Range(
             Ip4Address.Parse("10.0.0.0"),
             Ip4Address.Parse("10.0.0.255")));
 
@@ -828,7 +828,7 @@ public class Ip4RangeSet2Test
     public void MinimizeSubnets_EmptySet_ReturnsEmptySet()
     {
         // Arrange
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
         // Act
         var minimized = set.MinimizeSubnets(10);
@@ -841,7 +841,7 @@ public class Ip4RangeSet2Test
     public void MinimizeSubnets_HighDelta_RemovesAllSmallSubnets()
     {
         // Arrange
-        var set = new Ip4RangeSet2(new Ip4Range(
+        var set = new Ip4RangeSet(new Ip4Range(
             Ip4Address.Parse("10.0.0.0"),
             Ip4Address.Parse("10.0.0.31")));
 
@@ -861,7 +861,7 @@ public class Ip4RangeSet2Test
     public void ToString_EmptySet_ReturnsEmptyString()
     {
         // Arrange
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
         // Act
         var result = set.ToString();
@@ -874,7 +874,7 @@ public class Ip4RangeSet2Test
     public void ToString_SingleRange_ReturnsRangeString()
     {
         // Arrange
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
 
         // Act
         var result = set.ToString();
@@ -889,7 +889,7 @@ public class Ip4RangeSet2Test
     public void ToString_MultipleRanges_ReturnsAllRanges()
     {
         // Arrange
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(30), new Ip4Address(40))
@@ -909,7 +909,7 @@ public class Ip4RangeSet2Test
     public void ToString_ContainsNewlines()
     {
         // Arrange
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(30), new Ip4Address(40))
@@ -929,7 +929,7 @@ public class Ip4RangeSet2Test
     [Fact]
     public void Union_WithNullArray_ThrowsArgumentNullException()
     {
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
         Assert.Throws<ArgumentNullException>(() => set.Union((Ip4Range[])null!));
     }
@@ -937,7 +937,7 @@ public class Ip4RangeSet2Test
     [Fact]
     public void Union_WithNullEnumerable_ThrowsArgumentNullException()
     {
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
         Assert.Throws<ArgumentNullException>(() => set.Union((IEnumerable<Ip4Range>)null!));
     }
@@ -945,7 +945,7 @@ public class Ip4RangeSet2Test
     [Fact]
     public void Union_WithNullSubnetEnumerable_ThrowsArgumentNullException()
     {
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
         Assert.Throws<ArgumentNullException>(() => set.Union((IEnumerable<Ip4Subnet>)null!));
     }
@@ -954,7 +954,7 @@ public class Ip4RangeSet2Test
     public void Operations_AtMinimumIpAddress_WorkCorrectly()
     {
         // Arrange: range starting at 0.0.0.0
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(0), new Ip4Address(100)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(0), new Ip4Address(100)));
 
         // Act & Assert: should handle minimum address
         var ranges = set.ToIp4Ranges();
@@ -966,7 +966,7 @@ public class Ip4RangeSet2Test
     public void Operations_AtMaximumIpAddress_WorkCorrectly()
     {
         // Arrange: range ending at 255.255.255.255
-        var set = new Ip4RangeSet2(new Ip4Range(
+        var set = new Ip4RangeSet(new Ip4Range(
             new Ip4Address(uint.MaxValue - 100),
             new Ip4Address(uint.MaxValue)));
 
@@ -980,7 +980,7 @@ public class Ip4RangeSet2Test
     public void Union_FullIpRange_WorksCorrectly()
     {
         // Arrange: union with entire IP range
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(1000), new Ip4Address(2000)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(1000), new Ip4Address(2000)));
 
         // Act: union with full range
         set.Union(Ip4Range.All);
@@ -996,7 +996,7 @@ public class Ip4RangeSet2Test
     public void Except_FullIpRange_ResultsInEmptySet()
     {
         // Arrange
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(1000), new Ip4Address(2000)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(1000), new Ip4Address(2000)));
 
         // Act: except entire IP range
         set.Except(Ip4Range.All);
@@ -1009,7 +1009,7 @@ public class Ip4RangeSet2Test
     public void LargeRangeOperations_PerformCorrectly()
     {
         // Arrange: large ranges for performance testing
-        var set = new Ip4RangeSet2(new Ip4Range(
+        var set = new Ip4RangeSet(new Ip4Range(
             new Ip4Address(0),
             new Ip4Address(10_000_000)));
 
@@ -1030,7 +1030,7 @@ public class Ip4RangeSet2Test
     public void MultipleOperations_MaintainsSortedOrder()
     {
         // Arrange
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
 
         // Act: perform multiple operations
         set.Union(new Ip4Range(new Ip4Address(50), new Ip4Address(60)));

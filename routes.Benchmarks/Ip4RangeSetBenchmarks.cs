@@ -14,7 +14,7 @@ public class Ip4RangeSetBenchmarks
     private string _subnetsText = "";
     private Ip4Subnet[] _subnets = [];
     private Ip4Range[] _bogon = [];
-    private List<Ip4RangeSet2> rangeSetsBy10 = [];
+    private List<Ip4RangeSet> rangeSetsBy10 = [];
 
     [GlobalSetup]
     public async Task GlobalSetup()
@@ -54,7 +54,7 @@ public class Ip4RangeSetBenchmarks
             }
         }).ToList();
 
-        rangeSetsBy10 = ranges.Chunk(10).Select(chunk => new Ip4RangeSet2(chunk)).ToList();
+        rangeSetsBy10 = ranges.Chunk(10).Select(chunk => new Ip4RangeSet(chunk)).ToList();
     }
 
     private static async Task<string> FetchAndParseRuAggregatedZoneAsync()
@@ -76,13 +76,13 @@ public class Ip4RangeSetBenchmarks
     }
 
     [Benchmark]
-    public Ip4RangeSet2 Realistic()
+    public Ip4RangeSet Realistic()
     {
-        var all = new Ip4RangeSet2(Ip4SubnetParser.GetRanges("0.0.0.0/0"));
-        var ip = new Ip4RangeSet2(Ip4SubnetParser.GetRanges("1.2.3.4"));
-        var bogon = new Ip4RangeSet2(_bogon);
+        var all = new Ip4RangeSet(Ip4SubnetParser.GetRanges("0.0.0.0/0"));
+        var ip = new Ip4RangeSet(Ip4SubnetParser.GetRanges("1.2.3.4"));
+        var bogon = new Ip4RangeSet(_bogon);
 
-        var subnets = new Ip4RangeSet2(Ip4SubnetParser.GetRanges(_subnetsText));
+        var subnets = new Ip4RangeSet(Ip4SubnetParser.GetRanges(_subnetsText));
 
         var result = all;
         result.Except(ip);
@@ -93,13 +93,13 @@ public class Ip4RangeSetBenchmarks
     }
 
     [Benchmark]
-    public Ip4RangeSet2 RealisticWithoutParser()
+    public Ip4RangeSet RealisticWithoutParser()
     {
-        var all = Ip4RangeSet2.All;
-        var ip = new Ip4RangeSet2(new Ip4Address(1, 2, 3, 4));
-        var bogon = new Ip4RangeSet2(_bogon);
+        var all = Ip4RangeSet.All;
+        var ip = new Ip4RangeSet(new Ip4Address(1, 2, 3, 4));
+        var bogon = new Ip4RangeSet(_bogon);
 
-        var subnets = new Ip4RangeSet2(_subnets);
+        var subnets = new Ip4RangeSet(_subnets);
 
         var result = all;
         result.Except(ip);
@@ -110,10 +110,10 @@ public class Ip4RangeSetBenchmarks
     }
 
     //[Benchmark]
-    //public Ip4RangeSet2 Union4Except4()
+    //public Ip4RangeSet Union4Except4()
     //{
     //    Random random = new();
-    //    Ip4RangeSet2 result = new();
+    //    Ip4RangeSet result = new();
     //    for (int index = 0; index < 100_000; index++)
     //    {
     //        if (random.NextDouble() < 0.5d)
@@ -130,10 +130,10 @@ public class Ip4RangeSetBenchmarks
     //}
 
     //[Benchmark]
-    //public Ip4RangeSet2 Union5Except4()
+    //public Ip4RangeSet Union5Except4()
     //{
     //    Random random = new();
-    //    Ip4RangeSet2 result = new();
+    //    Ip4RangeSet result = new();
     //    for (int index = 0; index < 100_000; index++)
     //    {
     //        if (random.NextDouble() < 0.5d)
@@ -150,10 +150,10 @@ public class Ip4RangeSetBenchmarks
     //}
 
     [Benchmark]
-    public Ip4RangeSet2 UnionExcept()
+    public Ip4RangeSet UnionExcept()
     {
         Random random = new();
-        Ip4RangeSet2 result = new();
+        Ip4RangeSet result = new();
         for (int index = 0; index < 100_000; index++)
         {
             if (random.NextDouble() < 0.5d)

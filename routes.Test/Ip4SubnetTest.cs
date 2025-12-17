@@ -1,4 +1,4 @@
-﻿namespace routes.Test;
+namespace routes.Test;
 
 public class Ip4SubnetTest
 {
@@ -187,7 +187,7 @@ public class Ip4SubnetTest
     {
         var subnet = Ip4Subnet.Parse("192.168.1.0/24");
 
-        var set = subnet.ToIp4RangeSet2();
+        var set = subnet.ToIp4RangeSet();
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);
@@ -283,7 +283,7 @@ public class Ip4SubnetTest
     {
         var subnet = Ip4Subnet.Parse("192.168.1.0/24");
 
-        Ip4RangeSet2 set = subnet;
+        Ip4RangeSet set = subnet;
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);

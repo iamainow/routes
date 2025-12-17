@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 namespace routes;
 
@@ -10,9 +10,9 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
         return subnet.ToIp4Range();
     }
 
-    public static implicit operator Ip4RangeSet2(Ip4Subnet subnet)
+    public static implicit operator Ip4RangeSet(Ip4Subnet subnet)
     {
-        return subnet.ToIp4RangeSet2();
+        return subnet.ToIp4RangeSet();
     }
 
     /// <param name="text">x.x.x.x/yy or x.x.x.x y.y.y.y</param>
@@ -87,9 +87,9 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
         return new Ip4Range(FirstAddress, LastAddress);
     }
 
-    public Ip4RangeSet2 ToIp4RangeSet2()
+    public Ip4RangeSet ToIp4RangeSet()
     {
-        return new Ip4RangeSet2(this);
+        return new Ip4RangeSet(this);
     }
 
     public string ToFullString()

@@ -1,4 +1,4 @@
-﻿using AnsiColoredWriters;
+using AnsiColoredWriters;
 using Ip4Parsers;
 using Ip4RangeSetDifferenceCalculator;
 using NativeMethods.Windows;
@@ -88,7 +88,7 @@ internal static class Program
         Console.WriteLine();
     }
 
-    private static void ChangeRoutes(Ip4RangeSet2 targetRangeSet, string interfaceName, int metric, Action<string?> successWriteLine, Action<string?> errorWriteLine)
+    private static void ChangeRoutes(Ip4RangeSet targetRangeSet, string interfaceName, int metric, Action<string?> successWriteLine, Action<string?> errorWriteLine)
     {
         NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()
             .Where(x => x.Name == interfaceName)
@@ -192,11 +192,11 @@ internal static class Program
             int metric = int.Parse(args[2]);
             ITextWriterWrapper errorTextWriterWrapper = Console.IsErrorRedirected ? new TextWriterWrapper(Console.Error) : new AnsiColoredTextWriterWrapper(Console.Error, AnsiColor.Red);
             string? line;
-            Ip4RangeSet2 ip4RangeSet = new();
+            Ip4RangeSet ip4RangeSet = new();
             while ((line = Console.ReadLine()) != null)
             {
                 IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
-                Ip4RangeSet2 rangesSet = new(ranges);
+                Ip4RangeSet rangesSet = new(ranges);
 
                 ip4RangeSet.Union(rangesSet);
             }

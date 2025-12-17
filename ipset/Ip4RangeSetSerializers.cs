@@ -1,4 +1,4 @@
-﻿using routes;
+using routes;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -6,7 +6,7 @@ namespace ipops;
 
 internal static class Ip4RangeSetSerializers
 {
-    public static string SerializeToAmneziaJson(Ip4RangeSet2 set)
+    public static string SerializeToAmneziaJson(Ip4RangeSet set)
     {
         AmneziaItem[] objectToSerialize = set.ToIp4Subnets()
             .Select(x => new AmneziaItem(x.ToCidrString()))

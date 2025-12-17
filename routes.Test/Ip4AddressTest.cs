@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 
 namespace routes.Test;
 
@@ -306,7 +306,7 @@ public class Ip4AddressTest
     {
         var ip = new Ip4Address(100);
 
-        Ip4RangeSet2 set = ip;
+        Ip4RangeSet set = ip;
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);
@@ -341,7 +341,7 @@ public class Ip4AddressTest
     {
         var ip = new Ip4Address(100);
 
-        var set = ip.ToIp4RangeSet2();
+        var set = ip.ToIp4RangeSet();
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);

@@ -1,4 +1,4 @@
-﻿#pragma warning disable CA5394 // Do not use insecure randomness
+#pragma warning disable CA5394 // Do not use insecure randomness
 
 using Ip4Parsers;
 
@@ -51,13 +51,13 @@ internal sealed class Ip4RangeSetPerfomanceProfile
         }
     }
 
-    public Ip4RangeSet2 Realistic()
+    public Ip4RangeSet Realistic()
     {
-        var all = new Ip4RangeSet2(Ip4SubnetParser.GetRanges("0.0.0.0/0"));
-        var ip = new Ip4RangeSet2(Ip4SubnetParser.GetRanges("1.2.3.4"));
-        var bogon = new Ip4RangeSet2(_bogon);
+        var all = new Ip4RangeSet(Ip4SubnetParser.GetRanges("0.0.0.0/0"));
+        var ip = new Ip4RangeSet(Ip4SubnetParser.GetRanges("1.2.3.4"));
+        var bogon = new Ip4RangeSet(_bogon);
 
-        var subnets = new Ip4RangeSet2(Ip4SubnetParser.GetRanges(_subnetsText));
+        var subnets = new Ip4RangeSet(Ip4SubnetParser.GetRanges(_subnetsText));
 
         var result = all;
         result.Except(ip);

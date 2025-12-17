@@ -1,4 +1,4 @@
-﻿namespace routes.Test;
+namespace routes.Test;
 
 public class Ip4RangeTest
 {
@@ -303,7 +303,7 @@ public class Ip4RangeTest
     {
         var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
 
-        Ip4RangeSet2 set = range;
+        Ip4RangeSet set = range;
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);
@@ -315,7 +315,7 @@ public class Ip4RangeTest
     {
         var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
 
-        var set = range.ToIp4RangeSet2();
+        var set = range.ToIp4RangeSet();
 
         var ranges = set.ToIp4Ranges();
         Assert.Single(ranges);
@@ -350,7 +350,7 @@ public class Ip4RangeTest
 
         Assert.NotEmpty(subnets);
         // Verify all subnets cover the range
-        var reconstructed = new Ip4RangeSet2(subnets);
+        var reconstructed = new Ip4RangeSet(subnets);
         var reconstructedRanges = reconstructed.ToIp4Ranges();
         Assert.Single(reconstructedRanges);
         Assert.Equal(range.FirstAddress, reconstructedRanges[0].FirstAddress);

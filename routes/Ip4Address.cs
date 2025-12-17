@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 using System.Runtime.InteropServices;
 
@@ -158,9 +158,9 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return address.ToIp4Subnet();
     }
 
-    public static implicit operator Ip4RangeSet2(Ip4Address address)
+    public static implicit operator Ip4RangeSet(Ip4Address address)
     {
-        return address.ToIp4RangeSet2();
+        return address.ToIp4RangeSet();
     }
 
     public static implicit operator IPAddress(Ip4Address address)
@@ -256,9 +256,9 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return new Ip4Subnet(this, Ip4Mask.SingleAddress);
     }
 
-    public Ip4RangeSet2 ToIp4RangeSet2()
+    public Ip4RangeSet ToIp4RangeSet()
     {
-        return new Ip4RangeSet2(this);
+        return new Ip4RangeSet(this);
     }
 
     public override string ToString()

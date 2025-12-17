@@ -1,11 +1,11 @@
 namespace routes.Test;
 
 /// <summary>
-/// Comprehensive complex test cases for Ip4RangeSet2 Union and Except methods.
+/// Comprehensive complex test cases for Ip4RangeSet Union and Except methods.
 /// These tests focus on edge cases, boundary conditions, and complex scenarios
 /// to ensure the rewritten logic handles all possible situations correctly.
 /// </summary>
-public class Ip4RangeSet2ComplexTest
+public class Ip4RangeSetComplexTest
 {
     #region Complex Union Tests
 
@@ -14,7 +14,7 @@ public class Ip4RangeSet2ComplexTest
     {
         // Arrange: Create a set with multiple overlapping ranges
         // [10-30], [20-40], [35-50] should merge to [10-50]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
         
         // Act
         set.Union(new Ip4Range(new Ip4Address(20), new Ip4Address(40)));
@@ -32,7 +32,7 @@ public class Ip4RangeSet2ComplexTest
     {
         // Arrange: Create adjacent ranges that should merge
         // [10-20], [21-30], [31-40], [41-50] should become [10-50]
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
         
         // Act
         set.Union(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
@@ -52,7 +52,7 @@ public class Ip4RangeSet2ComplexTest
     {
         // Arrange: Interleaved ranges [10-20], [30-40], [15-35], [50-60]
         // Should result in [10-40], [50-60]
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(30), new Ip4Address(40))
@@ -76,7 +76,7 @@ public class Ip4RangeSet2ComplexTest
     {
         // Arrange: Multiple disjoint ranges with a spanning range
         // [10-20], [30-40], [50-60], [70-80] + [15-75] should become [10-80]
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(30), new Ip4Address(40)),
@@ -98,7 +98,7 @@ public class Ip4RangeSet2ComplexTest
     public void Union_SingleAddressRanges_HandlesCorrectly()
     {
         // Arrange: Single address ranges (where FirstAddress == LastAddress)
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(10)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(10)));
         
         // Act: Add adjacent single address
         set.Union(new Ip4Range(new Ip4Address(11), new Ip4Address(11)));
@@ -114,7 +114,7 @@ public class Ip4RangeSet2ComplexTest
     public void Union_BoundaryAtZero_HandlesMinimumAddress()
     {
         // Arrange: Range starting at 0.0.0.0
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(0), new Ip4Address(100)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(0), new Ip4Address(100)));
         
         // Act: Union with adjacent range
         set.Union(new Ip4Range(new Ip4Address(101), new Ip4Address(200)));
@@ -130,7 +130,7 @@ public class Ip4RangeSet2ComplexTest
     public void Union_BoundaryAtMaxValue_HandlesMaximumAddress()
     {
         // Arrange: Range ending at 255.255.255.255
-        var set = new Ip4RangeSet2(new Ip4Range(
+        var set = new Ip4RangeSet(new Ip4Range(
             new Ip4Address(uint.MaxValue - 100),
             new Ip4Address(uint.MaxValue)));
         
@@ -150,7 +150,7 @@ public class Ip4RangeSet2ComplexTest
     public void Union_CompletelyContainedRanges_AbsorbsSmaller()
     {
         // Arrange: Large range [10-100]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(100)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(100)));
         
         // Act: Union with completely contained ranges
         set.Union(new Ip4Range(new Ip4Address(20), new Ip4Address(30)));
@@ -170,13 +170,13 @@ public class Ip4RangeSet2ComplexTest
         // Arrange: Two sets with multiple ranges each
         // Set1: [10-20], [40-50], [70-80]
         // Set2: [15-45], [60-75], [90-100]
-        var set1 = new Ip4RangeSet2(new[]
+        var set1 = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(40), new Ip4Address(50)),
             new Ip4Range(new Ip4Address(70), new Ip4Address(80))
         });
-        var set2 = new Ip4RangeSet2(new[]
+        var set2 = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(15), new Ip4Address(45)),
             new Ip4Range(new Ip4Address(60), new Ip4Address(75)),
@@ -205,7 +205,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_MultipleHolesInSingleRange_CreatesMultipleFragments()
     {
         // Arrange: Large range [10-100]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(100)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(100)));
         
         // Act: Punch multiple holes
         set.Except(new Ip4Range(new Ip4Address(20), new Ip4Address(25)));
@@ -229,7 +229,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_RangeSpanningMultipleRanges_RemovesFromAll()
     {
         // Arrange: Multiple disjoint ranges [10-20], [30-40], [50-60], [70-80]
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(30), new Ip4Address(40)),
@@ -257,7 +257,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_ExactBoundaryMatches_RemovesCompletely()
     {
         // Arrange: Range [10-20]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
         
         // Act: Except with exact same boundaries
         set.Except(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
@@ -270,7 +270,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_SingleAddressFromRange_CreatesGap()
     {
         // Arrange: Range [10-20]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
         
         // Act: Except single address in the middle
         set.Except(new Ip4Range(new Ip4Address(15), new Ip4Address(15)));
@@ -288,7 +288,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_FirstAddressOnly_TruncatesStart()
     {
         // Arrange: Range [10-20]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
         
         // Act: Except only the first address
         set.Except(new Ip4Range(new Ip4Address(10), new Ip4Address(10)));
@@ -304,7 +304,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_LastAddressOnly_TruncatesEnd()
     {
         // Arrange: Range [10-20]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
         
         // Act: Except only the last address
         set.Except(new Ip4Range(new Ip4Address(20), new Ip4Address(20)));
@@ -320,7 +320,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_BoundaryAtZero_HandlesMinimumAddress()
     {
         // Arrange: Range starting at 0.0.0.0
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(0), new Ip4Address(100)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(0), new Ip4Address(100)));
         
         // Act: Except first 50 addresses
         set.Except(new Ip4Range(new Ip4Address(0), new Ip4Address(49)));
@@ -336,7 +336,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_BoundaryAtMaxValue_HandlesMaximumAddress()
     {
         // Arrange: Range ending at 255.255.255.255
-        var set = new Ip4RangeSet2(new Ip4Range(
+        var set = new Ip4RangeSet(new Ip4Range(
             new Ip4Address(uint.MaxValue - 100),
             new Ip4Address(uint.MaxValue)));
         
@@ -356,7 +356,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_TwoSetsWithMultipleRanges_RemovesComplexly()
     {
         // Arrange: Set with multiple ranges [10-30], [50-70], [90-110]
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(30)),
             new Ip4Range(new Ip4Address(50), new Ip4Address(70)),
@@ -364,7 +364,7 @@ public class Ip4RangeSet2ComplexTest
         });
         
         // Except set with overlapping ranges [20-60], [100-120]
-        var exceptSet = new Ip4RangeSet2(new[]
+        var exceptSet = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(20), new Ip4Address(60)),
             new Ip4Range(new Ip4Address(100), new Ip4Address(120))
@@ -388,7 +388,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_AlternatingOperations_MaintainsCorrectState()
     {
         // Arrange: Start with large range
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(0), new Ip4Address(1000)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(0), new Ip4Address(1000)));
         
         // Act: Alternate except and union operations
         set.Except(new Ip4Range(new Ip4Address(100), new Ip4Address(200)));  // Creates hole
@@ -416,8 +416,8 @@ public class Ip4RangeSet2ComplexTest
     public void Union_EmptySetWithEmptySet_RemainsEmpty()
     {
         // Arrange
-        var set1 = new Ip4RangeSet2();
-        var set2 = new Ip4RangeSet2();
+        var set1 = new Ip4RangeSet();
+        var set2 = new Ip4RangeSet();
         
         // Act
         set1.Union(set2);
@@ -430,8 +430,8 @@ public class Ip4RangeSet2ComplexTest
     public void Except_EmptySetWithEmptySet_RemainsEmpty()
     {
         // Arrange
-        var set1 = new Ip4RangeSet2();
-        var set2 = new Ip4RangeSet2();
+        var set1 = new Ip4RangeSet();
+        var set2 = new Ip4RangeSet();
         
         // Act
         set1.Except(set2);
@@ -444,7 +444,7 @@ public class Ip4RangeSet2ComplexTest
     public void Union_FullRangeWithAnyRange_RemainsFullRange()
     {
         // Arrange: Full IP range
-        var set = new Ip4RangeSet2(Ip4Range.All);
+        var set = new Ip4RangeSet(Ip4Range.All);
         
         // Act: Union with any range
         set.Union(new Ip4Range(new Ip4Address(1000), new Ip4Address(2000)));
@@ -460,7 +460,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_FullRangeWithFullRange_ResultsInEmpty()
     {
         // Arrange: Full IP range
-        var set = new Ip4RangeSet2(Ip4Range.All);
+        var set = new Ip4RangeSet(Ip4Range.All);
         
         // Act: Except full range
         set.Except(Ip4Range.All);
@@ -473,7 +473,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_FullRangeWithPartialRange_CreatesComplement()
     {
         // Arrange: Full IP range
-        var set = new Ip4RangeSet2(Ip4Range.All);
+        var set = new Ip4RangeSet(Ip4Range.All);
         
         // Act: Except middle portion
         set.Except(new Ip4Range(new Ip4Address(1000), new Ip4Address(2000)));
@@ -495,7 +495,7 @@ public class Ip4RangeSet2ComplexTest
     public void Union_AdjacentRangesWithGapOfOne_RemainsDisjoint()
     {
         // Arrange: Ranges with gap of 1 [10-20], [22-30]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(20)));
         
         // Act
         set.Union(new Ip4Range(new Ip4Address(22), new Ip4Address(30)));
@@ -513,7 +513,7 @@ public class Ip4RangeSet2ComplexTest
     public void Union_OverlappingWithExistingRanges_MergesCorrectly()
     {
         // Arrange: Two ranges with gap [10-20], [30-40]
-        var set = new Ip4RangeSet2(new[]
+        var set = new Ip4RangeSet(new[]
         {
             new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
             new Ip4Range(new Ip4Address(30), new Ip4Address(40))
@@ -533,7 +533,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_CreatingAdjacentRanges_DoesNotMerge()
     {
         // Arrange: Range [10-30]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(10), new Ip4Address(30)));
         
         // Act: Except middle address [20-20]
         set.Except(new Ip4Range(new Ip4Address(20), new Ip4Address(20)));
@@ -555,7 +555,7 @@ public class Ip4RangeSet2ComplexTest
     public void Union_ManySmallRanges_MergesEfficiently()
     {
         // Arrange: Create 100 small adjacent ranges
-        var set = new Ip4RangeSet2();
+        var set = new Ip4RangeSet();
         
         // Act: Add 100 adjacent ranges
         for (uint i = 0; i < 100; i++)
@@ -576,7 +576,7 @@ public class Ip4RangeSet2ComplexTest
     public void Except_ManySmallHoles_CreatesFragmentation()
     {
         // Arrange: Large range [0-1000]
-        var set = new Ip4RangeSet2(new Ip4Range(new Ip4Address(0), new Ip4Address(1000)));
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(0), new Ip4Address(1000)));
         
         // Act: Punch 9 small holes (avoiding boundaries)
         for (uint i = 1; i <= 9; i++)
@@ -611,7 +611,7 @@ public class Ip4RangeSet2ComplexTest
         }
         
         // Act
-        var set = new Ip4RangeSet2(ranges);
+        var set = new Ip4RangeSet(ranges);
         
         // Assert: Should maintain all 50 ranges
         var result = set.ToIp4Ranges();
