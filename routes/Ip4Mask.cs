@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -23,26 +23,25 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     public static bool TryParseFullString(string text, out Ip4Mask result)
     {
         ArgumentNullException.ThrowIfNull(text);
-        string[] step1 = text.Split('.');
-        if (step1.Length != 4)
+        Span<byte> bytes = stackalloc byte[4];
+        var enumerator = text.AsSpan().Split('.');
+        int i = 0;
+        foreach (var range in enumerator)
+        {
+            if (i >= 4 || !byte.TryParse(text.AsSpan()[range], out bytes[i]))
+            {
+                result = default;
+                return false;
+            }
+            i++;
+        }
+        if (i != 4)
         {
             result = default;
             return false;
         }
 
-        List<byte> step2 = new(4);
-        foreach (string step1Item in step1)
-        {
-            if (!byte.TryParse(step1Item, out byte step2Item))
-            {
-                result = default;
-                return false;
-            }
-
-            step2.Add(step2Item);
-        }
-
-        result = new Ip4Mask(step2[0], step2[1], step2[2], step2[3]);
+        result = new Ip4Mask(bytes[0], bytes[1], bytes[2], bytes[3]);
         return true;
     }
 

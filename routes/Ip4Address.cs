@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace routes;
@@ -13,93 +14,58 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public static Ip4Address Parse(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
-        string[] step1 = text.Split('.');
-        if (step1.Length != 4)
+        if (TryParse(text.AsSpan(), out Ip4Address result))
         {
-            throw new FormatException();
+            return result;
         }
-
-        byte[] step2 = step1.Select(byte.Parse).ToArray();
-
-        return new Ip4Address(step2[0], step2[1], step2[2], step2[3]);
+        // Check if failure is due to out of range numbers
+        var span = text.AsSpan();
+        var enumerator = span.Split('.');
+        int i = 0;
+        foreach (var range in enumerator)
+        {
+            if (i >= 4)
+            {
+                throw new FormatException();
+            }
+            var part = span[range];
+            if (int.TryParse(part, out int val) && (val < 0 || val > 255))
+            {
+                throw new OverflowException();
+            }
+            i++;
+        }
+        throw new FormatException();
     }
 
     /// <param name="text">x.x.x.x format</param>
     public static bool TryParse(string text, out Ip4Address result)
     {
         ArgumentNullException.ThrowIfNull(text);
-        string[] step1 = text.Split('.');
-        if (step1.Length != 4)
-        {
-            result = default;
-            return false;
-        }
-
-        List<byte> step2 = new(4);
-        foreach (string step1Item in step1)
-        {
-            if (!byte.TryParse(step1Item, out byte step2Item))
-            {
-                result = default;
-                return false;
-            }
-
-            step2.Add(step2Item);
-        }
-
-        result = new Ip4Address(step2[0], step2[1], step2[2], step2[3]);
-        return true;
+        return TryParse(text.AsSpan(), out result);
     }
 
     public static bool TryParse(ReadOnlySpan<char> text, out Ip4Address result)
     {
+        Span<byte> bytes = stackalloc byte[4];
         var enumerator = text.Split('.');
-
-        if (!enumerator.MoveNext())
+        int i = 0;
+        foreach (var range in enumerator)
         {
-            result = default;
-            return false;
+            if (i >= 4 || !byte.TryParse(text[range], out bytes[i]))
+            {
+                result = default;
+                return false;
+            }
+            i++;
         }
-        if (!byte.TryParse(text[enumerator.Current], out byte b1))
-        {
-            result = default;
-            return false;
-        }
-
-        if (!enumerator.MoveNext())
-        {
-            result = default;
-            return false;
-        }
-        if (!byte.TryParse(text[enumerator.Current], out byte b2))
+        if (i != 4)
         {
             result = default;
             return false;
         }
 
-        if (!enumerator.MoveNext())
-        {
-            result = default;
-            return false;
-        }
-        if (!byte.TryParse(text[enumerator.Current], out byte b3))
-        {
-            result = default;
-            return false;
-        }
-
-        if (!enumerator.MoveNext())
-        {
-            result = default;
-            return false;
-        }
-        if (!byte.TryParse(text[enumerator.Current], out byte b4))
-        {
-            result = default;
-            return false;
-        }
-
-        result = new Ip4Address(b1, b2, b3, b4);
+        result = new Ip4Address(bytes[0], bytes[1], bytes[2], bytes[3]);
         return true;
     }
 
