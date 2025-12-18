@@ -4,6 +4,7 @@
 
 using BenchmarkDotNet.Attributes;
 using Ip4Parsers;
+using routes;
 
 namespace routes.Benchmarks;
 
@@ -15,6 +16,8 @@ public class Ip4RangeSetBenchmarks
     private Ip4Subnet[] _subnets = [];
     private Ip4Range[] _bogon = [];
     private List<Ip4RangeSet> rangeSetsBy10 = [];
+    private List<Ip4RangeSetSortedSet> rangeSetsBy10SortedSet = [];
+    private List<Ip4RangeSetImmutable> rangeSetsBy10Immutable = [];
 
     [GlobalSetup]
     public async Task GlobalSetup()
@@ -55,6 +58,8 @@ public class Ip4RangeSetBenchmarks
         }).ToList();
 
         rangeSetsBy10 = ranges.Chunk(10).Select(chunk => new Ip4RangeSet(chunk)).ToList();
+        rangeSetsBy10SortedSet = ranges.Chunk(10).Select(chunk => new Ip4RangeSetSortedSet(chunk)).ToList();
+        rangeSetsBy10Immutable = ranges.Chunk(10).Select(chunk => new Ip4RangeSetImmutable(chunk)).ToList();
     }
 
     private static async Task<string> FetchAndParseRuAggregatedZoneAsync()
@@ -163,6 +168,46 @@ public class Ip4RangeSetBenchmarks
             else
             {
                 result.Except(rangeSetsBy10[index]);
+            }
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public Ip4RangeSetSortedSet UnionExceptSortedSet()
+    {
+        Random random = new();
+        Ip4RangeSetSortedSet result = new();
+        for (int index = 0; index < 100_000; index++)
+        {
+            if (random.NextDouble() < 0.5d)
+            {
+                result.Union(rangeSetsBy10SortedSet[index]);
+            }
+            else
+            {
+                result.Except(rangeSetsBy10SortedSet[index]);
+            }
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public Ip4RangeSetImmutable UnionExceptImmutable()
+    {
+        Random random = new();
+        Ip4RangeSetImmutable result = new();
+        for (int index = 0; index < 100_000; index++)
+        {
+            if (random.NextDouble() < 0.5d)
+            {
+                result = result.Union(rangeSetsBy10Immutable[index]);
+            }
+            else
+            {
+                result = result.Except(rangeSetsBy10Immutable[index]);
             }
         }
 
