@@ -81,7 +81,7 @@ internal static class Program
         {
             Console.Write("""
                 usage:
-                    ipops [raw <ips> | file <path> | - | bogon] [except|union [raw <ips> | file <path> | - | bogon] | simplify <number> | normalize]* [print subnet | range | amneziajson] [format <string:%subnet/%cidr | %subnet %mask | %firstaddress-%lastaddress>]
+                    ipops [raw <ips> | file <path> | - | bogon] [except|union [raw <ips> | file <path> | - | bogon] | simplify <number>]* [print subnet | range | amneziajson] [format <string:%subnet/%cidr | %subnet %mask | %firstaddress-%lastaddress>]
                 """);
             return;
         }
@@ -165,8 +165,7 @@ internal static class Program
                     break;
 
                 case "normalize":
-                    // obsolete; should remove in next versions
-                    break;
+                    throw new ArgumentException("normalize is obsolete. result always normalized. remove normalize from arguments.");
 
                 case "print":
                     if (!enumerator.MoveNext())
