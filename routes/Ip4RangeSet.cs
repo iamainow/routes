@@ -9,7 +9,7 @@ public class Ip4RangeSet
     public static Ip4RangeSet Empty => new();
     public static Ip4RangeSet All => new(Ip4Range.All);
 
-    // sorted by FirstAddress, elements not overlapping
+    // sorted by FirstAddress, elements not overlapping, elements non-adjacent/disjoint
     private LinkedList<Ip4Range> _list;
 
     public Ip4RangeSet()

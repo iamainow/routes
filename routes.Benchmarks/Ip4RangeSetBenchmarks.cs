@@ -1,10 +1,10 @@
 #pragma warning disable CA1822
 #pragma warning disable CA1515
 #pragma warning disable CA5394
+#pragma warning disable CA2014
 
 using BenchmarkDotNet.Attributes;
 using Ip4Parsers;
-using routes;
 
 namespace routes.Benchmarks;
 
@@ -17,7 +17,7 @@ public class Ip4RangeSetBenchmarks
     private Ip4Range[] _bogon = [];
     private List<Ip4RangeSet> rangeSetsBy10 = [];
     private List<Ip4RangeSetSortedSet> rangeSetsBy10SortedSet = [];
-    private List<Ip4RangeSetImmutable> rangeSetsBy10Immutable = [];
+    private List<Ip4Range[]> rangeSetsBy10AsArrays = [];
 
     [GlobalSetup]
     public async Task GlobalSetup()
@@ -59,7 +59,7 @@ public class Ip4RangeSetBenchmarks
 
         rangeSetsBy10 = ranges.Chunk(10).Select(chunk => new Ip4RangeSet(chunk)).ToList();
         rangeSetsBy10SortedSet = ranges.Chunk(10).Select(chunk => new Ip4RangeSetSortedSet(chunk)).ToList();
-        rangeSetsBy10Immutable = ranges.Chunk(10).Select(chunk => new Ip4RangeSetImmutable(chunk)).ToList();
+        rangeSetsBy10AsArrays = ranges.Chunk(10).Select(chunk => chunk.ToArray()).ToList();
     }
 
     private static async Task<string> FetchAndParseRuAggregatedZoneAsync()
@@ -114,46 +114,6 @@ public class Ip4RangeSetBenchmarks
         return result;
     }
 
-    //[Benchmark]
-    //public Ip4RangeSet Union4Except4()
-    //{
-    //    Random random = new();
-    //    Ip4RangeSet result = new();
-    //    for (int index = 0; index < 100_000; index++)
-    //    {
-    //        if (random.NextDouble() < 0.5d)
-    //        {
-    //            result.Union4(rangeSetsBy10[index]);
-    //        }
-    //        else
-    //        {
-    //            result.Except4(rangeSetsBy10[index]);
-    //        }
-    //    }
-
-    //    return result;
-    //}
-
-    //[Benchmark]
-    //public Ip4RangeSet Union5Except4()
-    //{
-    //    Random random = new();
-    //    Ip4RangeSet result = new();
-    //    for (int index = 0; index < 100_000; index++)
-    //    {
-    //        if (random.NextDouble() < 0.5d)
-    //        {
-    //            result.Union5(rangeSetsBy10[index]);
-    //        }
-    //        else
-    //        {
-    //            result.Except4(rangeSetsBy10[index]);
-    //        }
-    //    }
-
-    //    return result;
-    //}
-
     [Benchmark]
     public Ip4RangeSet UnionExcept()
     {
@@ -195,22 +155,64 @@ public class Ip4RangeSetBenchmarks
     }
 
     [Benchmark]
-    public Ip4RangeSetImmutable UnionExceptImmutable()
+    public void Union1Benchmark()
     {
-        Random random = new();
-        Ip4RangeSetImmutable result = new();
         for (int index = 0; index < 100_000; index++)
         {
-            if (random.NextDouble() < 0.5d)
-            {
-                result = result.Union(rangeSetsBy10Immutable[index]);
-            }
-            else
-            {
-                result = result.Except(rangeSetsBy10Immutable[index]);
-            }
+            var left = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[index % rangeSetsBy10AsArrays.Count]);
+            var right = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[(index + 1) % rangeSetsBy10AsArrays.Count]);
+            int bufferSize = Ip4RangeSetStackAlloc.CalcUnionBufferSize(left, right);
+            Span<Ip4Range> buffer = stackalloc Ip4Range[bufferSize];
+            var result = left.Union1(buffer, right);
         }
-
-        return result;
     }
+
+    [Benchmark]
+    public void Union2Benchmark()
+    {
+        for (int index = 0; index < 100_000; index++)
+        {
+            var left = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[index % rangeSetsBy10AsArrays.Count]);
+            var right = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[(index + 1) % rangeSetsBy10AsArrays.Count]);
+            int bufferSize = Ip4RangeSetStackAlloc.CalcUnionBufferSize(left, right);
+            Span<Ip4Range> buffer = stackalloc Ip4Range[bufferSize];
+            var result = left.Union2(buffer, right);
+        }
+    }
+
+    [Benchmark]
+    public void ExceptBenchmark()
+    {
+        for (int index = 0; index < 100_000; index++)
+        {
+            var left = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[index % rangeSetsBy10AsArrays.Count]);
+            var right = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[(index + 1) % rangeSetsBy10AsArrays.Count]);
+            int bufferSize = Ip4RangeSetStackAlloc.CalcExceptBufferSize(left, right);
+            Span<Ip4Range> buffer = stackalloc Ip4Range[bufferSize];
+            var result = left.Except(buffer, right);
+        }
+    }
+
+    //[Benchmark]
+    //public Ip4RangeSet UnionExcept()
+    //{
+    //    Random random = new();
+    //    Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc();
+    //    for (int index = 0; index < 100_000; index++)
+    //    {
+    //        if (random.NextDouble() < 0.5d)
+    //        {
+    //            rangeSetsBy10AsArrays[index]
+    //            Ip4RangeSetStackAlloc.CalcUnionBufferSize()
+    //                result.Union1()
+    //            result.Union(rangeSetsBy10[index]);
+    //        }
+    //        else
+    //        {
+    //            result.Except(rangeSetsBy10[index]);
+    //        }
+    //    }
+
+    //    return result;
+    //}
 }
