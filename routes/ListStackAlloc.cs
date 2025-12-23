@@ -50,6 +50,11 @@ public ref struct ListStackAlloc<T>
         }
     }
 
+    public readonly ref T Last()
+    {
+        return ref this[_size - 1];
+    }
+
     public readonly ReadOnlySpan<T> this[Range range]
     {
         get

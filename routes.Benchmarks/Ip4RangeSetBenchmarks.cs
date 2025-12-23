@@ -155,7 +155,7 @@ public class Ip4RangeSetBenchmarks
     }
 
     [Benchmark]
-    public int Union1ExceptStackAlloc()
+    public int UnionExceptStackAlloc()
     {
         Random random = new();
         Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000]);
@@ -167,57 +167,14 @@ public class Ip4RangeSetBenchmarks
                 var otherArray = rangeSetsBy10AsArrays[index];
                 var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
 
-                var r = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[Ip4RangeSetStackAlloc.CalcUnionBufferSize(result, other)]);
-
-                result.Union1(ref r, other);
-
-                result = r;
+                result.Union(other);
             }
             else
             {
                 var otherArray = rangeSetsBy10AsArrays[index];
                 var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
 
-                var r = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[Ip4RangeSetStackAlloc.CalcUnionBufferSize(result, other)]);
-
-                result.Except(ref r, other);
-
-                result = r;
-            }
-        }
-
-        return result.ToSpan().Length;
-    }
-
-    [Benchmark]
-    public int Union2ExceptStackAlloc()
-    {
-        Random random = new();
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000]);
-
-        for (int index = 0; index < 100_000; index++)
-        {
-            if (random.NextDouble() < 0.5d)
-            {
-                var otherArray = rangeSetsBy10AsArrays[index];
-                var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
-
-                var r = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[Ip4RangeSetStackAlloc.CalcUnionBufferSize(result, other)]);
-
-                result.Union2(ref r, other);
-
-                result = r;
-            }
-            else
-            {
-                var otherArray = rangeSetsBy10AsArrays[index];
-                var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
-
-                var r = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[Ip4RangeSetStackAlloc.CalcUnionBufferSize(result, other)]);
-
-                result.Except(ref r, other);
-
-                result = r;
+                result.Except(other);
             }
         }
 

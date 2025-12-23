@@ -1,8 +1,8 @@
 namespace routes;
 
-public readonly ref struct Ip4RangeSetStackAlloc
+public ref struct Ip4RangeSetStackAlloc
 {
-    private readonly ListStackAlloc<Ip4Range> _ranges; // sorted by FirstAddress, elements not overlapping, elements non-adjacent/disjoint
+    private ListStackAlloc<Ip4Range> _ranges; // sorted by FirstAddress, elements not overlapping, elements non-adjacent/disjoint
 
     public ReadOnlySpan<Ip4Range> ToReadOnlySpan() => _ranges.AsReadOnlySpan();
 
@@ -10,7 +10,7 @@ public readonly ref struct Ip4RangeSetStackAlloc
 
     public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer)
     {
-        _ranges = new ListStackAlloc<Ip4Range>();
+        _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer);
     }
 
     public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer, ReadOnlySpan<Ip4Range> elements) // elements may be unsorted, may overlapping, may adjacent/disjoint
@@ -21,13 +21,15 @@ public readonly ref struct Ip4RangeSetStackAlloc
         elements.CopyTo(temp);
         temp.Sort(Ip4RangeComparer.Instance);
 
+        // here temp sorted, but may overlap or be adjacent/disjoint
+
         if (temp.Length > 0)
         {
             _ranges.Add(temp[0]);
             for (int i = 1; i < temp.Length; i++)
             {
                 var current = temp[i];
-                var last = _ranges[_ranges.Count - 1];
+                ref var last = ref _ranges.Last();
                 /*
                 condition should be if (last.FirstAddress (1) <= current.LastAddress (3) && last.LastAddress >= current.FirstAddress)
                 lets current.FirstAddress = (2)
@@ -41,7 +43,7 @@ public readonly ref struct Ip4RangeSetStackAlloc
                 if (last.LastAddress.ToUInt32() + 1 >= current.FirstAddress.ToUInt32())
                 {
                     var merged = new Ip4Range(last.FirstAddress, current.LastAddress);
-                    _ranges[_ranges.Count - 1] = merged;
+                    last = merged;
                 }
                 else
                 {
@@ -56,184 +58,96 @@ public readonly ref struct Ip4RangeSetStackAlloc
         return left._ranges.Count + right._ranges.Count;
     }
 
-    public void Union1(ref Ip4RangeSetStackAlloc result, Ip4RangeSetStackAlloc other)
+    /// <summary>
+    /// dumb way to do union - sorting already sorted _ranges
+    /// </summary>
+    /// <param name="other"></param>
+    public void Union(Ip4RangeSetStackAlloc other)
     {
-        Span<Ip4Range> temp = stackalloc Ip4Range[_ranges.Count + other._ranges.Count];
-        _ranges.AsReadOnlySpan().CopyTo(temp);
-        other._ranges.AsReadOnlySpan().CopyTo(temp.Slice(_ranges.Count));
-        temp.Sort(Ip4RangeComparer.Instance);
+        Span<Ip4Range> thisAndOtherSorted = stackalloc Ip4Range[_ranges.Count + other._ranges.Count];
 
-        if (temp.Length > 0)
+        _ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted);
+        other._ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted.Slice(_ranges.Count));
+
+        thisAndOtherSorted.Sort(Ip4RangeComparer.Instance);
+
+        this._ranges.Clear();
+
+        if (thisAndOtherSorted.Length > 0)
         {
-            result._ranges.Add(temp[0]);
-            for (int i = 1; i < temp.Length; i++)
+            this._ranges.Add(thisAndOtherSorted[0]);
+            for (int i = 1; i < thisAndOtherSorted.Length; i++)
             {
-                var current = temp[i];
-                var last = result._ranges[result._ranges.Count - 1];
-                if (last.LastAddress.ToUInt32() + 1 >= current.FirstAddress.ToUInt32())
+                var current = thisAndOtherSorted[i];
+                ref var last = ref this._ranges.Last();
+                if (last.LastAddress.ToUInt32() == uint.MaxValue || last.LastAddress.ToUInt32() + 1 >= current.FirstAddress.ToUInt32())
                 {
-                    var merged = new Ip4Range(last.FirstAddress, current.LastAddress);
-                    result._ranges.RemoveLast();
-                    result._ranges.Add(merged);
+                    var maxLast = Math.Max(last.LastAddress.ToUInt32(), current.LastAddress.ToUInt32());
+                    last = new Ip4Range(last.FirstAddress, new Ip4Address(maxLast));
                 }
                 else
                 {
-                    result._ranges.Add(current);
+                    this._ranges.Add(current);
                 }
-            }
-        }
-    }
-
-    public void Union2(ref Ip4RangeSetStackAlloc result, Ip4RangeSetStackAlloc other)
-    {
-        int i = 0, j = 0;
-        while (i < _ranges.Count && j < other._ranges.Count)
-        {
-            var current = _ranges[i];
-            var currentOther = other._ranges[j];
-
-            if (currentOther.FirstAddress > current.LastAddress)
-            {
-                switch ((currentOther.FirstAddress.ToUInt32() - current.LastAddress.ToUInt32()).CompareTo(1U))
-                {
-                    case > 0:
-                        result._ranges.Add(current);
-                        i++;
-                        continue;
-                    case 0:
-                        result._ranges.Add(new Ip4Range(current.FirstAddress, currentOther.LastAddress));
-                        i++;
-                        j++;
-                        continue;
-                    default:
-                        throw new InvalidOperationException();
-                }
-            }
-
-            if (current.FirstAddress > currentOther.LastAddress)
-            {
-                switch ((current.FirstAddress.ToUInt32() - currentOther.LastAddress.ToUInt32()).CompareTo(1U))
-                {
-                    case > 0:
-                        result._ranges.Add(currentOther);
-                        j++;
-                        continue;
-                    case 0:
-                        result._ranges.Add(new Ip4Range(currentOther.FirstAddress, current.LastAddress));
-                        i++;
-                        j++;
-                        continue;
-                    default:
-                        throw new InvalidOperationException();
-                }
-            }
-
-            {
-                var newElement = current.IntersectableUnion(currentOther);
-                result._ranges.Add(newElement);
-                bool moveOther = current.LastAddress >= currentOther.LastAddress;
-                if (moveOther)
-                {
-                    j++;
-                }
-                else
-                {
-                    i++;
-                }
-            }
-        }
-
-        while (i < _ranges.Count)
-        {
-            result._ranges.Add(_ranges[i]);
-            i++;
-        }
-
-        while (j < other._ranges.Count)
-        {
-            result._ranges.Add(other._ranges[j]);
-            j++;
-        }
-
-        // Normalize the result
-        if (result._ranges.Count > 1)
-        {
-            Span<Ip4Range> normalized = stackalloc Ip4Range[result._ranges.Count];
-            result._ranges.AsReadOnlySpan().CopyTo(normalized);
-            int writeIndex = 0;
-            if (normalized.Length > 0)
-            {
-                normalized[writeIndex++] = normalized[0];
-                for (int k = 1; k < normalized.Length; k++)
-                {
-                    var curr = normalized[k];
-                    var last = normalized[writeIndex - 1];
-                    if (last.IsIntersects(curr))
-                    {
-                        normalized[writeIndex - 1] = last.IntersectableUnion(curr);
-                    }
-                    else if (last.LastAddress.ToUInt32() + 1 == curr.FirstAddress.ToUInt32())
-                    {
-                        normalized[writeIndex - 1] = new Ip4Range(last.FirstAddress, curr.LastAddress);
-                    }
-                    else
-                    {
-                        normalized[writeIndex++] = curr;
-                    }
-                }
-            }
-            result._ranges.RemoveRegion(0, result._ranges.Count);
-            for (int idx = 0; idx < writeIndex; idx++)
-            {
-                result._ranges.Add(normalized[idx]);
             }
         }
     }
 
     public static int CalcExceptBufferSize(Ip4RangeSetStackAlloc left, Ip4RangeSetStackAlloc right)
     {
-        return left._ranges.Count * right._ranges.Count;
+        return left._ranges.Count + right._ranges.Count;
     }
 
-    public void Except(ref Ip4RangeSetStackAlloc result, Ip4RangeSetStackAlloc other)
+    public void Except(Ip4RangeSetStackAlloc other)
     {
-        int i = 0, j = 0;
-        while (i < _ranges.Count && j < other._ranges.Count)
-        {
-            var current = _ranges[i];
-            var currentOther = other._ranges[j];
+        if (_ranges.Count == 0 || other._ranges.Count == 0)
+            return;
 
-            if (current.LastAddress < currentOther.FirstAddress)
+        Span<Ip4Range> temp = stackalloc Ip4Range[CalcExceptBufferSize(this, other)];
+        int count = 0;
+
+        int i = 0;
+        int j = 0;
+
+        while (i < _ranges.Count)
+        {
+            if (j >= other._ranges.Count)
             {
-                result._ranges.Add(current);
+                // Add remaining ranges from this set
+                while (i < _ranges.Count)
+                {
+                    temp[count++] = _ranges[i++];
+                }
+                break;
+            }
+
+            var curr = _ranges[i];
+            var otherCurr = other._ranges[j];
+
+            if (curr.LastAddress.ToUInt32() < otherCurr.FirstAddress.ToUInt32())
+            {
+                temp[count++] = curr;
                 i++;
             }
-            else if (current.FirstAddress > currentOther.LastAddress)
+            else if (curr.FirstAddress.ToUInt32() > otherCurr.LastAddress.ToUInt32())
             {
                 j++;
             }
             else
             {
-                var excepted = current.IntersectableExcept(currentOther);
-                foreach (var range in excepted)
+                var excepted = curr.IntersectableExcept(otherCurr);
+                foreach (var ex in excepted)
                 {
-                    result._ranges.Add(range);
+                    temp[count++] = ex;
                 }
-                if (current.LastAddress <= currentOther.LastAddress)
-                {
-                    i++;
-                }
-                else
-                {
-                    j++;
-                }
+                i++;
             }
         }
 
-        while (i < _ranges.Count)
+        _ranges.Clear();
+        for (int k = 0; k < count; k++)
         {
-            result._ranges.Add(_ranges[i]);
-            i++;
+            _ranges.Add(temp[k]);
         }
     }
 }
