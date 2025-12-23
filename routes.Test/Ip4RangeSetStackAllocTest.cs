@@ -1,231 +1,327 @@
 namespace routes.Test;
 
-using Xunit;
-
 public class Ip4RangeSetStackAllocTest
 {
     #region Constructor Tests
 
     [Fact]
-    public void Constructor_EmptyElements_ProducesEmptySet()
+    public void Constructor_EmptyBuffer_CreatesEmptySet()
     {
-        Span<Ip4Range> buffer = stackalloc Ip4Range[1];
-        Span<Ip4Range> elements = default;
+        // Arrange & Act
+        Span<Ip4Range> buffer = stackalloc Ip4Range[0];
+        var set = new Ip4RangeSetStackAlloc(buffer);
+
+        // Assert
+        Assert.Equal(0, set.ToReadOnlySpan().Length);
+        Assert.Equal(0, set.ToSpan().Length);
+    }
+
+    [Fact]
+    public void Constructor_WithEmptyElements_CreatesEmptySet()
+    {
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
+        ReadOnlySpan<Ip4Range> elements = [];
+
+        // Act
         var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        // Assert
         Assert.Equal(0, set.ToReadOnlySpan().Length);
     }
 
     [Fact]
-    public void Constructor_SingleElement_PreservesRange()
+    public void Constructor_WithSingleRange_CreatesSetWithOneRange()
     {
-        Span<Ip4Range> buffer = stackalloc Ip4Range[1];
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
         var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        Span<Ip4Range> elements = [range];
+        ReadOnlySpan<Ip4Range> elements = [range];
+
+        // Act
         var set = new Ip4RangeSetStackAlloc(buffer, elements);
-        var result = set.ToReadOnlySpan();
-        Assert.Equal(1, result.Length);
-        Assert.Equal(range, result[0]);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(range, spans[0]);
     }
 
     [Fact]
-    public void Constructor_MultipleDisjointSorted_NoChanges()
+    public void Constructor_WithOverlappingRanges_MergesIntoSingleRange()
     {
-        Span<Ip4Range> buffer = stackalloc Ip4Range[3];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var r2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
-        var r3 = new Ip4Range(new Ip4Address(50), new Ip4Address(60));
-        Span<Ip4Range> elements = [r1, r2, r3];
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
+        ReadOnlySpan<Ip4Range> elements = [range1, range2];
+
+        // Act
         var set = new Ip4RangeSetStackAlloc(buffer, elements);
-        var result = set.ToReadOnlySpan();
-        Assert.Equal(3, result.Length);
-        Assert.Equal(r1, result[0]);
-        Assert.Equal(r2, result[1]);
-        Assert.Equal(r3, result[2]);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(25), spans[0].LastAddress);
     }
 
     [Fact]
-    public void Constructor_OverlappingElements_MergesIntoSingleRange()
+    public void Constructor_WithAdjacentRanges_MergesIntoSingleRange()
     {
-        Span<Ip4Range> buffer = stackalloc Ip4Range[2];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var r2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
-        Span<Ip4Range> elements = [r1, r2];
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(19));
+        var range2 = new Ip4Range(new Ip4Address(20), new Ip4Address(30));
+        ReadOnlySpan<Ip4Range> elements = [range1, range2];
+
+        // Act
         var set = new Ip4RangeSetStackAlloc(buffer, elements);
-        var result = set.ToReadOnlySpan();
-        Assert.Equal(1, result.Length);
-        Assert.Equal(new Ip4Address(10), result[0].FirstAddress);
-        Assert.Equal(new Ip4Address(25), result[0].LastAddress);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(30), spans[0].LastAddress);
     }
 
     [Fact]
-    public void Constructor_AdjacentElements_Merges()
+    public void Constructor_WithDisjointRanges_KeepsSeparateRanges()
     {
-        Span<Ip4Range> buffer = stackalloc Ip4Range[2];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var r2 = new Ip4Range(new Ip4Address(21), new Ip4Address(30));
-        Span<Ip4Range> elements = [r1, r2];
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
+        ReadOnlySpan<Ip4Range> elements = [range1, range2];
+
+        // Act
         var set = new Ip4RangeSetStackAlloc(buffer, elements);
-        var result = set.ToReadOnlySpan();
-        Assert.Equal(1, result.Length);
-        Assert.Equal(new Ip4Address(10), result[0].FirstAddress);
-        Assert.Equal(new Ip4Address(30), result[0].LastAddress);
+
+        // Assert
+        var spans = set.ToReadOnlySpan().ToArray();
+        Assert.Equal(2, spans.Length);
+        Assert.Equal(range1, spans[0]);
+        Assert.Equal(range2, spans[1]);
     }
 
     [Fact]
-    public void Constructor_UnsortedElements_SortsAndNormalizes()
+    public void Constructor_WithUnsortedInput_SortsAndNormalizes()
     {
-        Span<Ip4Range> buffer = stackalloc Ip4Range[3];
-        var r1 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
-        var r2 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var r3 = new Ip4Range(new Ip4Address(15), new Ip4Address(35)); // overlaps with both
-        Span<Ip4Range> elements = [r1, r2, r3];
-        var set = new Ip4RangeSetStackAlloc(buffer, elements);
-        var result = set.ToReadOnlySpan();
-        Assert.Equal(1, result.Length);
-        Assert.Equal(new Ip4Address(10), result[0].FirstAddress);
-        Assert.Equal(new Ip4Address(40), result[0].LastAddress);
-    }
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
+        var range1 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
+        var range2 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range3 = new Ip4Range(new Ip4Address(35), new Ip4Address(45));
+        ReadOnlySpan<Ip4Range> elements = [range1, range2, range3];
 
-    [Fact]
-    public void Constructor_MixedOverlappingAndAdjacent_ComplexMerge()
-    {
-        Span<Ip4Range> buffer = stackalloc Ip4Range[4];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var r2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25)); // overlap
-        var r3 = new Ip4Range(new Ip4Address(26), new Ip4Address(30)); // adjacent
-        var r4 = new Ip4Range(new Ip4Address(40), new Ip4Address(50)); // disjoint
-        Span<Ip4Range> elements = [r1, r2, r3, r4];
+        // Act
         var set = new Ip4RangeSetStackAlloc(buffer, elements);
-        var result = set.ToReadOnlySpan();
-        Assert.Equal(2, result.Length);
-        Assert.Equal(new Ip4Address(10), result[0].FirstAddress);
-        Assert.Equal(new Ip4Address(30), result[0].LastAddress);
-        Assert.Equal(new Ip4Address(40), result[1].FirstAddress);
-        Assert.Equal(new Ip4Address(50), result[1].LastAddress);
+
+        // Assert
+        var spans = set.ToReadOnlySpan().ToArray();
+        Assert.Equal(2, spans.Length);
+        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(20), spans[0].LastAddress);
+        Assert.Equal(new Ip4Address(30), spans[1].FirstAddress);
+        Assert.Equal(new Ip4Address(45), spans[1].LastAddress);
     }
 
     #endregion
 
-    #region Union1 Tests
+    #region Span Accessor Tests
 
     [Fact]
-    public void Union1_EmptySets_ReturnsEmpty()
+    public void ToReadOnlySpan_ReturnsCorrectRanges()
     {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, default);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, default);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[1];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
-        set1.Union1(ref result, set2);
-        Assert.Equal(0, result.ToReadOnlySpan().Length);
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
+        ReadOnlySpan<Ip4Range> elements = [range1, range2];
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        // Act
+        var spans = set.ToReadOnlySpan();
+
+        // Assert
+        Assert.Equal(2, spans.Length);
+        Assert.Equal(range1, spans[0]);
+        Assert.Equal(range2, spans[1]);
     }
 
     [Fact]
-    public void Union1_DisjointRanges_ConcatenatesSorted()
+    public void ToSpan_ReturnsCorrectRanges()
     {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, [r1]);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var r2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, [r2]);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[2];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
-        set1.Union1(ref result, set2);
-        var ranges = result.ToReadOnlySpan();
-        Assert.Equal(2, ranges.Length);
-        Assert.Equal(r1, ranges[0]);
-        Assert.Equal(r2, ranges[1]);
-    }
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
+        var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        ReadOnlySpan<Ip4Range> elements = [range];
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
 
-    [Fact]
-    public void Union1_OverlappingRanges_Merges()
-    {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, [r1]);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var r2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, [r2]);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[1];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
-        set1.Union1(ref result, set2);
-        var ranges = result.ToReadOnlySpan();
-        Assert.Equal(1, ranges.Length);
-        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
-        Assert.Equal(new Ip4Address(25), ranges[0].LastAddress);
-    }
+        // Act
+        var spans = set.ToSpan();
 
-    [Fact]
-    public void Union1_AdjacentRanges_Merges()
-    {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, [r1]);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var r2 = new Ip4Range(new Ip4Address(21), new Ip4Address(30));
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, [r2]);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[1];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
-        set1.Union1(ref result, set2);
-        var ranges = result.ToReadOnlySpan();
-        Assert.Equal(1, ranges.Length);
-        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
-        Assert.Equal(new Ip4Address(30), ranges[0].LastAddress);
+        // Assert
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(range, spans[0]);
     }
 
     #endregion
 
-    #region Union2 Tests
+    #region Union Tests
 
     [Fact]
-    public void Union2_EmptySets_ReturnsEmpty()
+    public void CalcUnionBufferSize_ReturnsCorrectSize()
     {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, default);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, default);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[1];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
-        set1.Union2(ref result, set2);
-        Assert.Equal(0, result.ToReadOnlySpan().Length);
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range1]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, [range2]);
+
+        // Act
+        var size = Ip4RangeSetStackAlloc.CalcUnionBufferSize(set1, set2);
+
+        // Assert
+        Assert.Equal(2, size);
     }
 
     [Fact]
-    public void Union2_DisjointRanges_ConcatenatesSorted()
+    public void Union1_WithDisjointRanges_CombinesCorrectly()
     {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, [r1]);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var r2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, [r2]);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[2];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
-        set1.Union2(ref result, set2);
-        var ranges = result.ToReadOnlySpan();
-        Assert.Equal(2, ranges.Length);
-        Assert.Equal(r1, ranges[0]);
-        Assert.Equal(r2, ranges[1]);
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range1]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, [range2]);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
+        set1.Union1(ref result, set2);
+
+        // Assert
+        var spans = result.ToReadOnlySpan().ToArray();
+        Assert.Equal(2, spans.Length);
+        Assert.Equal(range1, spans[0]);
+        Assert.Equal(range2, spans[1]);
     }
 
     [Fact]
-    public void Union2_OverlappingRanges_Merges()
+    public void Union1_WithOverlappingRanges_MergesCorrectly()
     {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, [r1]);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var r2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, [r2]);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[2];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range1]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, [range2]);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
+        set1.Union1(ref result, set2);
+
+        // Assert
+        var spans = result.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(25), spans[0].LastAddress);
+    }
+
+    [Fact]
+    public void Union1_WithAdjacentRanges_MergesCorrectly()
+    {
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(19));
+        var range2 = new Ip4Range(new Ip4Address(20), new Ip4Address(30));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range1]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, [range2]);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
+        set1.Union1(ref result, set2);
+
+        // Assert
+        var spans = result.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(30), spans[0].LastAddress);
+    }
+
+    [Fact]
+    public void Union1_WithEmptySet_NoChange()
+    {
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
+        set1.Union1(ref result, set2);
+
+        // Assert
+        var spans = result.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(range, spans[0]);
+    }
+
+    [Fact]
+    public void Union2_WithDisjointRanges_CombinesCorrectly()
+    {
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range1]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, [range2]);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
         set1.Union2(ref result, set2);
-        var ranges = result.ToReadOnlySpan();
-        Assert.Equal(1, ranges.Length);
-        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
-        Assert.Equal(new Ip4Address(25), ranges[0].LastAddress);
+
+        // Assert
+        var spans = result.ToReadOnlySpan().ToArray();
+        Assert.Equal(2, spans.Length);
+        Assert.Equal(range1, spans[0]);
+        Assert.Equal(range2, spans[1]);
+    }
+
+    [Fact]
+    public void Union2_WithOverlappingRanges_MergesCorrectly()
+    {
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range1]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, [range2]);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
+        set1.Union2(ref result, set2);
+
+        // Assert
+        var spans = result.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(25), spans[0].LastAddress);
     }
 
     #endregion
@@ -233,65 +329,194 @@ public class Ip4RangeSetStackAllocTest
     #region Except Tests
 
     [Fact]
-    public void Except_EmptySets_ReturnsEmpty()
+    public void CalcExceptBufferSize_ReturnsCorrectSize()
     {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, default);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, default);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[1];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range1, range2]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, [new Ip4Range(new Ip4Address(15), new Ip4Address(35))]);
+
+        // Act
+        var size = Ip4RangeSetStackAlloc.CalcExceptBufferSize(set1, set2);
+
+        // Assert
+        Assert.Equal(2, size); // 2 ranges * 1 range = 2
+    }
+
+    [Fact]
+    public void Except_WithDisjointRanges_NoChange()
+    {
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range1, range2]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, [new Ip4Range(new Ip4Address(50), new Ip4Address(60))]);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
         set1.Except(ref result, set2);
+
+        // Assert
+        var spans = result.ToReadOnlySpan().ToArray();
+        Assert.Equal(2, spans.Length);
+        Assert.Equal(range1, spans[0]);
+        Assert.Equal(range2, spans[1]);
+    }
+
+    [Fact]
+    public void Except_WithPartialOverlap_SplitsRanges()
+    {
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var range = new Ip4Range(new Ip4Address(10), new Ip4Address(30));
+        var exceptRange = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, [exceptRange]);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
+        set1.Except(ref result, set2);
+
+        // Assert
+        var spans = result.ToReadOnlySpan().ToArray();
+        Assert.Equal(2, spans.Length);
+        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(14), spans[0].LastAddress);
+        Assert.Equal(new Ip4Address(26), spans[1].FirstAddress);
+        Assert.Equal(new Ip4Address(30), spans[1].LastAddress);
+    }
+
+    [Fact]
+    public void Except_WithCompleteOverlap_RemovesRange()
+    {
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var exceptRange = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, [exceptRange]);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
+        set1.Except(ref result, set2);
+
+        // Assert
         Assert.Equal(0, result.ToReadOnlySpan().Length);
     }
 
     [Fact]
-    public void Except_Disjoint_NoChange()
+    public void Except_WithEmptySet_NoChange()
     {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, [r1]);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var r2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, [r2]);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[1];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, [range]);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
         set1.Except(ref result, set2);
-        var ranges = result.ToReadOnlySpan();
-        Assert.Equal(1, ranges.Length);
-        Assert.Equal(r1, ranges[0]);
+
+        // Assert
+        var spans = result.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(range, spans[0]);
+    }
+
+    #endregion
+
+    #region Edge Cases
+
+    [Fact]
+    public void Operations_WithMinimumIpAddress_WorkCorrectly()
+    {
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
+        var range = new Ip4Range(new Ip4Address(0), new Ip4Address(100));
+        var set = new Ip4RangeSetStackAlloc(buffer, [range]);
+
+        // Act & Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(0), spans[0].FirstAddress);
     }
 
     [Fact]
-    public void Except_CompleteOverlap_ReturnsEmpty()
+    public void Operations_WithMaximumIpAddress_WorkCorrectly()
     {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, [r1]);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, [r1]);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[1];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
-        set1.Except(ref result, set2);
-        Assert.Equal(0, result.ToReadOnlySpan().Length);
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
+        var range = new Ip4Range(new Ip4Address(uint.MaxValue - 100), new Ip4Address(uint.MaxValue));
+        var set = new Ip4RangeSetStackAlloc(buffer, [range]);
+
+        // Act & Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(uint.MaxValue), spans[0].LastAddress);
     }
 
     [Fact]
-    public void Except_PartialOverlap_Truncates()
+    public void Constructor_WithLargeRanges_HandlesCorrectly()
     {
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[1];
-        var r1 = new Ip4Range(new Ip4Address(10), new Ip4Address(30));
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, [r1]);
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[1];
-        var r2 = new Ip4Range(new Ip4Address(20), new Ip4Address(40));
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, [r2]);
-        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[1];
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(resultBuffer);
-        set1.Except(ref result, set2);
-        var ranges = result.ToReadOnlySpan();
-        Assert.Equal(1, ranges.Length);
-        Assert.Equal(new Ip4Address(10), ranges[0].FirstAddress);
-        Assert.Equal(new Ip4Address(19), ranges[0].LastAddress);
+        // Arrange
+        Span<Ip4Range> buffer = stackalloc Ip4Range[1000];
+        var range1 = new Ip4Range(new Ip4Address(0), new Ip4Address(1000000));
+        var range2 = new Ip4Range(new Ip4Address(2000000), new Ip4Address(3000000));
+        ReadOnlySpan<Ip4Range> elements = [range1, range2];
+
+        // Act
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        // Assert
+        var spans = set.ToReadOnlySpan().ToArray();
+        Assert.Equal(2, spans.Length);
+        Assert.Equal(range1, spans[0]);
+        Assert.Equal(range2, spans[1]);
+    }
+
+    [Fact]
+    public void Union_WithMultipleOverlaps_NormalizesCorrectly()
+    {
+        // Arrange
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[10];
+        var ranges1 = new[]
+        {
+            new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
+            new Ip4Range(new Ip4Address(40), new Ip4Address(50))
+        };
+        var ranges2 = new[]
+        {
+            new Ip4Range(new Ip4Address(15), new Ip4Address(35)),
+            new Ip4Range(new Ip4Address(55), new Ip4Address(65))
+        };
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, ranges1);
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, ranges2);
+        var result = new Ip4RangeSetStackAlloc(resultBuffer, []);
+
+        // Act
+        set1.Union1(ref result, set2);
+
+        // Assert
+        var spans = result.ToReadOnlySpan().ToArray();
+        Assert.Equal(2, spans.Length);
+        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(35), spans[0].LastAddress);
+        Assert.Equal(new Ip4Address(40), spans[1].FirstAddress);
+        Assert.Equal(new Ip4Address(65), spans[1].LastAddress);
     }
 
     #endregion

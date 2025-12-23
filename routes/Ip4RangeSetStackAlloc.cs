@@ -2,23 +2,20 @@ namespace routes;
 
 public readonly ref struct Ip4RangeSetStackAlloc
 {
-    // sorted by FirstAddress, elements not overlapping, elements non-adjacent/disjoint
-    private readonly ListStackAlloc<Ip4Range> _ranges;
+    private readonly ListStackAlloc<Ip4Range> _ranges; // sorted by FirstAddress, elements not overlapping, elements non-adjacent/disjoint
 
     public ReadOnlySpan<Ip4Range> ToReadOnlySpan() => _ranges.AsReadOnlySpan();
 
     public ReadOnlySpan<Ip4Range> ToSpan() => _ranges.AsSpan();
 
-    public Ip4RangeSetStackAlloc(Span<Ip4Range> buffer)
+    public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer)
     {
-        _ranges = new ListStackAlloc<Ip4Range>(buffer);
+        _ranges = new ListStackAlloc<Ip4Range>();
     }
 
-    public Ip4RangeSetStackAlloc(Span<Ip4Range> buffer, Span<Ip4Range> elements) // elements is unsorted, may overlapping, may adjacent/disjoint
+    public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer, ReadOnlySpan<Ip4Range> elements) // elements may be unsorted, may overlapping, may adjacent/disjoint
     {
-        _ranges = new ListStackAlloc<Ip4Range>(buffer);
-
-        elements.Sort()
+        _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer);
 
         Span<Ip4Range> temp = stackalloc Ip4Range[elements.Length];
         elements.CopyTo(temp);
@@ -31,17 +28,20 @@ public readonly ref struct Ip4RangeSetStackAlloc
             {
                 var current = temp[i];
                 var last = _ranges[_ranges.Count - 1];
-                if (last.IsIntersects(current))
-                {
-                    var merged = last.IntersectableUnion(current);
-                    _ranges.RemoveLast();
-                    _ranges.Add(merged);
-                }
-                else if (last.LastAddress.ToUInt32() + 1 == current.FirstAddress.ToUInt32())
+                /*
+                condition should be if (last.FirstAddress (1) <= current.LastAddress (3) && last.LastAddress >= current.FirstAddress)
+                lets current.FirstAddress = (2)
+                but (1) <= (2) due sorting 
+                and (2) <= (3) due FirstAddress <= LastAddress
+                so when (1) <= (2) <= (3) then (1) <= (3)
+                it means that last.FirstAddress (1) <= current.LastAddress (3) is always true
+                so original condition equals to if (true && last.LastAddress >= current.FirstAddress)
+                and then equals to if (last.LastAddress >= current.FirstAddress)
+                */
+                if (last.LastAddress.ToUInt32() + 1 >= current.FirstAddress.ToUInt32())
                 {
                     var merged = new Ip4Range(last.FirstAddress, current.LastAddress);
-                    _ranges.RemoveLast();
-                    _ranges.Add(merged);
+                    _ranges[_ranges.Count - 1] = merged;
                 }
                 else
                 {
@@ -70,13 +70,7 @@ public readonly ref struct Ip4RangeSetStackAlloc
             {
                 var current = temp[i];
                 var last = result._ranges[result._ranges.Count - 1];
-                if (last.IsIntersects(current))
-                {
-                    var merged = last.IntersectableUnion(current);
-                    result._ranges.RemoveLast();
-                    result._ranges.Add(merged);
-                }
-                else if (last.LastAddress.ToUInt32() + 1 == current.FirstAddress.ToUInt32())
+                if (last.LastAddress.ToUInt32() + 1 >= current.FirstAddress.ToUInt32())
                 {
                     var merged = new Ip4Range(last.FirstAddress, current.LastAddress);
                     result._ranges.RemoveLast();
@@ -198,7 +192,7 @@ public readonly ref struct Ip4RangeSetStackAlloc
 
     public static int CalcExceptBufferSize(Ip4RangeSetStackAlloc left, Ip4RangeSetStackAlloc right)
     {
-        return left._ranges.Count * 2;
+        return left._ranges.Count * right._ranges.Count;
     }
 
     public void Except(ref Ip4RangeSetStackAlloc result, Ip4RangeSetStackAlloc other)

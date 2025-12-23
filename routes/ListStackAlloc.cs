@@ -5,25 +5,48 @@ public ref struct ListStackAlloc<T>
     private Span<T> _items;
     private int _size;
 
-    public ListStackAlloc(Span<T> buffer)
+    /// <summary>
+    /// Initializes a new instance of the ListStackAlloc<T> class using the specified buffer as the underlying storage.
+    /// </summary>
+    public ListStackAlloc(Span<T> rewritableInternalBuffer)
     {
-        _items = buffer;
+        _items = rewritableInternalBuffer;
         _size = 0;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the ListStackAlloc<T> class using the specified buffer as the underlying storage with specified first count of items
+    /// </summary>
+    public ListStackAlloc(Span<T> rewritableInternalBuffer, int count)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(count, rewritableInternalBuffer.Length);
+
+        _items = rewritableInternalBuffer;
+        _size = count;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the ListStackAlloc<T> class using the specified buffer as the underlying storage and copies the elements into it.
+    /// </summary>
+    public ListStackAlloc(Span<T> rewritableInternalBuffer, ReadOnlySpan<T> elements)
+    {
+        elements.CopyTo(rewritableInternalBuffer);
+        _items = rewritableInternalBuffer;
+        _size = elements.Length;
     }
 
     public readonly int Count => _size;
 
     public readonly int Capacity => _items.Length;
 
-    public readonly T this[int index]
+    public readonly ref T this[int index]
     {
         get
         {
-            if (index < 0 || index >= _size)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index));
-            }
-            return _items[index];
+            ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _size);
+
+            return ref _items[index];
         }
     }
 
@@ -41,8 +64,7 @@ public ref struct ListStackAlloc<T>
         {
             throw new InvalidOperationException("Capacity exceeded");
         }
-        _items[_size] = item;
-        ++_size;
+        _items[_size++] = item;
     }
 
     public void AddRange(Span<T> items)
@@ -98,6 +120,11 @@ public ref struct ListStackAlloc<T>
     {
         (int start, int count) = range.GetOffsetAndLength(Count);
         RemoveRegion(start, count);
+    }
+
+    public void Clear()
+    {
+        _size = 0;
     }
 
     public void Sort<TComparer>(Comparison<T> comparer)

@@ -52,6 +52,23 @@ public class ListStackAllocTest
     }
 
     [Fact]
+    public void Constructor_WithCount_InitializesCorrectly()
+    {
+        Span<int> buffer = stackalloc int[5];
+        buffer[0] = 10;
+        buffer[1] = 20;
+        buffer[2] = 30;
+
+        var list = new ListStackAlloc<int>(buffer, 3);
+
+        Assert.Equal(3, list.Count);
+        Assert.Equal(5, list.Capacity);
+        Assert.Equal(10, list[0]);
+        Assert.Equal(20, list[1]);
+        Assert.Equal(30, list[2]);
+    }
+
+    [Fact]
     public void Indexer_Get_ValidIndex_ReturnsCorrectValue()
     {
         Span<int> buffer = stackalloc int[5];
@@ -301,5 +318,40 @@ public class ListStackAllocTest
         Assert.Equal(1, array[0]);
         Assert.Equal(2, array[1]);
         Assert.Equal(3, array[2]);
+    }
+
+    [Fact]
+    public void Clear_ResetsCountToZero()
+    {
+        Span<int> buffer = stackalloc int[5];
+        int[] elements = [1, 2, 3];
+        var list = new ListStackAlloc<int>(buffer);
+        list.AddRange(elements);
+
+        Assert.Equal(3, list.Count);
+        Assert.Equal(5, list.Capacity);
+
+        list.Clear();
+
+        Assert.Equal(0, list.Count);
+        Assert.Equal(5, list.Capacity);
+    }
+
+    [Fact]
+    public void Sort_WithComparison_SortsCorrectly()
+    {
+        Span<int> buffer = stackalloc int[5];
+        int[] elements = [3, 1, 4, 1, 5];
+        var list = new ListStackAlloc<int>(buffer);
+        list.AddRange(elements);
+
+        list.Sort<int>((a, b) => a.CompareTo(b));
+
+        Assert.Equal(5, list.Count);
+        Assert.Equal(1, list[0]);
+        Assert.Equal(1, list[1]);
+        Assert.Equal(3, list[2]);
+        Assert.Equal(4, list[3]);
+        Assert.Equal(5, list[4]);
     }
 }

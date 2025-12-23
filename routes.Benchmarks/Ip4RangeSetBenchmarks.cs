@@ -155,64 +155,72 @@ public class Ip4RangeSetBenchmarks
     }
 
     [Benchmark]
-    public void Union1Benchmark()
+    public int Union1ExceptStackAlloc()
     {
+        Random random = new();
+        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000]);
+
         for (int index = 0; index < 100_000; index++)
         {
-            var left = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[index % rangeSetsBy10AsArrays.Count]);
-            var right = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[(index + 1) % rangeSetsBy10AsArrays.Count]);
-            int bufferSize = Ip4RangeSetStackAlloc.CalcUnionBufferSize(left, right);
-            Span<Ip4Range> buffer = stackalloc Ip4Range[bufferSize];
-            var result = left.Union1(buffer, right);
+            if (random.NextDouble() < 0.5d)
+            {
+                var otherArray = rangeSetsBy10AsArrays[index];
+                var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
+
+                var r = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[Ip4RangeSetStackAlloc.CalcUnionBufferSize(result, other)]);
+
+                result.Union1(ref r, other);
+
+                result = r;
+            }
+            else
+            {
+                var otherArray = rangeSetsBy10AsArrays[index];
+                var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
+
+                var r = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[Ip4RangeSetStackAlloc.CalcUnionBufferSize(result, other)]);
+
+                result.Except(ref r, other);
+
+                result = r;
+            }
         }
+
+        return result.ToSpan().Length;
     }
 
     [Benchmark]
-    public void Union2Benchmark()
+    public int Union2ExceptStackAlloc()
     {
+        Random random = new();
+        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000]);
+
         for (int index = 0; index < 100_000; index++)
         {
-            var left = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[index % rangeSetsBy10AsArrays.Count]);
-            var right = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[(index + 1) % rangeSetsBy10AsArrays.Count]);
-            int bufferSize = Ip4RangeSetStackAlloc.CalcUnionBufferSize(left, right);
-            Span<Ip4Range> buffer = stackalloc Ip4Range[bufferSize];
-            var result = left.Union2(buffer, right);
+            if (random.NextDouble() < 0.5d)
+            {
+                var otherArray = rangeSetsBy10AsArrays[index];
+                var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
+
+                var r = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[Ip4RangeSetStackAlloc.CalcUnionBufferSize(result, other)]);
+
+                result.Union2(ref r, other);
+
+                result = r;
+            }
+            else
+            {
+                var otherArray = rangeSetsBy10AsArrays[index];
+                var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
+
+                var r = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[Ip4RangeSetStackAlloc.CalcUnionBufferSize(result, other)]);
+
+                result.Except(ref r, other);
+
+                result = r;
+            }
         }
+
+        return result.ToSpan().Length;
     }
-
-    [Benchmark]
-    public void ExceptBenchmark()
-    {
-        for (int index = 0; index < 100_000; index++)
-        {
-            var left = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[index % rangeSetsBy10AsArrays.Count]);
-            var right = new Ip4RangeSetStackAlloc(rangeSetsBy10AsArrays[(index + 1) % rangeSetsBy10AsArrays.Count]);
-            int bufferSize = Ip4RangeSetStackAlloc.CalcExceptBufferSize(left, right);
-            Span<Ip4Range> buffer = stackalloc Ip4Range[bufferSize];
-            var result = left.Except(buffer, right);
-        }
-    }
-
-    //[Benchmark]
-    //public Ip4RangeSet UnionExcept()
-    //{
-    //    Random random = new();
-    //    Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc();
-    //    for (int index = 0; index < 100_000; index++)
-    //    {
-    //        if (random.NextDouble() < 0.5d)
-    //        {
-    //            rangeSetsBy10AsArrays[index]
-    //            Ip4RangeSetStackAlloc.CalcUnionBufferSize()
-    //                result.Union1()
-    //            result.Union(rangeSetsBy10[index]);
-    //        }
-    //        else
-    //        {
-    //            result.Except(rangeSetsBy10[index]);
-    //        }
-    //    }
-
-    //    return result;
-    //}
 }
