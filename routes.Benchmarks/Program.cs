@@ -1,7 +1,6 @@
 ﻿using BenchmarkDotNet.Running;
-using routes.Benchmarks;
 
-BenchmarkRunner.Run<Ip4RangeSetBenchmarks>();
+BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 
 // To run: dotnet run --project routes.Benchmarks -c Release
 // Note: Power plan changes are disabled via the [Config(typeof(NoPowerPlanConfig))] attribute

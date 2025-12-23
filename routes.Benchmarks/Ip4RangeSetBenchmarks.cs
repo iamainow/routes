@@ -9,9 +9,12 @@ using Ip4Parsers;
 namespace routes.Benchmarks;
 
 [MemoryDiagnoser]
+[ExceptionDiagnoser]
 [Config(typeof(NoPowerPlanConfig))]
 public class Ip4RangeSetBenchmarks
 {
+    const int Count = 100_000;
+
     private string _subnetsText = "";
     private Ip4Subnet[] _subnets = [];
     private Ip4Range[] _bogon = [];
@@ -43,7 +46,7 @@ public class Ip4RangeSetBenchmarks
             Ip4Subnet.Parse("224.0.0.0/4"), // Multicast
             Ip4Subnet.Parse("240.0.0.0/4"), // Reserved for future use
         ];
-        List<Ip4Range> ranges = Enumerable.Range(0, 1_000_000).Select(_ =>
+        List<Ip4Range> ranges = Enumerable.Range(0, Count * 10).Select(_ =>
         {
             var address1 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
             var address2 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
@@ -119,7 +122,7 @@ public class Ip4RangeSetBenchmarks
     {
         Random random = new();
         Ip4RangeSet result = new();
-        for (int index = 0; index < 100_000; index++)
+        for (int index = 0; index < rangeSetsBy10.Count; index++)
         {
             if (random.NextDouble() < 0.5d)
             {
@@ -139,7 +142,7 @@ public class Ip4RangeSetBenchmarks
     {
         Random random = new();
         Ip4RangeSetSortedSet result = new();
-        for (int index = 0; index < 100_000; index++)
+        for (int index = 0; index < rangeSetsBy10.Count; index++)
         {
             if (random.NextDouble() < 0.5d)
             {
@@ -158,22 +161,19 @@ public class Ip4RangeSetBenchmarks
     public int UnionExceptStackAlloc()
     {
         Random random = new();
-        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000]);
+        int capacity = 1000;
+        Ip4RangeSetStackAlloc result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[capacity]);
 
-        for (int index = 0; index < 100_000; index++)
+        for (int index = 0; index < rangeSetsBy10.Count; index++)
         {
+            var otherArray = rangeSetsBy10AsArrays[index];
+            var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
             if (random.NextDouble() < 0.5d)
             {
-                var otherArray = rangeSetsBy10AsArrays[index];
-                var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
-
                 result.Union(other);
             }
             else
             {
-                var otherArray = rangeSetsBy10AsArrays[index];
-                var other = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[otherArray.Length], otherArray);
-
                 result.Except(other);
             }
         }
