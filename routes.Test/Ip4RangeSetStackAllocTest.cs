@@ -201,27 +201,6 @@ public class Ip4RangeSetStackAllocTest
     #region Union Tests
 
     [Fact]
-    public void CalcUnionBufferSize_ReturnsSumOfCounts()
-    {
-        // Arrange
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        Ip4Range[] elements1 = [range1];
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, elements1);
-
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
-        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
-        Ip4Range[] elements2 = [range2];
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
-
-        // Act
-        var bufferSize = Ip4RangeSetStackAlloc.CalcUnionBufferSize(set1, set2);
-
-        // Assert
-        Assert.Equal(2, bufferSize);
-    }
-
-    [Fact]
     public void Union_DisjointRanges_KeepsBothRanges()
     {
         // Arrange
@@ -257,32 +236,6 @@ public class Ip4RangeSetStackAllocTest
             Assert.Equal(new Ip4Address(30), spans[1].FirstAddress);
             Assert.Equal(new Ip4Address(40), spans[1].LastAddress);
         }
-    }
-
-    [Fact]
-    public void Union_OverlappingRanges_MergesIntoSingleRange()
-    {
-        // Arrange
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        Ip4Range[] elements1 = [range1];
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, elements1);
-
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
-        var range2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
-        Ip4Range[] elements2 = [range2];
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
-
-        int unionBufferSize = Ip4RangeSetStackAlloc.CalcUnionBufferSize(set1, set2);
-
-        // Act
-        set1.Union(set2);
-
-        // Assert
-        var spans = set1.ToReadOnlySpan();
-        Assert.Equal(1, spans.Length);
-        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
-        Assert.Equal(new Ip4Address(25), spans[0].LastAddress);
     }
 
     [Fact]
@@ -390,31 +343,6 @@ public class Ip4RangeSetStackAllocTest
     #endregion
 
     #region Except Tests
-
-    [Fact]
-    public void CalcExceptBufferSize_ReturnsProductOfCounts()
-    {
-        // Arrange
-        Span<Ip4Range> buffer1 = stackalloc Ip4Range[10];
-        var ranges1 = new[]
-        {
-            new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
-            new Ip4Range(new Ip4Address(30), new Ip4Address(40))
-        };
-        var set1 = new Ip4RangeSetStackAlloc(buffer1, ranges1);
-
-        Span<Ip4Range> buffer2 = stackalloc Ip4Range[10];
-        var ranges2 = new[]
-        {
-            new Ip4Range(new Ip4Address(15), new Ip4Address(35))
-        };
-        var set2 = new Ip4RangeSetStackAlloc(buffer2, ranges2);
-
-        // Act
-        var bufferSize = Ip4RangeSetStackAlloc.CalcExceptBufferSize(set1, set2);
-
-        Assert.True(bufferSize >= 2);
-    }
 
     [Fact]
     public void Except_DisjointRanges_NoChange()

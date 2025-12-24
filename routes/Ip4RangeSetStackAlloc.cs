@@ -53,11 +53,6 @@ public ref struct Ip4RangeSetStackAlloc
         }
     }
 
-    public static int CalcUnionBufferSize(Ip4RangeSetStackAlloc left, Ip4RangeSetStackAlloc right)
-    {
-        return left._ranges.Count + right._ranges.Count;
-    }
-
     /// <summary>
     /// dumb way to do union - sorting already sorted _ranges
     /// </summary>
@@ -67,7 +62,7 @@ public ref struct Ip4RangeSetStackAlloc
         Span<Ip4Range> thisAndOtherSorted = stackalloc Ip4Range[_ranges.Count + other._ranges.Count];
 
         _ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted);
-        other._ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted.Slice(_ranges.Count));
+        other._ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted[_ranges.Count..]);
 
         thisAndOtherSorted.Sort(Ip4RangeComparer.Instance);
 
@@ -80,7 +75,12 @@ public ref struct Ip4RangeSetStackAlloc
             {
                 var current = thisAndOtherSorted[i];
                 ref var last = ref this._ranges.Last();
-                if (last.LastAddress.ToUInt32() == uint.MaxValue || last.LastAddress.ToUInt32() + 1 >= current.FirstAddress.ToUInt32())
+                if (last.LastAddress.ToUInt32() == uint.MaxValue)
+                {
+                    last = new Ip4Range(last.FirstAddress, new Ip4Address(uint.MaxValue));
+                    return;
+                }
+                else if (last.LastAddress.ToUInt32() + 1U >= current.FirstAddress.ToUInt32())
                 {
                     var maxLast = Math.Max(last.LastAddress.ToUInt32(), current.LastAddress.ToUInt32());
                     last = new Ip4Range(last.FirstAddress, new Ip4Address(maxLast));
@@ -93,7 +93,43 @@ public ref struct Ip4RangeSetStackAlloc
         }
     }
 
-    public static int CalcExceptBufferSize(Ip4RangeSetStackAlloc left, Ip4RangeSetStackAlloc right)
+    public void Union(ReadOnlySpan<Ip4Range> other)
+    {
+        Span<Ip4Range> thisAndOtherSorted = stackalloc Ip4Range[_ranges.Count + other.Length];
+
+        _ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted);
+        other.CopyTo(thisAndOtherSorted[_ranges.Count..]);
+
+        thisAndOtherSorted.Sort(Ip4RangeComparer.Instance);
+
+        this._ranges.Clear();
+
+        if (thisAndOtherSorted.Length > 0)
+        {
+            this._ranges.Add(thisAndOtherSorted[0]);
+            for (int i = 1; i < thisAndOtherSorted.Length; i++)
+            {
+                var current = thisAndOtherSorted[i];
+                ref var last = ref this._ranges.Last();
+                if (last.LastAddress.ToUInt32() == uint.MaxValue)
+                {
+                    last = new Ip4Range(last.FirstAddress, new Ip4Address(uint.MaxValue));
+                    return;
+                }
+                else if (last.LastAddress.ToUInt32() + 1U >= current.FirstAddress.ToUInt32())
+                {
+                    var maxLast = Math.Max(last.LastAddress.ToUInt32(), current.LastAddress.ToUInt32());
+                    last = new Ip4Range(last.FirstAddress, new Ip4Address(maxLast));
+                }
+                else
+                {
+                    this._ranges.Add(current);
+                }
+            }
+        }
+    }
+
+    private static int CalcExceptBufferSize(Ip4RangeSetStackAlloc left, Ip4RangeSetStackAlloc right)
     {
         return left._ranges.Count + right._ranges.Count;
     }
