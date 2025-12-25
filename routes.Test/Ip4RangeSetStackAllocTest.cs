@@ -221,7 +221,7 @@ public class Ip4RangeSetStackAllocTest
         Assert.Equal(1, initialSpans2.Length);
 
         // Act
-        set1.Union(set2);
+        set1.Union1(set2);
 
         // Assert
         var spans = set1.ToReadOnlySpan();
@@ -253,7 +253,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Union(set2);
+        set1.Union1(set2);
 
         // Assert
         var spans = set1.ToReadOnlySpan();
@@ -275,7 +275,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2);
 
         // Act
-        set1.Union(set2);
+        set1.Union1(set2);
 
         // Assert: set1 should remain unchanged
         var spans = set1.ToReadOnlySpan();
@@ -297,7 +297,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Union(set2);
+        set1.Union1(set2);
 
         // Assert: set1 should now contain set2's range
         var spans = set1.ToReadOnlySpan();
@@ -327,7 +327,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, ranges2);
 
         // Act
-        set1.Union(set2);
+        set1.Union1(set2);
 
         // Assert: should have [10-35], [40-50], [60-70]
         var spans = set1.ToReadOnlySpan();
@@ -359,7 +359,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Except(set2);
+        set1.ExceptSorted(set2.ToReadOnlySpan());
 
         // Assert: set1 should remain unchanged
         var spans = set1.ToReadOnlySpan();
@@ -383,7 +383,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Except(set2);
+        set1.ExceptSorted(set2.ToReadOnlySpan());
 
         // Assert: set1 should be empty
         var spans = set1.ToReadOnlySpan();
@@ -405,7 +405,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Except(set2);
+        set1.ExceptSorted(set2.ToReadOnlySpan());
 
         // Assert
         var spans = set1.ToReadOnlySpan();
@@ -429,7 +429,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Except(set2);
+        set1.ExceptSorted(set2.ToReadOnlySpan());
 
         // Assert
         var spans = set1.ToReadOnlySpan();
@@ -453,7 +453,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Except(set2);
+        set1.ExceptSorted(set2.ToReadOnlySpan());
 
         // Assert
         var spans = set1.ToReadOnlySpan();
@@ -477,7 +477,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2);
 
         // Act
-        set1.Except(set2);
+        set1.ExceptSorted(set2.ToReadOnlySpan());
 
         // Assert: set1 should remain unchanged
         var spans = set1.ToReadOnlySpan();
@@ -499,7 +499,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Except(set2);
+        set1.ExceptSorted(set2.ToReadOnlySpan());
 
         // Assert: set1 should remain empty
         var spans = set1.ToReadOnlySpan();
@@ -528,7 +528,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, ranges2);
 
         // Act
-        set1.Except(set2);
+        set1.ExceptSorted(set2.ToReadOnlySpan());
 
         // Assert: should result in [10-14], [36-40], [50-54]
         var spans = set1.ToReadOnlySpan();
@@ -560,7 +560,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act: Union with same single IP
-        set1.Union(set2);
+        set1.Union1(set2);
 
         // Assert
         var spans = set1.ToReadOnlySpan();
@@ -614,7 +614,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act: union with full range
-        set1.Union(set2);
+        set1.Union1(set2);
 
         // Assert: should result in full range
         var spans = set1.ToReadOnlySpan();
@@ -638,7 +638,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act: except entire IP range
-        set1.Except(set2);
+        set1.ExceptSorted(set2.ToReadOnlySpan());
 
         // Assert: should be empty
         var spans = set1.ToReadOnlySpan();
@@ -660,7 +660,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act: union with another large range
-        set1.Union(set2);
+        set1.Union1(set2);
 
         // Assert: should merge correctly
         var spans = set1.ToReadOnlySpan();
@@ -682,22 +682,22 @@ public class Ip4RangeSetStackAllocTest
         Span<Ip4Range> tempBuffer1 = stackalloc Ip4Range[10];
         Ip4Range[] elements1 = [new Ip4Range(new Ip4Address(50), new Ip4Address(60))];
         var set1 = new Ip4RangeSetStackAlloc(tempBuffer1, elements1);
-        set.Union(set1);
+        set.Union1(set1);
 
         Span<Ip4Range> tempBuffer2 = stackalloc Ip4Range[10];
         Ip4Range[] elements2 = [new Ip4Range(new Ip4Address(10), new Ip4Address(20))];
         var set2 = new Ip4RangeSetStackAlloc(tempBuffer2, elements2);
-        set.Union(set2);
+        set.Union1(set2);
 
         Span<Ip4Range> tempBuffer3 = stackalloc Ip4Range[10];
         Ip4Range[] elements3 = [new Ip4Range(new Ip4Address(30), new Ip4Address(40))];
         var set3 = new Ip4RangeSetStackAlloc(tempBuffer3, elements3);
-        set.Union(set3);
+        set.Union1(set3);
 
         Span<Ip4Range> tempBuffer4 = stackalloc Ip4Range[20];
         Ip4Range[] elements4 = [new Ip4Range(new Ip4Address(35), new Ip4Address(55))];
         var set4 = new Ip4RangeSetStackAlloc(tempBuffer4, elements4);
-        set.Except(set4);
+        set.ExceptSorted(set4.ToReadOnlySpan());
 
         // Assert: ranges should be in sorted order
         var spans = set.ToReadOnlySpan();

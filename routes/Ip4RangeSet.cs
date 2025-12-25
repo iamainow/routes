@@ -569,4 +569,6 @@ public class Ip4RangeSet
 
         return result.ToString();
     }
+
+    public int RangesCount => _list.Count;
 }

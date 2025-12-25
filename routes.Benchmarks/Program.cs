@@ -93,4 +93,65 @@ BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 | UnionExcept            | 1,769.7 us | 29.28 us | 27.39 us |  25.3906 |       - |       - |  270.42 KB |
 
 
+
+
+
+
+
+| Method             | Count  | Mean         | Error     | StdDev    | Exceptions | Allocated |
+|------------------- |------- |-------------:|----------:|----------:|-----------:|----------:|
+| Ip4RangeSet_Except | 1000   |     6.341 us | 0.1207 us | 0.1129 us |          - |         - |
+| Ip4RangeSet_Except | 10000  |    65.489 us | 0.2816 us | 0.2496 us |          - |         - |
+| Ip4RangeSet_Except | 100000 | 1,806.483 us | 4.6287 us | 3.6138 us |          - |         - |
+
+| Method                             | Mean       | Error    | StdDev   | Exceptions | Gen0     | Gen1     | Gen2    | Allocated |
+|----------------------------------- |-----------:|---------:|---------:|-----------:|---------:|---------:|--------:|----------:|
+| Ip4RangeSet_Realistic              | 1,828.8 us | 36.11 us | 51.79 us |          - | 166.0156 |  82.0313 | 41.0156 |   1.33 MB |
+| Ip4RangeSet_RealisticWithoutParser |   399.9 us |  7.70 us | 11.04 us |          - | 126.9531 | 108.3984 |       - |   1.02 MB |
+
+ Method            | Count  | Mean        | Error     | StdDev    | Exceptions | Allocated |
+|------------------ |------- |------------:|----------:|----------:|-----------:|----------:|
+| Ip4RangeSet_Union | 1000   |    10.21 us |  0.202 us |  0.224 us |          - |         - |
+| Ip4RangeSet_Union | 10000  |   186.81 us |  2.642 us |  2.472 us |          - |         - |
+| Ip4RangeSet_Union | 100000 | 2,314.50 us | 44.760 us | 39.679 us |          - |         - |
+
+
+| Method                  | Count  | Mean        | Error     | StdDev    | Exceptions | Gen0    | Allocated |
+|------------------------ |------- |------------:|----------:|----------:|-----------:|--------:|----------:|
+| Ip4RangeSet_UnionExcept | 1000   |    10.79 us |  0.209 us |  0.224 us |          - |  1.4801 |  12.13 KB |
+| Ip4RangeSet_UnionExcept | 10000  |   122.07 us |  1.231 us |  1.152 us |          - |  8.0566 |  65.99 KB |
+| Ip4RangeSet_UnionExcept | 100000 | 1,262.24 us | 14.890 us | 13.200 us |          - | 46.8750 | 392.98 KB |
+
+| Method                       | Count  | Mean     | Error   | StdDev  | Gen0    | Exceptions | Allocated |
+|----------------------------- |------- |---------:|--------:|--------:|--------:|-----------:|----------:|
+| Ip4RangeSetStackAlloc_Except | 1000   | 244.1 us | 4.87 us | 4.56 us | 20.5078 |          - | 167.81 KB |
+| Ip4RangeSetStackAlloc_Except | 10000  |       NA |      NA |      NA |      NA |         NA |        NA |
+| Ip4RangeSetStackAlloc_Except | 100000 |       NA |      NA |      NA |      NA |         NA |        NA |
+
+| Method                                       | Mean       | Error    | StdDev   | Gen0    | Exceptions | Gen1    | Gen2    | Allocated |
+|--------------------------------------------- |-----------:|---------:|---------:|--------:|-----------:|--------:|--------:|----------:|
+| Ip4RangeSetStackAlloc_Realistic              | 1,464.2 us | 22.51 us | 19.95 us | 41.0156 |          - | 41.0156 | 41.0156 | 390.31 KB |
+| Ip4RangeSetStackAlloc_RealisticWithoutParser |   123.1 us |  2.35 us |  2.80 us |  8.0566 |          - |  1.9531 |       - |  67.05 KB |
+
+| Method                                    | Count  | Mean     | Error   | StdDev  | Gen0    | Exceptions | Allocated |
+|------------------------------------------ |------- |---------:|--------:|--------:|--------:|-----------:|----------:|
+| Ip4RangeSetStackAlloc_Union1              | 1000   | 377.5 us | 6.56 us | 6.14 us | 22.9492 |          - |  187.5 KB |
+| Ip4RangeSetStackAlloc_Union2              | 1000   | 344.2 us | 5.70 us | 4.76 us | 15.1367 |          - |    125 KB |
+| Ip4RangeSetStackAlloc_SmartUnionUnordered | 1000   | 271.6 us | 5.38 us | 6.80 us | 15.1367 |          - |    125 KB |
+| Ip4RangeSetStackAlloc_ctor                | 1000   | 146.0 us | 2.49 us | 2.33 us |  7.5684 |          - |   62.5 KB |
+| Ip4RangeSetStackAlloc_Union1              | 10000  |       NA |      NA |      NA |      NA |         NA |        NA |
+| Ip4RangeSetStackAlloc_Union2              | 10000  |       NA |      NA |      NA |      NA |         NA |        NA |
+| Ip4RangeSetStackAlloc_SmartUnionUnordered | 10000  |       NA |      NA |      NA |      NA |         NA |        NA |
+| Ip4RangeSetStackAlloc_ctor                | 10000  |       NA |      NA |      NA |      NA |         NA |        NA |
+| Ip4RangeSetStackAlloc_Union1              | 100000 |       NA |      NA |      NA |      NA |         NA |        NA |
+| Ip4RangeSetStackAlloc_Union2              | 100000 |       NA |      NA |      NA |      NA |         NA |        NA |
+| Ip4RangeSetStackAlloc_SmartUnionUnordered | 100000 |       NA |      NA |      NA |      NA |         NA |        NA |
+| Ip4RangeSetStackAlloc_ctor                | 100000 |       NA |      NA |      NA |      NA |         NA |        NA |
+
+| Method                                                  | Count  | Mean         | Error      | StdDev     | Exceptions | Gen0      | Allocated |
+|-------------------------------------------------------- |------- |-------------:|-----------:|-----------:|-----------:|----------:|----------:|
+| Ip4RangeSetStackAlloc_SmartUnionUnorderedExceptUnsorted | 1000   |     85.31 us |   1.069 us |   0.947 us |          - |   10.1318 |  83.41 KB |
+| Ip4RangeSetStackAlloc_SmartUnionUnorderedExceptUnsorted | 10000  |  1,035.70 us |  15.671 us |  14.659 us |          - |  101.5625 | 832.43 KB |
+| Ip4RangeSetStackAlloc_SmartUnionUnorderedExceptUnsorted | 100000 | 10,996.90 us | 195.253 us | 182.640 us |          - | 1015.6250 | 8338.5 KB |
+
 */
