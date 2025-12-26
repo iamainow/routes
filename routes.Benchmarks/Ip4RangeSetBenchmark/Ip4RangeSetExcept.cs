@@ -1,9 +1,3 @@
-#pragma warning disable CA1822
-#pragma warning disable CA1515
-#pragma warning disable CA5394
-#pragma warning disable CA2014
-#pragma warning disable CA1707
-
 using BenchmarkDotNet.Attributes;
 
 namespace routes.Benchmarks.Ip4RangeSetBenchmark;

@@ -1,7 +1,3 @@
-#pragma warning disable CA1822
-#pragma warning disable CA1515
-#pragma warning disable CA5394
-
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Jobs;
