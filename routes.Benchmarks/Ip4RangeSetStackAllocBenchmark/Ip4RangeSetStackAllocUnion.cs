@@ -41,10 +41,13 @@ public class Ip4RangeSetStackAllocUnion
     {
         int result = 0;
 
+        Span<Ip4Range> span1 = stackalloc Ip4Range[100];
+        Span<Ip4Range> span2 = stackalloc Ip4Range[100];
+
         for (int index = 0; index < Count; index++)
         {
-            var set1 = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000], rangeSets1[index]);
-            var set2 = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000], rangeSets2[index]);
+            var set1 = new Ip4RangeSetStackAlloc(span1, rangeSets1[index]);
+            var set2 = new Ip4RangeSetStackAlloc(span2, rangeSets2[index]);
 
             set1.Union1(set2);
             result += set1.RangesCount;
@@ -58,10 +61,13 @@ public class Ip4RangeSetStackAllocUnion
     {
         int result = 0;
 
+        Span<Ip4Range> span1 = stackalloc Ip4Range[100];
+        Span<Ip4Range> span2 = stackalloc Ip4Range[100];
+
         for (int index = 0; index < Count; index++)
         {
-            var set1 = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000], rangeSets1[index]);
-            var set2 = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000], rangeSets2[index]);
+            var set1 = new Ip4RangeSetStackAlloc(span1, rangeSets1[index]);
+            var set2 = new Ip4RangeSetStackAlloc(span2, rangeSets2[index]);
 
             set1.Union2(set2);
             result += set1.RangesCount;
@@ -75,9 +81,11 @@ public class Ip4RangeSetStackAllocUnion
     {
         int result = 0;
 
+        Span<Ip4Range> span1 = stackalloc Ip4Range[100];
+
         for (int index = 0; index < Count; index++)
         {
-            var set1 = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000], rangeSets1[index]);
+            var set1 = new Ip4RangeSetStackAlloc(span1, rangeSets1[index]);
             var set2 = rangeSets2[index];
 
             set1.SmartUnionUnordered(set2);
@@ -92,9 +100,11 @@ public class Ip4RangeSetStackAllocUnion
     {
         int result = 0;
 
+        Span<Ip4Range> span1 = stackalloc Ip4Range[100];
+
         for (int index = 0; index < Count; index++)
         {
-            var set1 = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000], rangeSets1[index]);
+            var set1 = new Ip4RangeSetStackAlloc(span1, rangeSets1[index]);
             result += set1.RangesCount;
         }
 

@@ -41,9 +41,11 @@ public class Ip4RangeSetStackAllocExcept
     {
         int result = 0;
 
+        Span<Ip4Range> span1 = stackalloc Ip4Range[1000];
+
         for (int index = 0; index < Count; index++)
         {
-            var set1 = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000], rangeSets1[index]);
+            var set1 = new Ip4RangeSetStackAlloc(span1, rangeSets1[index]);
             var set2 = rangeSets2[index];
 
             set1.ExceptUnsorted(set2);
