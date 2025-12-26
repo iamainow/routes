@@ -4,9 +4,9 @@ public ref struct Ip4RangeSetStackAlloc
 {
     private ListStackAlloc<Ip4Range> _ranges; // sorted by FirstAddress, elements not overlapping, elements non-adjacent/disjoint
 
-    public ReadOnlySpan<Ip4Range> ToReadOnlySpan() => _ranges.AsReadOnlySpan();
+    public readonly ReadOnlySpan<Ip4Range> ToReadOnlySpan() => _ranges.AsReadOnlySpan();
 
-    public ReadOnlySpan<Ip4Range> ToSpan() => _ranges.AsSpan();
+    public readonly int RangesCount => _ranges.Count;
 
     public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer)
     {
@@ -133,8 +133,6 @@ public ref struct Ip4RangeSetStackAlloc
     {
         other.Sort(Ip4RangeComparer.Instance);
         SmartUnionSorted(other);
-
-        SmartUnionUnordered(other);
     }
 
     public void SmartUnionUnordered(Span<Ip4Range> other)
@@ -202,7 +200,7 @@ public ref struct Ip4RangeSetStackAlloc
 
     private static int CalcExceptBufferSize(int left, int right)
     {
-        return (left + right) * 2;
+        return (left + right);
     }
 
     public void ExceptUnsorted(Span<Ip4Range> other)
@@ -263,6 +261,4 @@ public ref struct Ip4RangeSetStackAlloc
             _ranges.Add(temp[k]);
         }
     }
-
-    public int RangesCount => _ranges.Count;
 }

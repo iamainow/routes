@@ -43,7 +43,7 @@ public class Ip4RangeSetStackAllocExcept
 
         for (int index = 0; index < Count; index++)
         {
-            var set1 = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[2 * (int)Math.Log2(Count) + 10], rangeSets1[index]);
+            var set1 = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1000], rangeSets1[index]);
             var set2 = rangeSets2[index];
 
             set1.ExceptUnsorted(set2);

@@ -161,26 +161,6 @@ public class Ip4RangeSetStackAllocTest
     }
 
     [Fact]
-    public void ToSpan_ReturnsReadOnlySpan()
-    {
-        // Arrange
-        Span<Ip4Range> buffer = stackalloc Ip4Range[10];
-        var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        Ip4Range[] elementsArray = [range];
-        ReadOnlySpan<Ip4Range> elements = elementsArray;
-        var set = new Ip4RangeSetStackAlloc(buffer, elements);
-
-        // Act
-        var span = set.ToSpan();
-
-        // Assert: ToSpan() returns ReadOnlySpan, not Span
-
-        Assert.Equal(1, span.Length);
-        Assert.Equal(range.FirstAddress, span[0].FirstAddress);
-        Assert.Equal(range.LastAddress, span[0].LastAddress);
-    }
-
-    [Fact]
     public void SpanAccessors_EmptySet_ReturnEmptySpans()
     {
         // Arrange
@@ -189,11 +169,9 @@ public class Ip4RangeSetStackAllocTest
 
         // Act
         var readonlySpan = set.ToReadOnlySpan();
-        var span = set.ToSpan();
 
         // Assert
         Assert.Equal(0, readonlySpan.Length);
-        Assert.Equal(0, span.Length);
     }
 
     #endregion
