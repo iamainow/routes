@@ -106,11 +106,51 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
 
     public Ip4Range[] IntersectableExcept(Ip4Range other)
     {
-        return other.FirstAddress <= FirstAddress
-            ? other.LastAddress < LastAddress ? [new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), LastAddress)] : []
-            : other.LastAddress < LastAddress
-                ? [new Ip4Range(FirstAddress, new Ip4Address((uint)other.FirstAddress - 1)), new Ip4Range(new Ip4Address((uint)other.LastAddress + 1), LastAddress)]
-                : [new Ip4Range(FirstAddress, new Ip4Address((uint)other.FirstAddress - 1))];
+        if (other.FirstAddress <= FirstAddress)
+        {
+            if (other.LastAddress < LastAddress)
+            {
+                if (other.LastAddress.ToUInt32() < uint.MaxValue)
+                {
+                    return [new Ip4Range(new Ip4Address(other.LastAddress.ToUInt32() + 1), LastAddress)];
+                }
+                else
+                {
+                    return [];
+                }
+            }
+            else
+            {
+                return [];
+            }
+        }
+        else
+        {
+            if (other.LastAddress < LastAddress)
+            {
+                List<Ip4Range> ranges = new();
+                if (other.FirstAddress.ToUInt32() > 0)
+                {
+                    ranges.Add(new Ip4Range(FirstAddress, new Ip4Address(other.FirstAddress.ToUInt32() - 1)));
+                }
+                if (other.LastAddress.ToUInt32() < uint.MaxValue)
+                {
+                    ranges.Add(new Ip4Range(new Ip4Address(other.LastAddress.ToUInt32() + 1), LastAddress));
+                }
+                return ranges.ToArray();
+            }
+            else
+            {
+                if (other.FirstAddress.ToUInt32() > 0)
+                {
+                    return [new Ip4Range(FirstAddress, new Ip4Address(other.FirstAddress.ToUInt32() - 1))];
+                }
+                else
+                {
+                    return [];
+                }
+            }
+        }
     }
 
     public Ip4Range[] Except(Ip4Range other)

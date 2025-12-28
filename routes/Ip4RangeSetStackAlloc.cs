@@ -2,6 +2,8 @@ namespace routes;
 
 public ref struct Ip4RangeSetStackAlloc
 {
+    private const int MAX_STACK_ALLOC = 1024;
+
     private ListStackAlloc<Ip4Range> _ranges; // sorted by FirstAddress, elements not overlapping, elements non-adjacent/disjoint
 
     public readonly ReadOnlySpan<Ip4Range> ToReadOnlySpan() => _ranges.AsReadOnlySpan();
@@ -15,6 +17,9 @@ public ref struct Ip4RangeSetStackAlloc
 
     public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer, ReadOnlySpan<Ip4Range> elements) // elements may be unsorted, may overlapping, may adjacent/disjoint
     {
+        if (elements.Length > MAX_STACK_ALLOC)
+            throw new InvalidOperationException("Input size exceeds maximum stack allocation limit.");
+
         _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer);
 
         Span<Ip4Range> temp = stackalloc Ip4Range[elements.Length];
@@ -40,6 +45,11 @@ public ref struct Ip4RangeSetStackAlloc
                 so original condition equals to if (true && last.LastAddress >= current.FirstAddress)
                 and then equals to if (last.LastAddress >= current.FirstAddress)
                 */
+                if (last.LastAddress.ToUInt32() == uint.MaxValue)
+                {
+                    last = new Ip4Range(last.FirstAddress, new Ip4Address(uint.MaxValue));
+                    break;
+                }
                 if (last.LastAddress.ToUInt32() + 1 >= current.FirstAddress.ToUInt32())
                 {
                     var merged = new Ip4Range(last.FirstAddress, current.LastAddress);
@@ -59,6 +69,9 @@ public ref struct Ip4RangeSetStackAlloc
     /// <param name="other"></param>
     public void Union1(Ip4RangeSetStackAlloc other)
     {
+        if (_ranges.Count + other._ranges.Count > MAX_STACK_ALLOC)
+            throw new InvalidOperationException("Combined size exceeds maximum stack allocation limit.");
+
         Span<Ip4Range> thisAndOtherSorted = stackalloc Ip4Range[_ranges.Count + other._ranges.Count];
 
         _ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted);
@@ -100,6 +113,9 @@ public ref struct Ip4RangeSetStackAlloc
 
     public void Union1(ReadOnlySpan<Ip4Range> other)
     {
+        if (_ranges.Count + other.Length > MAX_STACK_ALLOC)
+            throw new InvalidOperationException("Combined size exceeds maximum stack allocation limit.");
+
         Span<Ip4Range> thisAndOtherSorted = stackalloc Ip4Range[_ranges.Count + other.Length];
 
         _ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted);
@@ -116,6 +132,11 @@ public ref struct Ip4RangeSetStackAlloc
             {
                 var current = thisAndOtherSorted[i];
                 ref var last = ref this._ranges.Last();
+                if (last.LastAddress.ToUInt32() == uint.MaxValue)
+                {
+                    last = new Ip4Range(last.FirstAddress, new Ip4Address(uint.MaxValue));
+                    return;
+                }
                 if (last.LastAddress.ToUInt32() + 1UL >= current.FirstAddress.ToUInt32())
                 {
                     var maxLast = Math.Max(last.LastAddress.ToUInt32(), current.LastAddress.ToUInt32());
@@ -180,6 +201,11 @@ public ref struct Ip4RangeSetStackAlloc
             else
             {
                 ref var last = ref temp.Last();
+                if (last.LastAddress.ToUInt32() == uint.MaxValue)
+                {
+                    last = new Ip4Range(last.FirstAddress, new Ip4Address(uint.MaxValue));
+                    return;
+                }
                 if (last.LastAddress.ToUInt32() + 1UL >= curr.FirstAddress.ToUInt32())
                 {
                     last = new Ip4Range(last.FirstAddress, new Ip4Address(Math.Max(last.LastAddress.ToUInt32(), curr.LastAddress.ToUInt32())));
@@ -213,6 +239,9 @@ public ref struct Ip4RangeSetStackAlloc
     {
         if (_ranges.Count == 0 || other.Length == 0)
             return;
+
+        if (_ranges.Count + other.Length > MAX_STACK_ALLOC)
+            throw new InvalidOperationException("Combined size exceeds maximum stack allocation limit.");
 
         Span<Ip4Range> temp = stackalloc Ip4Range[CalcExceptBufferSize(_ranges.Count, other.Length)];
         int count = 0;

@@ -51,8 +51,6 @@ public class Ip4RangeSet
         this._list = new LinkedList<Ip4Range>(set._list);
     }
 
-    //public void Union(Ip4RangeSet other) => Union5(other);
-
     public void Union4(Ip4RangeSet other)
     {
         ArgumentNullException.ThrowIfNull(other);
@@ -155,8 +153,9 @@ public class Ip4RangeSet
                     {
                         if (current.Value.IsIntersects(current.Next.Value))
                         {
-                            do
+                            // The static analyzer incorrectly flags this as dead code because it doesn't understand that removing current.Next changes the linked list structure, making the condition dynamic.
 #pragma warning disable CA1508 // Avoid dead conditional code
+                            do
                             {
                                 current.Value = current.Value.IntersectableUnion(current.Next.Value);
                                 _list.Remove(current.Next);
@@ -176,7 +175,6 @@ public class Ip4RangeSet
     public void Union(Ip4RangeSet other)
     {
 #pragma warning disable IDE0010 // Add missing cases
-#pragma warning disable CA1508 // Avoid dead conditional code
         ArgumentNullException.ThrowIfNull(other);
 
         if (_list.First is null)
@@ -291,11 +289,14 @@ public class Ip4RangeSet
                     {
                         if (current.Value.IsIntersects(current.Next.Value))
                         {
+                            // The static analyzer incorrectly flags this as dead code because it doesn't understand that removing current.Next changes the linked list structure, making the condition dynamic.
+#pragma warning disable CA1508 // Avoid dead conditional code
                             do
                             {
                                 current.Value = current.Value.IntersectableUnion(current.Next.Value);
                                 _list.Remove(current.Next);
                             } while (current.Next is not null && current.Value.IsIntersects(current.Next.Value));
+#pragma warning restore CA1508 // Avoid dead conditional code
 
                             continue;
                         }
@@ -308,7 +309,6 @@ public class Ip4RangeSet
                 }
             }
         }
-#pragma warning restore CA1508 // Avoid dead conditional code
 #pragma warning restore IDE0010 // Add missing cases
     }
 
@@ -316,12 +316,9 @@ public class Ip4RangeSet
     {
         ArgumentNullException.ThrowIfNull(ranges);
 
-        Ip4Range[] temp = new Ip4Range[ranges.Length];
-        Array.Copy(ranges, temp, temp.Length);
+        Array.Sort(ranges, Ip4RangeComparer.Instance);
 
-        Array.Sort(temp, Ip4RangeComparer.Instance);
-
-        InternalUnionSortedRanges(temp);
+        InternalUnionSortedRanges(ranges);
     }
 
     public void Union(IEnumerable<Ip4Range> ranges)
@@ -514,35 +511,30 @@ public class Ip4RangeSet
                 {
                     _list.AddBefore(current, newElements[0]);
                     current.Value = newElements[1];
+                    if (currentOther.Next is not null)
+                    {
+                        currentOther = currentOther.Next;
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
             }
         }
     }
 
-    //public void Intersect(Ip4Range other)
-    //{
-    //    List<Ip4Range> result = [];
-    //    foreach (Ip4Range item in _list)
-    //    {
-    //        if (other.IsIntersects(item))
-    //        {
-    //            result.Add(other.IntersectableIntersect(item));
-    //        }
-    //    }
+    public void Except(Ip4Range range)
+    {
+        Ip4RangeSet temp = new Ip4RangeSet(range);
+        Except(temp);
+    }
 
-    //    return new Ip4RangeSet(result.ToImmutableList());
-    //}
-
-    //public void Intersect(Ip4RangeSet other)
-    //{
-    //    ArgumentNullException.ThrowIfNull(other);
-    //    Ip4RangeSet result = new();
-    //    foreach (Ip4Range item in other._list)
-    //    {
-    //        result = result.Union(Intersect(item));
-    //    }
-    //    return result;
-    //}
+    public void Union(Ip4Range range)
+    {
+        Ip4RangeSet temp = new Ip4RangeSet(range);
+        Union(temp);
+    }
 
     public Ip4RangeSet MinimizeSubnets(uint delta)
     {

@@ -50,7 +50,7 @@ public ref struct ListStackAlloc<T>
         }
     }
 
-    public readonly ref T Last()
+    public ref T Last()
     {
         return ref this[_size - 1];
     }

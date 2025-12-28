@@ -686,5 +686,244 @@ public class Ip4RangeSetStackAllocTest
         }
     }
 
+    [Fact]
+    public void Union_AdjacentRangesAtMaxBoundary_MergesCorrectly()
+    {
+        // Arrange: ranges adjacent at uint.MaxValue boundary
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[20];
+        var r1 = new Ip4Range(new Ip4Address(uint.MaxValue - 10), new Ip4Address(uint.MaxValue - 5));
+        Ip4Range[] elements1 = [r1];
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, elements1);
+
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[20];
+        var r2 = new Ip4Range(new Ip4Address(uint.MaxValue - 4), new Ip4Address(uint.MaxValue));
+        Ip4Range[] elements2 = [r2];
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
+
+        // Act
+        set1.Union1(set2);
+
+        // Assert
+        var spans = set1.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(uint.MaxValue), spans[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_RangeStartingAtZero_NoUnderflow()
+    {
+        // Arrange: set [0, 20], except [0, 10] - tests underflow prevention at 0
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[20];
+        var r1 = new Ip4Range(new Ip4Address(0), new Ip4Address(20));
+        Ip4Range[] elements1 = [r1];
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, elements1);
+
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[20];
+        var r2 = new Ip4Range(new Ip4Address(0), new Ip4Address(10));
+        Ip4Range[] elements2 = [r2];
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
+
+        // Act
+        set1.ExceptSorted(set2.ToReadOnlySpan());
+
+        // Assert
+        var spans = set1.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(11), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(20), spans[0].LastAddress);
+    }
+
+    [Fact]
+    public void Union_RangeEndingAtMaxIp_HandlesCorrectly()
+    {
+        // Arrange: union with range ending at uint.MaxValue
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[20];
+        var r1 = new Ip4Range(new Ip4Address(uint.MaxValue - 10), new Ip4Address(uint.MaxValue - 5));
+        Ip4Range[] elements1 = [r1];
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, elements1);
+
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[20];
+        var r2 = new Ip4Range(new Ip4Address(uint.MaxValue - 4), new Ip4Address(uint.MaxValue));
+        Ip4Range[] elements2 = [r2];
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
+
+        // Act
+        set1.Union1(set2);
+
+        // Assert
+        var spans = set1.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(uint.MaxValue), spans[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_RangeEndingAtMaxIp_NoOverflow()
+    {
+        // Arrange: set [uint.MaxValue-10, uint.MaxValue], except [uint.MaxValue-5, uint.MaxValue] - tests overflow prevention at uint.MaxValue
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[20];
+        var r1 = new Ip4Range(new Ip4Address(uint.MaxValue - 10), new Ip4Address(uint.MaxValue));
+        Ip4Range[] elements1 = [r1];
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, elements1);
+
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[20];
+        var r2 = new Ip4Range(new Ip4Address(uint.MaxValue - 5), new Ip4Address(uint.MaxValue));
+        Ip4Range[] elements2 = [r2];
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
+
+        // Act
+        set1.ExceptSorted(set2.ToReadOnlySpan());
+
+        // Assert
+        var spans = set1.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 6), spans[0].LastAddress);
+    }
+
+    [Fact]
+    public void IntersectableExcept_AtBoundaries_HandlesOverflowCorrectly()
+    {
+        // Test IntersectableExcept via ExceptSorted at boundaries
+        // Case 1: Excepting range ending at uint.MaxValue that covers the end
+        Span<Ip4Range> buffer1 = stackalloc Ip4Range[20];
+        var r1 = new Ip4Range(new Ip4Address(uint.MaxValue - 5), new Ip4Address(uint.MaxValue));
+        Ip4Range[] elements1 = [r1];
+        var set1 = new Ip4RangeSetStackAlloc(buffer1, elements1);
+
+        Span<Ip4Range> buffer2 = stackalloc Ip4Range[20];
+        var r2 = new Ip4Range(new Ip4Address(uint.MaxValue), new Ip4Address(uint.MaxValue));
+        Ip4Range[] elements2 = [r2];
+        var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
+
+        set1.ExceptSorted(set2.ToReadOnlySpan());
+        var spans1 = set1.ToReadOnlySpan();
+        Assert.Equal(1, spans1.Length);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 5), spans1[0].FirstAddress);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 1), spans1[0].LastAddress);
+
+        // Case 2: Excepting range starting at 0 that covers the start
+        Span<Ip4Range> buffer3 = stackalloc Ip4Range[20];
+        var r3 = new Ip4Range(new Ip4Address(0), new Ip4Address(10));
+        Ip4Range[] elements3 = [r3];
+        var set3 = new Ip4RangeSetStackAlloc(buffer3, elements3);
+
+        Span<Ip4Range> buffer4 = stackalloc Ip4Range[20];
+        var r4 = new Ip4Range(new Ip4Address(0), new Ip4Address(0));
+        Ip4Range[] elements4 = [r4];
+        var set4 = new Ip4RangeSetStackAlloc(buffer4, elements4);
+
+        set3.ExceptSorted(set4.ToReadOnlySpan());
+        var spans2 = set3.ToReadOnlySpan();
+        Assert.Equal(1, spans2.Length);
+        Assert.Equal(new Ip4Address(1), spans2[0].FirstAddress);
+        Assert.Equal(new Ip4Address(10), spans2[0].LastAddress);
+    }
+
+    #endregion
+
+    #region Stress Tests for Buffer Size Validation
+
+    [Fact]
+    public void Constructor_WithMoreThanMaxStackAllocRanges_ThrowsInvalidOperationException()
+    {
+        // Arrange: Create 1025 ranges (exceeds MAX_STACK_ALLOC of 1024)
+        const int rangeCount = 1025;
+        var ranges = new Ip4Range[rangeCount];
+        for (int i = 0; i < rangeCount; i++)
+        {
+            ranges[i] = new Ip4Range(new Ip4Address((uint)i * 10), new Ip4Address((uint)i * 10 + 5));
+        }
+
+        // Act & Assert: Should throw InvalidOperationException
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            Span<Ip4Range> buffer = stackalloc Ip4Range[rangeCount];
+            new Ip4RangeSetStackAlloc(buffer, ranges);
+        });
+    }
+
+    [Fact]
+    public void Constructor_WithExactlyMaxStackAllocRanges_WorksCorrectly()
+    {
+        // Arrange: Create exactly 1024 ranges (MAX_STACK_ALLOC)
+        const int rangeCount = 1024;
+        var ranges = new Ip4Range[rangeCount];
+        for (int i = 0; i < rangeCount; i++)
+        {
+            ranges[i] = new Ip4Range(new Ip4Address((uint)i * 10), new Ip4Address((uint)i * 10 + 5));
+        }
+
+        Span<Ip4Range> buffer = stackalloc Ip4Range[rangeCount];
+
+        // Act: Should not throw
+        var set = new Ip4RangeSetStackAlloc(buffer, ranges);
+
+        // Assert: Should contain all ranges
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(rangeCount, spans.Length);
+    }
+
+    [Fact]
+    public void Union1_WithCombinedSizeExceedingMaxStackAlloc_ThrowsInvalidOperationException()
+    {
+        // Act & Assert: Should throw InvalidOperationException
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            // Arrange: Create two sets where combined size > 1024
+            const int set1Size = 600;
+            const int set2Size = 500; // Combined = 1100 > 1024
+
+            Span<Ip4Range> buffer1 = stackalloc Ip4Range[set1Size];
+            var ranges1 = new Ip4Range[set1Size];
+            for (int i = 0; i < set1Size; i++)
+            {
+                ranges1[i] = new Ip4Range(new Ip4Address((uint)i * 20), new Ip4Address((uint)i * 20 + 10));
+            }
+            var set1 = new Ip4RangeSetStackAlloc(buffer1, ranges1);
+
+            Span<Ip4Range> buffer2 = stackalloc Ip4Range[set2Size];
+            var ranges2 = new Ip4Range[set2Size];
+            for (int i = 0; i < set2Size; i++)
+            {
+                ranges2[i] = new Ip4Range(new Ip4Address((uint)(i + 10000) * 20), new Ip4Address((uint)(i + 10000) * 20 + 10));
+            }
+            var set2 = new Ip4RangeSetStackAlloc(buffer2, ranges2);
+
+            set1.Union1(set2);
+        });
+    }
+
+    [Fact]
+    public void ExceptSorted_WithCombinedSizeExceedingMaxStackAlloc_ThrowsInvalidOperationException()
+    {
+        // Act & Assert: Should throw InvalidOperationException
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            // Arrange: Create two sets where combined size > 1024
+            const int set1Size = 600;
+            const int set2Size = 500; // Combined = 1100 > 1024
+
+            Span<Ip4Range> buffer1 = stackalloc Ip4Range[set1Size];
+            var ranges1 = new Ip4Range[set1Size];
+            for (int i = 0; i < set1Size; i++)
+            {
+                ranges1[i] = new Ip4Range(new Ip4Address((uint)i * 20), new Ip4Address((uint)i * 20 + 10));
+            }
+            var set1 = new Ip4RangeSetStackAlloc(buffer1, ranges1);
+
+            Span<Ip4Range> buffer2 = stackalloc Ip4Range[set2Size];
+            var ranges2 = new Ip4Range[set2Size];
+            for (int i = 0; i < set2Size; i++)
+            {
+                ranges2[i] = new Ip4Range(new Ip4Address((uint)i * 20 + 5), new Ip4Address((uint)i * 20 + 15)); // Overlapping
+            }
+            var set2 = new Ip4RangeSetStackAlloc(buffer2, ranges2);
+
+            set1.ExceptSorted(set2.ToReadOnlySpan());
+        });
+    }
+
     #endregion
 }

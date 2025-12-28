@@ -1046,5 +1046,240 @@ public class Ip4RangeSetTest
         }
     }
 
+    [Fact]
+    public void Union_AdjacentRangesAtMaxBoundary_MergesCorrectly()
+    {
+        // Arrange: ranges adjacent at uint.MaxValue boundary
+        var r1 = new Ip4Range(new Ip4Address(uint.MaxValue - 10), new Ip4Address(uint.MaxValue - 5));
+        var r2 = new Ip4Range(new Ip4Address(uint.MaxValue - 4), new Ip4Address(uint.MaxValue));
+        var set = new Ip4RangeSet(r1);
+
+        // Act
+        set.Union(r2);
+
+        // Assert
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(uint.MaxValue), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_RangeStartingAtZero_NoUnderflow()
+    {
+        // Arrange: set [0, 20], except [0, 10] - tests underflow prevention at 0
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(0), new Ip4Address(20)));
+
+        // Act
+        set.Except(new Ip4Range(new Ip4Address(0), new Ip4Address(10)));
+
+        // Assert
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(11), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(20), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void Union_RangeEndingAtMaxIp_HandlesCorrectly()
+    {
+        // Arrange: union with range ending at uint.MaxValue
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(uint.MaxValue - 10), new Ip4Address(uint.MaxValue - 5)));
+        var otherSet = new Ip4RangeSet(new Ip4Range(new Ip4Address(uint.MaxValue - 4), new Ip4Address(uint.MaxValue)));
+
+        // Act
+        set.Union(otherSet);
+
+        // Assert
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(uint.MaxValue), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_RangeEndingAtMaxIp_NoOverflow()
+    {
+        // Arrange: set [uint.MaxValue-10, uint.MaxValue], except [uint.MaxValue-5, uint.MaxValue] - tests overflow prevention at uint.MaxValue
+        var set = new Ip4RangeSet(new Ip4Range(new Ip4Address(uint.MaxValue - 10), new Ip4Address(uint.MaxValue)));
+
+        // Act
+        set.Except(new Ip4Range(new Ip4Address(uint.MaxValue - 5), new Ip4Address(uint.MaxValue)));
+
+        // Assert
+        var ranges = set.ToIp4Ranges();
+        Assert.Single(ranges);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 10), ranges[0].FirstAddress);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 6), ranges[0].LastAddress);
+    }
+
+    [Fact]
+    public void IntersectableExcept_AtBoundaries_HandlesOverflowCorrectly()
+    {
+        // Test IntersectableExcept directly via Except operation at boundaries
+        // Case 1: Excepting range ending at uint.MaxValue that covers the end
+        var set1 = new Ip4RangeSet(new Ip4Range(new Ip4Address(uint.MaxValue - 5), new Ip4Address(uint.MaxValue)));
+        set1.Except(new Ip4Range(new Ip4Address(uint.MaxValue), new Ip4Address(uint.MaxValue)));
+        var ranges1 = set1.ToIp4Ranges();
+        Assert.Single(ranges1);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 5), ranges1[0].FirstAddress);
+        Assert.Equal(new Ip4Address(uint.MaxValue - 1), ranges1[0].LastAddress);
+
+        // Case 2: Excepting range starting at 0 that covers the start
+        var set2 = new Ip4RangeSet(new Ip4Range(new Ip4Address(0), new Ip4Address(10)));
+        set2.Except(new Ip4Range(new Ip4Address(0), new Ip4Address(0)));
+        var ranges2 = set2.ToIp4Ranges();
+        Assert.Single(ranges2);
+        Assert.Equal(new Ip4Address(1), ranges2[0].FirstAddress);
+        Assert.Equal(new Ip4Address(10), ranges2[0].LastAddress);
+    }
+
+    #endregion
+
+    #region Stress Tests for Large Range Sets
+
+    [Fact]
+    public void Constructor_WithLargeNumberOfRanges_HandlesCorrectly()
+    {
+        // Arrange: Create a large number of ranges (more than MAX_STACK_ALLOC)
+        const int rangeCount = 2000;
+        var ranges = new List<Ip4Range>();
+        for (int i = 0; i < rangeCount; i++)
+        {
+            ranges.Add(new Ip4Range(new Ip4Address((uint)i * 100), new Ip4Address((uint)i * 100 + 50)));
+        }
+
+        // Act: Create set with large number of ranges
+        var set = new Ip4RangeSet(ranges);
+
+        // Assert: Should handle large input correctly
+        var resultRanges = set.ToIp4Ranges().ToArray();
+        Assert.Equal(rangeCount, resultRanges.Length);
+        for (int i = 0; i < rangeCount; i++)
+        {
+            Assert.Equal(new Ip4Address((uint)i * 100), resultRanges[i].FirstAddress);
+            Assert.Equal(new Ip4Address((uint)i * 100 + 50), resultRanges[i].LastAddress);
+        }
+    }
+
+    [Fact]
+    public void Union_WithLargeSets_HandlesCorrectly()
+    {
+        // Arrange: Create two large sets
+        const int set1Size = 1500;
+        var ranges1 = new List<Ip4Range>();
+        for (int i = 0; i < set1Size; i++)
+        {
+            ranges1.Add(new Ip4Range(new Ip4Address((uint)i * 200), new Ip4Address((uint)i * 200 + 50)));
+        }
+        var set1 = new Ip4RangeSet(ranges1);
+
+        const int set2Size = 1200;
+        var ranges2 = new List<Ip4Range>();
+        for (int i = 0; i < set2Size; i++)
+        {
+            ranges2.Add(new Ip4Range(new Ip4Address((uint)(i + 10000) * 200), new Ip4Address((uint)(i + 10000) * 200 + 50)));
+        }
+        var set2 = new Ip4RangeSet(ranges2);
+
+        // Act: Union the large sets
+        set1.Union(set2);
+
+        // Assert: Should contain all ranges from both sets
+        var resultRanges = set1.ToIp4Ranges().ToArray();
+        Assert.Equal(set1Size + set2Size, resultRanges.Length);
+    }
+
+    [Fact]
+    public void Except_WithLargeSets_HandlesCorrectly()
+    {
+        // Arrange: Create two large sets with some overlap
+        const int set1Size = 1000;
+        var ranges1 = new List<Ip4Range>();
+        for (int i = 0; i < set1Size; i++)
+        {
+            ranges1.Add(new Ip4Range(new Ip4Address((uint)i * 100), new Ip4Address((uint)i * 100 + 50)));
+        }
+        var set1 = new Ip4RangeSet(ranges1);
+
+        const int set2Size = 800;
+        var ranges2 = new List<Ip4Range>();
+        for (int i = 0; i < set2Size; i++)
+        {
+            // Create overlapping ranges
+            ranges2.Add(new Ip4Range(new Ip4Address((uint)i * 100 + 25), new Ip4Address((uint)i * 100 + 75)));
+        }
+        var set2 = new Ip4RangeSet(ranges2);
+
+        // Act: Except operation
+        set1.Except(set2);
+
+        // Assert: Should have performed the operation without throwing
+        var resultRanges = set1.ToIp4Ranges().ToArray();
+        // The exact count depends on merging, but should be reasonable
+        Assert.True(resultRanges.Length > 0);
+        Assert.True(resultRanges.Length <= set1Size);
+    }
+
+    [Fact]
+    public void LargeSetOperations_MaintainCorrectness()
+    {
+        // Arrange: Create a large set and perform multiple operations
+        const int initialSize = 500;
+        var ranges = new List<Ip4Range>();
+        for (int i = 0; i < initialSize; i++)
+        {
+            ranges.Add(new Ip4Range(new Ip4Address((uint)i * 1000), new Ip4Address((uint)i * 1000 + 500)));
+        }
+        var set = new Ip4RangeSet(ranges);
+
+        // Act: Perform multiple operations
+        var unionRange = new Ip4Range(new Ip4Address(250000), new Ip4Address(300000));
+        set.Union(unionRange);
+
+        var exceptRange = new Ip4Range(new Ip4Address(100000), new Ip4Address(150000));
+        set.Except(exceptRange);
+
+        // Assert: Operations completed successfully
+        var resultRanges = set.ToIp4Ranges().ToArray();
+        Assert.True(resultRanges.Length > 0);
+
+        // Verify the union range is present
+        bool unionRangeFound = resultRanges.Any(r =>
+            r.FirstAddress <= unionRange.FirstAddress && r.LastAddress >= unionRange.LastAddress);
+        Assert.True(unionRangeFound, "Union range should be present in the result");
+
+        // Verify the except range is not present
+        bool exceptRangeFound = resultRanges.Any(r =>
+            r.FirstAddress <= exceptRange.LastAddress && r.LastAddress >= exceptRange.FirstAddress);
+        Assert.False(exceptRangeFound, "Except range should not be present in the result");
+    }
+
+    [Fact]
+    public void Ip4RangeSet_HandlesInputsExceedingStackAllocLimit_WithoutIssues()
+    {
+        // Arrange: Create input that exceeds MAX_STACK_ALLOC (1024) to verify heap allocation works
+        const int rangeCount = 1500; // Well above 1024
+        var ranges = new List<Ip4Range>();
+        for (int i = 0; i < rangeCount; i++)
+        {
+            ranges.Add(new Ip4Range(new Ip4Address((uint)i * 10), new Ip4Address((uint)i * 10 + 5)));
+        }
+
+        // Act: Create set - should use heap allocation and work fine
+        var set = new Ip4RangeSet(ranges);
+
+        // Assert: Should handle large input correctly
+        var resultRanges = set.ToIp4Ranges().ToArray();
+        Assert.Equal(rangeCount, resultRanges.Length);
+
+        // Verify ranges are sorted and correct
+        for (int i = 0; i < rangeCount; i++)
+        {
+            Assert.Equal(new Ip4Address((uint)i * 10), resultRanges[i].FirstAddress);
+            Assert.Equal(new Ip4Address((uint)i * 10 + 5), resultRanges[i].LastAddress);
+        }
+    }
+
     #endregion
 }

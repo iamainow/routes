@@ -7,18 +7,22 @@ namespace routes.Benchmarks.Ip4RangeSetBenchmark;
 [Config(typeof(NoPowerPlanConfig))]
 public class Ip4RangeSetExcept
 {
-    [Params(1_000, 10_000, 100_000)]
+    [Params(1_000)]
     public int Count { get; set; }
+
+    [Params(10, 100, 1_000, 10_000)]
+    public int SetSize { get; set; }
 
     private List<Ip4RangeSet> rangeSets1 = [];
     private List<Ip4RangeSet> rangeSets2 = [];
+
+    private List<Ip4Range[]> ranges1 = [];
 
     [GlobalSetup]
     public async Task GlobalSetup()
     {
         Random random = new();
-        const int pack = 10;
-        List<Ip4Range> ranges = Enumerable.Range(0, Count * pack * 2).Select(_ =>
+        List<Ip4Range> ranges = Enumerable.Range(0, (Count + 1) * SetSize).Select(_ =>
         {
             var address1 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
             var address2 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
@@ -32,8 +36,10 @@ public class Ip4RangeSetExcept
             }
         }).ToList();
 
-        rangeSets1 = ranges.Chunk(pack).Select(chunk => new Ip4RangeSet(chunk)).ToList();
-        rangeSets2 = ranges.Skip(Count * pack).Chunk(pack).Select(chunk => new Ip4RangeSet(chunk)).ToList();
+        ranges1 = ranges.Chunk(SetSize).ToList();
+
+        rangeSets1 = ranges1.Take(Count).Select(chunk => new Ip4RangeSet(chunk)).ToList();
+        rangeSets2 = ranges.Skip(1).Select(chunk => new Ip4RangeSet(chunk)).ToList();
     }
 
     [Benchmark]
