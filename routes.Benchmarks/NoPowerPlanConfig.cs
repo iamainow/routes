@@ -12,7 +12,8 @@ public class NoPowerPlanConfig : ManualConfig
         // from changing the Windows power plan during benchmark execution
         AddJob(Job.Default
             .DontEnforcePowerPlan()
-            .WithRuntime(CoreRuntime.Core10_0));
+            .WithRuntime(CoreRuntime.Core10_0))
+            .WithOptions(ConfigOptions.DisableOptimizationsValidator);
 
         //AddJob(Job.Default
         //    .DontEnforcePowerPlan()

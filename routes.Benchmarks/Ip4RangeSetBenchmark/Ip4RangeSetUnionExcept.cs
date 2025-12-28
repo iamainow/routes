@@ -7,49 +7,47 @@ namespace routes.Benchmarks.Ip4RangeSetBenchmark;
 [Config(typeof(NoPowerPlanConfig))]
 public class Ip4RangeSetUnionExcept
 {
-    [Params(1_000)]
+    [Params(1_000, 10_000)]
     public int Count { get; set; }
 
-    [Params(10, 100, 1_000)]
+    [Params(10, 100, 1_000, 10_000)]
     public int SetSize { get; set; }
 
     private List<Ip4RangeSet> rangeSets1 = [];
 
-    private List<Ip4Range[]> ranges3 = [];
+    private List<Ip4Range[]> rangesArray1 = [];
 
     [GlobalSetup]
     public async Task GlobalSetup()
     {
         Random random = new();
-        List<Ip4Range> ranges = Enumerable.Range(0, (Count + 1) * SetSize).Select(_ =>
-        {
-            var address1 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
-            var address2 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
-            if (address1 < address2)
-            {
-                return new Ip4Range(address1, address2);
-            }
-            else
-            {
-                return new Ip4Range(address2, address1);
-            }
-        }).ToList();
-
-        ranges3 = ranges.Chunk(SetSize).ToList();
-
-        rangeSets1 = ranges3.Take(Count).Select(chunk => new Ip4RangeSet(chunk)).ToList();
+        rangeSets1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).ToList();
+        rangesArray1 = rangeSets1.Select(x => x.ToIp4Ranges()).ToList();
     }
 
     [Benchmark]
-    public Ip4RangeSet Ip4RangeSet_UnionExcept_Set()
+    public int Ip4RangeSet_UnionExcept_Set()
     {
         Ip4RangeSet result = new();
-        for (int index = 1; index < Count; index += 2)
+        for (int index = 0; index < Count - 1; index += 2)
         {
-            result.Union(rangeSets1[index - 1]);
-            result.Except(rangeSets1[index]);
+            result.Union(rangeSets1[index]);
+            result.Except(rangeSets1[index + 1]);
         }
 
-        return result;
+        return result.RangesCount;
+    }
+
+    [Benchmark]
+    public int Ip4RangeSet_UnionExcept_Ip4RangeArray()
+    {
+        Ip4RangeSet result = new();
+        for (int index = 0; index < Count - 1; index += 2)
+        {
+            result.Union(rangesArray1[index]);
+            result.Except(rangeSets1[index + 1]);
+        }
+
+        return result.RangesCount;
     }
 }
