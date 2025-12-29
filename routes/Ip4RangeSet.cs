@@ -538,7 +538,7 @@ public class Ip4RangeSet
 
     public Ip4RangeSet MinimizeSubnets(uint delta)
     {
-        return new Ip4RangeSet(ToIp4Subnets().Where(x => x.Count > delta));
+        return new Ip4RangeSet(ToIp4Subnets().Where(x => x.Count >= delta));
     }
 
     public Ip4Range[] ToIp4Ranges()

@@ -161,7 +161,7 @@ internal static class Program
                         throw new ArgumentException("missing simplify argument, should use simplify <number>");
                     }
                     uint simplifyRange = uint.Parse(enumerator.Current);
-                    result.MinimizeSubnets(simplifyRange);
+                    result = result.MinimizeSubnets(simplifyRange);
                     break;
 
                 case "normalize":
