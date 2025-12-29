@@ -32,12 +32,13 @@ internal static class Ip4RangeSetExtensions
             {
                 var ranges = addresses.Chunk(2).Select(x => new Ip4Range(x[0], x[1])).ToArray();
                 Ip4RangeSet result = new(ranges);
-                if (result.RangesCount >= size)
+                int remains = size - result.RangesCount;
+                if (remains <= 0)
                 {
                     return result;
                 }
 
-                for (int index = 0; index < (size - result.RangesCount); ++index)
+                for (int index = 0; index < remains; ++index)
                 {
                     while (true)
                     {

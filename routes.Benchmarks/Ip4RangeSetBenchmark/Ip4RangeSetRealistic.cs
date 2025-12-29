@@ -57,7 +57,7 @@ public class Ip4RangeSetRealistic
     }
 
     [Benchmark]
-    public Ip4RangeSet Ip4RangeSet_Realistic()
+    public Ip4RangeSet Ip4RangeSet_Realistic_WithParser()
     {
         var all = new Ip4RangeSet(Ip4SubnetParser.GetRanges("0.0.0.0/0"));
         var ip = new Ip4RangeSet(Ip4SubnetParser.GetRanges("1.2.3.4"));
@@ -74,7 +74,7 @@ public class Ip4RangeSetRealistic
     }
 
     [Benchmark]
-    public Ip4RangeSet Ip4RangeSet_RealisticWithoutParser()
+    public Ip4RangeSet Ip4RangeSet_Realistic_WithoutParser()
     {
         var all = Ip4RangeSet.All;
         var ip = new Ip4RangeSet(new Ip4Address(1, 2, 3, 4));

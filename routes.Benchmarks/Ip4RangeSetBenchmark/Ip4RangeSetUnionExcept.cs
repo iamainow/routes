@@ -3,11 +3,11 @@ using BenchmarkDotNet.Attributes;
 namespace routes.Benchmarks.Ip4RangeSetBenchmark;
 
 [MemoryDiagnoser]
-[ExceptionDiagnoser]
+[ExceptionDiagnoser(false)]
 [Config(typeof(NoPowerPlanConfig))]
 public class Ip4RangeSetUnionExcept
 {
-    [Params(1_000, 10_000)]
+    [Params(1_000)]
     public int Count { get; set; }
 
     [Params(10, 100, 1_000, 10_000)]
