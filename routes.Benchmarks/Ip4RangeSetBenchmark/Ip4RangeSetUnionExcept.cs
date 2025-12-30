@@ -14,7 +14,6 @@ public class Ip4RangeSetUnionExcept
     public int SetSize { get; set; }
 
     private List<Ip4RangeSet> rangeSets_union_set = [];
-    private List<Ip4RangeSet> rangeSets_union4_set = [];
     private List<Ip4RangeSet> rangeSets_union_array = [];
     private List<Ip4RangeSet> rangeSets_except_set = [];
     private List<Ip4RangeSet> rangeSets_except_array = [];
@@ -26,7 +25,6 @@ public class Ip4RangeSetUnionExcept
     {
         Random random = new();
         rangeSets_union_set = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).ToList();
-        rangeSets_union4_set = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).ToList();
         rangeSets_union_array = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).ToList();
         rangeSets_except_set = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).ToList();
         rangeSets_except_array = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).ToList();
