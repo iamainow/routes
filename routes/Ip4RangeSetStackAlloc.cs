@@ -94,42 +94,6 @@ public ref struct Ip4RangeSetStackAlloc
         SmartUnionSorted(other.ToReadOnlySpan());
     }
 
-    public void Union1(ReadOnlySpan<Ip4Range> other)
-    {
-        Span<Ip4Range> thisAndOtherSorted = stackalloc Ip4Range[_ranges.Count + other.Length];
-
-        _ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted);
-        other.CopyTo(thisAndOtherSorted[_ranges.Count..]);
-
-        thisAndOtherSorted.Sort(Ip4RangeComparer.Instance);
-
-        this._ranges.Clear();
-
-        if (thisAndOtherSorted.Length > 0)
-        {
-            this._ranges.Add(thisAndOtherSorted[0]);
-            for (int i = 1; i < thisAndOtherSorted.Length; i++)
-            {
-                var current = thisAndOtherSorted[i];
-                ref var last = ref this._ranges.Last();
-                if (last.LastAddress.ToUInt32() == uint.MaxValue)
-                {
-                    last = new Ip4Range(last.FirstAddress, new Ip4Address(uint.MaxValue));
-                    return;
-                }
-                if (last.LastAddress.ToUInt32() + 1UL >= current.FirstAddress.ToUInt32())
-                {
-                    var maxLast = Math.Max(last.LastAddress.ToUInt32(), current.LastAddress.ToUInt32());
-                    last = new Ip4Range(last.FirstAddress, new Ip4Address(maxLast));
-                }
-                else
-                {
-                    this._ranges.Add(current);
-                }
-            }
-        }
-    }
-
     public void Union2ModifySpan(Span<Ip4Range> other)
     {
         other.Sort(Ip4RangeComparer.Instance);
@@ -143,7 +107,7 @@ public ref struct Ip4RangeSetStackAlloc
     }
 
     // merge sorted arrays into some temp span and then in the end copy to this._range
-    public void SmartUnionSorted(ReadOnlySpan<Ip4Range> other)
+    private void SmartUnionSorted(ReadOnlySpan<Ip4Range> other)
     {
         ListStackAlloc<Ip4Range> temp = new ListStackAlloc<Ip4Range>(stackalloc Ip4Range[_ranges.Count + other.Length]);
         int i = 0;
@@ -215,7 +179,7 @@ public ref struct Ip4RangeSetStackAlloc
         ExceptSorted(other);
     }
 
-    public void ExceptSorted(ReadOnlySpan<Ip4Range> other)
+    private void ExceptSorted(ReadOnlySpan<Ip4Range> other)
     {
         if (_ranges.Count == 0 || other.Length == 0)
             return;

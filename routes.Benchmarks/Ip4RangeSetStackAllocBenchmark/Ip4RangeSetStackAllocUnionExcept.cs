@@ -29,21 +29,6 @@ public class Ip4RangeSetStackAllocUnionExcept
     }
 
     [Benchmark]
-    public int Ip4RangeSetStackAlloc_ctor_Union1_span()
-    {
-        Span<Ip4Range> span = stackalloc Ip4Range[SetSize * 2];
-        int result = 0;
-        for (int index = 0; index < Count; ++index)
-        {
-            var set = new Ip4RangeSetStackAlloc(span, rangesArray_readonly_1[index].AsSpan());
-            set.Union1(rangesArray_readonly_2[index].AsSpan());
-            result += set.RangesCount;
-        }
-
-        return result;
-    }
-
-    [Benchmark]
     public int Ip4RangeSetStackAlloc_ctor_Union2_span()
     {
         Span<Ip4Range> span = stackalloc Ip4Range[SetSize * 2];
