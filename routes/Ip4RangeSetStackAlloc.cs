@@ -2,8 +2,6 @@ namespace routes;
 
 public ref struct Ip4RangeSetStackAlloc
 {
-    private const int MAX_STACK_ALLOC = 1024;
-
     private ListStackAlloc<Ip4Range> _ranges; // sorted by FirstAddress, elements not overlapping, elements non-adjacent/disjoint
 
     public readonly ReadOnlySpan<Ip4Range> ToReadOnlySpan() => _ranges.AsReadOnlySpan();
@@ -17,9 +15,6 @@ public ref struct Ip4RangeSetStackAlloc
 
     public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer, ReadOnlySpan<Ip4Range> elements) // elements may be unsorted, may overlapping, may adjacent/disjoint
     {
-        if (elements.Length > MAX_STACK_ALLOC)
-            throw new InvalidOperationException("Input size exceeds maximum stack allocation limit.");
-
         _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer);
 
         Span<Ip4Range> temp = stackalloc Ip4Range[elements.Length];
@@ -35,16 +30,7 @@ public ref struct Ip4RangeSetStackAlloc
             {
                 var current = temp[i];
                 ref var last = ref _ranges.Last();
-                /*
-                condition should be if (last.FirstAddress (1) <= current.LastAddress (3) && last.LastAddress >= current.FirstAddress)
-                lets current.FirstAddress = (2)
-                but (1) <= (2) due sorting 
-                and (2) <= (3) due FirstAddress <= LastAddress
-                so when (1) <= (2) <= (3) then (1) <= (3)
-                it means that last.FirstAddress (1) <= current.LastAddress (3) is always true
-                so original condition equals to if (true && last.LastAddress >= current.FirstAddress)
-                and then equals to if (last.LastAddress >= current.FirstAddress)
-                */
+
                 if (last.LastAddress.ToUInt32() == uint.MaxValue)
                 {
                     last = new Ip4Range(last.FirstAddress, new Ip4Address(uint.MaxValue));
@@ -69,9 +55,6 @@ public ref struct Ip4RangeSetStackAlloc
     /// <param name="other"></param>
     public void Union1(Ip4RangeSetStackAlloc other)
     {
-        if (_ranges.Count + other._ranges.Count > MAX_STACK_ALLOC)
-            throw new InvalidOperationException("Combined size exceeds maximum stack allocation limit.");
-
         Span<Ip4Range> thisAndOtherSorted = stackalloc Ip4Range[_ranges.Count + other._ranges.Count];
 
         _ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted);
@@ -113,9 +96,6 @@ public ref struct Ip4RangeSetStackAlloc
 
     public void Union1(ReadOnlySpan<Ip4Range> other)
     {
-        if (_ranges.Count + other.Length > MAX_STACK_ALLOC)
-            throw new InvalidOperationException("Combined size exceeds maximum stack allocation limit.");
-
         Span<Ip4Range> thisAndOtherSorted = stackalloc Ip4Range[_ranges.Count + other.Length];
 
         _ranges.AsReadOnlySpan().CopyTo(thisAndOtherSorted);
@@ -150,13 +130,13 @@ public ref struct Ip4RangeSetStackAlloc
         }
     }
 
-    public void Union2(Span<Ip4Range> other)
+    public void Union2ModifySpan(Span<Ip4Range> other)
     {
         other.Sort(Ip4RangeComparer.Instance);
         SmartUnionSorted(other);
     }
 
-    public void SmartUnionUnordered(Span<Ip4Range> other)
+    public void SmartUnionUnorderedModifySpan(Span<Ip4Range> other)
     {
         other.Sort(Ip4RangeComparer.Instance);
         SmartUnionSorted(other);
@@ -229,7 +209,7 @@ public ref struct Ip4RangeSetStackAlloc
         return (left + right);
     }
 
-    public void ExceptUnsorted(Span<Ip4Range> other)
+    public void ExceptUnsortedModifySpan(Span<Ip4Range> other)
     {
         other.Sort(Ip4RangeComparer.Instance);
         ExceptSorted(other);
@@ -239,9 +219,6 @@ public ref struct Ip4RangeSetStackAlloc
     {
         if (_ranges.Count == 0 || other.Length == 0)
             return;
-
-        if (_ranges.Count + other.Length > MAX_STACK_ALLOC)
-            throw new InvalidOperationException("Combined size exceeds maximum stack allocation limit.");
 
         Span<Ip4Range> temp = stackalloc Ip4Range[CalcExceptBufferSize(_ranges.Count, other.Length)];
         int count = 0;

@@ -3,46 +3,73 @@ using BenchmarkDotNet.Attributes;
 namespace routes.Benchmarks.Ip4RangeSetStackAllocBenchmark;
 
 [MemoryDiagnoser]
-[ExceptionDiagnoser]
+[ExceptionDiagnoser(false)]
 [Config(typeof(NoPowerPlanConfig))]
 public class Ip4RangeSetStackAllocUnionExcept
 {
-    [Params(1_000, 10_000, 100_000)]
+    [Params(1_000)]
     public int Count { get; set; }
 
-    private List<Ip4Range[]> rangeSets = [];
+    [Params(10, 100, 1_000)]
+    public int SetSize { get; set; }
+
+    private List<Ip4Range[]> rangesArray_readonly_1 = [];
+    private List<Ip4Range[]> rangesArray_readonly_2 = [];
+    private List<Ip4Range[]> rangesArray_1 = [];
+    private List<Ip4Range[]> rangesArray_2 = [];
 
     [GlobalSetup]
     public async Task GlobalSetup()
     {
         Random random = new();
-        List<Ip4Range> ranges = Enumerable.Range(0, Count * 10).Select(_ =>
-        {
-            var address1 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
-            var address2 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
-            if (address1 < address2)
-            {
-                return new Ip4Range(address1, address2);
-            }
-            else
-            {
-                return new Ip4Range(address2, address1);
-            }
-        }).ToList();
-
-        rangeSets = ranges.Chunk(10).ToList();
+        rangesArray_readonly_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
+        rangesArray_readonly_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
+        rangesArray_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
+        rangesArray_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
     }
 
     [Benchmark]
-    public int Ip4RangeSetStackAlloc_SmartUnionUnorderedExceptUnsorted()
+    public int Ip4RangeSetStackAlloc_ctor_Union1_span()
     {
-        Ip4RangeSetStackAlloc result = new(stackalloc Ip4Range[1000]);
-        for (int index = 1; index < Count; index += 2)
+        Span<Ip4Range> span = stackalloc Ip4Range[SetSize * 2];
+        int result = 0;
+        for (int index = 0; index < Count; ++index)
         {
-            result.SmartUnionUnordered(rangeSets[index - 1]);
-            result.ExceptUnsorted(rangeSets[index]);
+            var set = new Ip4RangeSetStackAlloc(span, rangesArray_readonly_1[index].AsSpan());
+            set.Union1(rangesArray_readonly_2[index].AsSpan());
+            result += set.RangesCount;
         }
 
-        return result.RangesCount;
+        return result;
+    }
+
+    [Benchmark]
+    public int Ip4RangeSetStackAlloc_ctor_Union2_span()
+    {
+        Span<Ip4Range> span = stackalloc Ip4Range[SetSize * 2];
+        int result = 0;
+        for (int index = 0; index < Count; ++index)
+        {
+            var set = new Ip4RangeSetStackAlloc(span, rangesArray_readonly_1[index].AsSpan());
+            set.Union2ModifySpan(rangesArray_1[index].AsSpan());
+            result += set.RangesCount;
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int Ip4RangeSetStackAlloc_ctor_ExceptUnsorted_span()
+    {
+        Span<Ip4Range> span = stackalloc Ip4Range[SetSize * 2];
+        int result = 0;
+        for (int index = 0; index < Count; ++index)
+        {
+            var set = new Ip4RangeSetStackAlloc(span, rangesArray_readonly_1[index].AsSpan());
+            set.ExceptUnsortedModifySpan(rangesArray_2[index].AsSpan());
+            result += set.RangesCount;
+        }
+
+        return result;
     }
 }
