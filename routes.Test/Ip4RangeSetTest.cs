@@ -943,14 +943,6 @@ public class Ip4RangeSetTest
     }
 
     [Fact]
-    public void Union_WithNullSubnetEnumerable_ThrowsArgumentNullException()
-    {
-        var set = new Ip4RangeSet();
-
-        Assert.Throws<ArgumentNullException>(() => set.Union((IEnumerable<Ip4Subnet>)null!));
-    }
-
-    [Fact]
     public void Operations_AtMinimumIpAddress_WorkCorrectly()
     {
         // Arrange: range starting at 0.0.0.0

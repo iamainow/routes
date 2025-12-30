@@ -48,19 +48,6 @@ public class Ip4RangeSetUnionExcept
     }
 
     [Benchmark]
-    public int Ip4RangeSet_Union4_Ip4RangeSet()
-    {
-        int result = 0;
-        for (int index = 0; index < Count; ++index)
-        {
-            rangeSets_union4_set[index].Union4(rangeSets_readonly[index]);
-            result += rangeSets_union4_set[index].RangesCount;
-        }
-
-        return result;
-    }
-
-    [Benchmark]
     public int Ip4RangeSet_Union_Ip4RangeArray()
     {
         int result = 0;
