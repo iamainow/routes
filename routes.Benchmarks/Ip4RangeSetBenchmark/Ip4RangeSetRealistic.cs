@@ -4,7 +4,7 @@ using Ip4Parsers;
 namespace routes.Benchmarks.Ip4RangeSetBenchmark;
 
 [MemoryDiagnoser]
-[ExceptionDiagnoser]
+[ExceptionDiagnoser(false)]
 [Config(typeof(NoPowerPlanConfig))]
 public class Ip4RangeSetRealistic
 {

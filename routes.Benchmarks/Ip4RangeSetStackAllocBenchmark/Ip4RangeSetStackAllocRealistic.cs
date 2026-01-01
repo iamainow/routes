@@ -1,10 +1,11 @@
 using BenchmarkDotNet.Attributes;
 using Ip4Parsers;
+using System.Runtime.InteropServices;
 
 namespace routes.Benchmarks.Ip4RangeSetStackAllocBenchmark;
 
 [MemoryDiagnoser]
-[ExceptionDiagnoser]
+[ExceptionDiagnoser(false)]
 [Config(typeof(NoPowerPlanConfig))]
 public class Ip4RangeSetStackAllocRealistic
 {
@@ -77,13 +78,13 @@ public class Ip4RangeSetStackAllocRealistic
     public int Ip4RangeSetStackAlloc_RealisticWithoutParser()
     {
         var all = Ip4Range.All;
-        var ip = new Ip4Address(1, 2, 3, 4);
-        var bogon = _bogon;
+        var ip = new Ip4Address(1, 2, 3, 4).ToIp4Range();
+        var bogon = _bogon.AsSpan();
 
         var subnets = _subnets.Select(x => x.ToIp4Range()).ToArray();
 
-        var result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[20000], [all]);
-        result.ExceptUnsortedModifySpan([ip]);
+        var result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[20000], MemoryMarshal.CreateSpan(ref all, 1));
+        result.ExceptUnsortedModifySpan(MemoryMarshal.CreateSpan(ref ip, 1));
         result.ExceptUnsortedModifySpan(bogon);
         result.ExceptUnsortedModifySpan(subnets);
 
