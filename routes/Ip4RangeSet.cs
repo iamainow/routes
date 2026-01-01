@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace routes;
@@ -78,7 +77,8 @@ public class Ip4RangeSet
 
         while (true)
         {
-            if (current.Value.LastAddress.ToUInt32() + 1L < currentOther.Value.FirstAddress.ToUInt32()) // [current]   [currentOther]
+            int compare1 = (current.Value.LastAddress.ToUInt32() + 1UL).CompareTo(currentOther.Value.FirstAddress.ToUInt32());
+            if (compare1 < 0) // [current]   [currentOther]
             {
                 if (current.Next is null)
                 {
@@ -92,7 +92,7 @@ public class Ip4RangeSet
                 }
                 current = current.Next;
             }
-            else if (current.Value.LastAddress.ToUInt32() + 1L == currentOther.Value.FirstAddress.ToUInt32()) // [current][currentOther]
+            else if (compare1 == 0) // [current][currentOther]
             {
                 current.Value = new Ip4Range(current.Value.FirstAddress, currentOther.Value.LastAddress);
                 if (current.Next is null)
@@ -110,30 +110,17 @@ public class Ip4RangeSet
                     current = current.Next;
                 }
             }
-            else if (current.Value.FirstAddress.ToUInt32() > currentOther.Value.LastAddress.ToUInt32() + 1L) // [currentOther]   [current]
-            {
-                if (currentOther.Next is null) return;
-                currentOther = currentOther.Next;
-            }
-            else if (current.Value.FirstAddress.ToUInt32() == currentOther.Value.LastAddress.ToUInt32() + 1L) // [currentOther][current]
-            {
-                current.Value = new Ip4Range(currentOther.Value.FirstAddress, current.Value.LastAddress);
-                if (currentOther.Next is null)
-                {
-                    return;
-                }
-                else
-                {
-                    currentOther = currentOther.Next;
-                }
-            }
             else
             {
-                var newElement = current.Value.IntersectableUnion(currentOther.Value);
-                bool moveOther = current.Value.LastAddress >= currentOther.Value.LastAddress;
-                current.Value = newElement;
-                if (moveOther)
+                int compare2 = current.Value.FirstAddress.ToUInt32().CompareTo(currentOther.Value.LastAddress.ToUInt32() + 1UL);
+                if (compare2 > 0) // [currentOther]   [current]
                 {
+                    if (currentOther.Next is null) return;
+                    currentOther = currentOther.Next;
+                }
+                else if (compare2 == 0) // [currentOther][current]
+                {
+                    current.Value = new Ip4Range(currentOther.Value.FirstAddress, current.Value.LastAddress);
                     if (currentOther.Next is null)
                     {
                         return;
@@ -145,32 +132,46 @@ public class Ip4RangeSet
                 }
                 else
                 {
-                    if (current.Next is null)
+                    var newElement = current.Value.IntersectableUnion(currentOther.Value);
+                    bool moveOther = current.Value.LastAddress >= currentOther.Value.LastAddress;
+                    current.Value = newElement;
+                    if (moveOther)
                     {
-                        var currOther = currentOther.Next;
-                        while (currOther is not null)
+                        if (currentOther.Next is null)
                         {
-                            _list.AddLast(currOther.Value);
-                            currOther = currOther.Next;
-                        }
-                        return;
-                    }
-                    else
-                    {
-                        if (current.Value.IsIntersects(current.Next.Value))
-                        {
-                            // The static analyzer incorrectly flags this as dead code because it doesn't understand that removing current.Next changes the linked list structure, making the condition dynamic.
-#pragma warning disable CA1508 // Avoid dead conditional code
-                            do
-                            {
-                                current.Value = current.Value.IntersectableUnion(current.Next.Value);
-                                _list.Remove(current.Next);
-                            } while (current.Next is not null && current.Value.IsIntersects(current.Next.Value));
-#pragma warning restore CA1508 // Avoid dead conditional code
+                            return;
                         }
                         else
                         {
-                            current = current.Next;
+                            currentOther = currentOther.Next;
+                        }
+                    }
+                    else
+                    {
+                        if (current.Next is null)
+                        {
+                            var currOther = currentOther.Next;
+                            while (currOther is not null)
+                            {
+                                _list.AddLast(currOther.Value);
+                                currOther = currOther.Next;
+                            }
+                            return;
+                        }
+                        else
+                        {
+                            if (current.Value.IsIntersects(current.Next.Value))
+                            {
+                                do
+                                {
+                                    current.Value = current.Value.IntersectableUnion(current.Next.Value);
+                                    _list.Remove(current.Next);
+                                } while (current.Next is not null && current.Value.IsIntersects(current.Next.Value));
+                            }
+                            else
+                            {
+                                current = current.Next;
+                            }
                         }
                     }
                 }
@@ -198,9 +199,7 @@ public class Ip4RangeSet
         InternalUnionSortedRanges(temp);
     }
 
-#pragma warning disable CA1859 // Use concrete types when possible for improved performance
     private void InternalUnionSortedRanges(IEnumerable<Ip4Range> sortedRanges)
-#pragma warning restore CA1859 // Use concrete types when possible for improved performance
     {
         using IEnumerator<Ip4Range> sortedRangesEnumerator = sortedRanges.GetEnumerator();
         bool sortedRangesValueExists = sortedRangesEnumerator.MoveNext();
@@ -410,14 +409,9 @@ public class Ip4RangeSet
         return _list.ToArray();
     }
 
-    public Span<Ip4Subnet> ToIp4Subnets()
+    public Ip4Subnet[] ToIp4Subnets()
     {
-        List<Ip4Subnet> result = new();
-        foreach (var range in _list)
-        {
-            result.AddRange(range.ToSubnets());
-        }
-        return CollectionsMarshal.AsSpan(result);
+        return _list.SelectMany(x => x.ToSubnets()).ToArray();
     }
 
     public override string ToString()

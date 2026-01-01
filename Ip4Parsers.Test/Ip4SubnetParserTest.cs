@@ -59,7 +59,7 @@ public class Ip4SubnetParserTest
     {
         var result = Ip4SubnetParser.GetSubnets("192.168.1.1").ToArray();
         Assert.Single(result);
-        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 1), 32), result[0]);
+        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 1), new Ip4Mask(32)), result[0]);
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public class Ip4SubnetParserTest
     {
         var result = Ip4SubnetParser.GetSubnets("192.168.1.0/24").ToArray();
         Assert.Single(result);
-        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 0), 24), result[0]);
+        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 0), new Ip4Mask(24)), result[0]);
     }
 
     [Fact]
@@ -75,8 +75,8 @@ public class Ip4SubnetParserTest
     {
         var result = Ip4SubnetParser.GetSubnets("192.168.1.1-192.168.1.3");
         Assert.Equal(2, result.Length);
-        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 1), 32), result[0]);
-        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 2), 31), result[1]);
+        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 1), new Ip4Mask(32)), result[0]);
+        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 2), new Ip4Mask(31)), result[1]);
     }
 
     [Fact]
@@ -84,8 +84,8 @@ public class Ip4SubnetParserTest
     {
         var result = Ip4SubnetParser.GetSubnets("192.168.1.1, 192.168.2.0/24");
         Assert.Equal(2, result.Length);
-        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 1), 32), result[0]);
-        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 2, 0), 24), result[1]);
+        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 1), new Ip4Mask(32)), result[0]);
+        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 2, 0), new Ip4Mask(24)), result[1]);
     }
 
     [Fact]
@@ -93,6 +93,6 @@ public class Ip4SubnetParserTest
     {
         var result = Ip4SubnetParser.GetSubnets("invalid 192.168.1.1 garbage").ToArray();
         Assert.Single(result);
-        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 1), 32), result[0]);
+        Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 1), new Ip4Mask(32)), result[0]);
     }
 }

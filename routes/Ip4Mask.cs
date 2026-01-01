@@ -25,7 +25,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
         Span<byte> bytes = stackalloc byte[4];
         var enumerator = text.Split('.');
         int i = 0;
-        foreach (var range in enumerator)
+        foreach (Range range in enumerator)
         {
             if (i >= 4 || !byte.TryParse(text[range], out bytes[i]))
             {
@@ -40,7 +40,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
             return false;
         }
 
-        result = new Ip4Mask(bytes[0], bytes[1], bytes[2], bytes[3]);
+        result = new Ip4Mask(bytes);
         return true;
     }
 
@@ -215,7 +215,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     }
 
     /// <exception cref="ArgumentException"></exception>
-    public Ip4Mask(Span<byte> bytes)
+    public Ip4Mask(ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length != 4)
         {
@@ -229,12 +229,12 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
         ValidateMask(_mask);
     }
 
-    public uint AsUInt32()
+    public uint ToUInt32()
     {
         return _mask;
     }
 
-    public byte[] AsByteArray()
+    public byte[] ToByteArray()
     {
         return [_byte1, _byte2, _byte3, _byte4];
     }

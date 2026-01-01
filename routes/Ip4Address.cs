@@ -157,7 +157,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return _address;
     }
 
-    public byte[] AsByteArray()
+    public byte[] ToByteArray()
     {
         return [_byte1, _byte2, _byte3, _byte4];
     }

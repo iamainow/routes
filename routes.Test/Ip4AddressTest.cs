@@ -15,7 +15,7 @@ public class Ip4AddressTest
         var ip = new Ip4Address(address);
 
         // Assert
-        byte[] ipAsBytes = ip.AsByteArray();
+        byte[] ipAsBytes = ip.ToByteArray();
         Assert.Equal(part1, ipAsBytes[0]);
         Assert.Equal(part2, ipAsBytes[1]);
         Assert.Equal(part3, ipAsBytes[2]);
@@ -323,7 +323,7 @@ public class Ip4AddressTest
         var ip = new Ip4Address(192, 168, 1, 1);
 
         // Act
-        byte[] bytes = ip.AsByteArray();
+        byte[] bytes = ip.ToByteArray();
 
         // Assert
         Assert.Equal([192, 168, 1, 1], bytes);

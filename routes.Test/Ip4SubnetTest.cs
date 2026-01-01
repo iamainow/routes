@@ -32,7 +32,7 @@ public class Ip4SubnetTest
     {
         var address = new Ip4Address(192, 168, 1, 0);
 
-        var subnet = new Ip4Subnet(address, 24);
+        var subnet = new Ip4Subnet(address, new Ip4Mask(24));
 
         Assert.Equal(address, subnet.FirstAddress);
         Assert.Equal(24, subnet.Mask.Cidr);
@@ -43,7 +43,7 @@ public class Ip4SubnetTest
     {
         var address = new Ip4Address(192, 168, 1, 0);
 
-        var subnet = new Ip4Subnet(address, 0xFFFFFF00u);
+        var subnet = new Ip4Subnet(address, new Ip4Mask(0xFFFFFF00u));
 
         Assert.Equal(address, subnet.FirstAddress);
         Assert.Equal(24, subnet.Mask.Cidr);
@@ -166,7 +166,7 @@ public class Ip4SubnetTest
     [InlineData(0, 4294967296UL)]
     public void Count_ReturnsCorrectNumberOfAddresses(int cidr, ulong expectedCount)
     {
-        var subnet = new Ip4Subnet(new Ip4Address(0), cidr);
+        var subnet = new Ip4Subnet(new Ip4Address(0), new Ip4Mask(cidr));
 
         Assert.Equal(expectedCount, subnet.Count);
     }
@@ -320,11 +320,11 @@ public class Ip4SubnetTest
         Assert.Equal(24, subnet1.Mask.Cidr);
 
         // Test with int cidr
-        var subnet2 = new Ip4Subnet(address, 24);
+        var subnet2 = new Ip4Subnet(address, new Ip4Mask(24));
         Assert.Equal(24, subnet2.Mask.Cidr);
 
         // Test with uint mask
-        var subnet3 = new Ip4Subnet(address, 0xFFFFFF00u);
+        var subnet3 = new Ip4Subnet(address, new Ip4Mask(0xFFFFFF00u));
         Assert.Equal(24, subnet3.Mask.Cidr);
 
         // All should be equal

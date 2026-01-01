@@ -82,7 +82,7 @@ public class Ip4MaskTest
     [InlineData(0)]
     public void AsUInt32_AsCidr_EqualsTo_JustCidr(int cidr)
     {
-        Assert.Equal(new Ip4Mask(new Ip4Mask(cidr).AsUInt32()).Cidr, cidr);
+        Assert.Equal(new Ip4Mask(new Ip4Mask(cidr).ToUInt32()).Cidr, cidr);
     }
 
     [Theory]
@@ -119,7 +119,7 @@ public class Ip4MaskTest
     {
         var mask = new Ip4Mask(cidr);
 
-        Assert.Equal(expectedMask, mask.AsUInt32());
+        Assert.Equal(expectedMask, mask.ToUInt32());
         Assert.Equal(cidr, mask.Cidr);
     }
 
@@ -142,7 +142,7 @@ public class Ip4MaskTest
         var mask = new Ip4Mask(maskValue);
 
         Assert.Equal(expectedCidr, mask.Cidr);
-        Assert.Equal(maskValue, mask.AsUInt32());
+        Assert.Equal(maskValue, mask.ToUInt32());
     }
 
     [Theory]
@@ -370,7 +370,7 @@ public class Ip4MaskTest
     {
         var mask = new Ip4Mask(24);
 
-        byte[] bytes = mask.AsByteArray();
+        byte[] bytes = mask.ToByteArray();
 
         Assert.Equal([255, 255, 255, 0], bytes);
     }

@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\routes\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Ip4Parsers\Ip4Parsers.csproj" />
     <ProjectReference Include="..\routes\routes.csproj" />
   </ItemGroup>

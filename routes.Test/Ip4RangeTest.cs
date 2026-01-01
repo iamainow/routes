@@ -99,30 +99,6 @@ public class Ip4RangeTest
     }
 
     [Fact]
-    public void Union_IntersectingRanges_ReturnsSingleRange()
-    {
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var range2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
-
-        var result = range1.Union(range2);
-
-        Assert.Single(result);
-        Assert.Equal(new Ip4Address(10), result[0].FirstAddress);
-        Assert.Equal(new Ip4Address(25), result[0].LastAddress);
-    }
-
-    [Fact]
-    public void Union_DisjointRanges_ReturnsTwoRanges()
-    {
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
-
-        var result = range1.Union(range2);
-
-        Assert.Equal(2, result.Length);
-    }
-
-    [Fact]
     public void IntersectableIntersect_OverlappingRanges_ReturnsIntersection()
     {
         var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(30));
@@ -132,30 +108,6 @@ public class Ip4RangeTest
 
         Assert.Equal(new Ip4Address(20), result.FirstAddress);
         Assert.Equal(new Ip4Address(30), result.LastAddress);
-    }
-
-    [Fact]
-    public void Intersect_IntersectingRanges_ReturnsIntersection()
-    {
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(30));
-        var range2 = new Ip4Range(new Ip4Address(20), new Ip4Address(40));
-
-        var result = range1.Intersect(range2);
-
-        Assert.NotNull(result);
-        Assert.Equal(new Ip4Address(20), result.Value.FirstAddress);
-        Assert.Equal(new Ip4Address(30), result.Value.LastAddress);
-    }
-
-    [Fact]
-    public void Intersect_DisjointRanges_ReturnsNull()
-    {
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
-
-        var result = range1.Intersect(range2);
-
-        Assert.Null(result);
     }
 
     [Fact]

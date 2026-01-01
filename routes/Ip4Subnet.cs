@@ -16,30 +16,53 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     }
 
     /// <param name="text">x.x.x.x/yy or x.x.x.x y.y.y.y</param>
-    public static Ip4Subnet Parse(string text)
+    public static Ip4Subnet Parse(ReadOnlySpan<char> text)
     {
-        return !TryParse(text, out Ip4Subnet result) ? throw new FormatException() : result;
+        return TryParse(text, out Ip4Subnet result) ? result : throw new FormatException();
     }
 
     /// <param name="text">x.x.x.x/yy or x.x.x.x y.y.y.y</param>
-    public static bool TryParse(string text, out Ip4Subnet result)
+    public static bool TryParse(ReadOnlySpan<char> text, out Ip4Subnet result)
     {
-        ArgumentNullException.ThrowIfNull(text);
+        ReadOnlySpan<char> separators = ['/', ' '];
+        var enumerator = text.Split(separators);
+        if (!enumerator.MoveNext())
+        {
+            result = default;
+            return false;
+        }
+        if (!Ip4Address.TryParse(text[enumerator.Current], out Ip4Address address))
+        {
+            result = default;
+            return false;
+        }
 
-        string[] step1 = text.Split('/', ' ');
-        if (step1.Length == 2 && Ip4Address.TryParse(step1[0], out Ip4Address address) && Ip4Mask.TryParse(step1[1], out Ip4Mask mask))
+        if (!enumerator.MoveNext())
+        {
+            result = default;
+            return false;
+        }
+        if (!Ip4Mask.TryParse(text[enumerator.Current], out Ip4Mask mask))
+        {
+            result = default;
+            return false;
+        }
+
+        if (enumerator.MoveNext())
+        {
+            result = default;
+            return false;
+        }
+        else
         {
             result = new Ip4Subnet(address, mask);
             return true;
         }
-
-        result = default;
-        return false;
     }
 
     public static bool IsValid(Ip4Mask mask, Ip4Address firstAddress)
     {
-        return (firstAddress.ToUInt32() & ~mask.AsUInt32()) == 0;
+        return (firstAddress.ToUInt32() & ~mask.ToUInt32()) == 0;
     }
 
     public static void Validate(Ip4Mask mask, Ip4Address firstAddress)
@@ -55,29 +78,13 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     public Ip4Address FirstAddress { get; }
     public Ip4Mask Mask { get; }
 
-    public Ip4Address LastAddress => new(FirstAddress.ToUInt32() | ~Mask.AsUInt32());
+    public Ip4Address LastAddress => new(FirstAddress.ToUInt32() | ~Mask.ToUInt32());
     public ulong Count => Mask.Count;
 
     public Ip4Subnet(Ip4Address address, Ip4Mask mask)
     {
         FirstAddress = address;
         Mask = mask;
-
-        Validate(Mask, FirstAddress);
-    }
-
-    public Ip4Subnet(Ip4Address firstAddress, int cidr)
-    {
-        FirstAddress = firstAddress;
-        Mask = new Ip4Mask(cidr);
-
-        Validate(Mask, FirstAddress);
-    }
-
-    public Ip4Subnet(Ip4Address firstAddress, uint mask)
-    {
-        FirstAddress = firstAddress;
-        Mask = new Ip4Mask(mask);
 
         Validate(Mask, FirstAddress);
     }
@@ -139,7 +146,7 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
             throw new InvalidOperationException("The subnet is the all-encompassing subnet and has no super-subnet.");
         }
         var mask = new Ip4Mask(Mask.Cidr - 1);
-        return new Ip4Subnet(new Ip4Address(FirstAddress.ToUInt32() & mask.AsUInt32()), mask);
+        return new Ip4Subnet(new Ip4Address(FirstAddress.ToUInt32() & mask.ToUInt32()), mask);
     }
 
     public bool HasSupernet()

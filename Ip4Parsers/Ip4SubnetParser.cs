@@ -52,7 +52,7 @@ public static partial class Ip4SubnetParser
                             continue;
                         }
 
-                        result.Add(new Ip4Subnet(address, mask));
+                        result.Add(new Ip4Subnet(address, new Ip4Mask(mask)));
                     }
                     else
                     {

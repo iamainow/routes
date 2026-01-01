@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace routes;
 
@@ -88,11 +87,6 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         return new Ip4Range(start, end);
     }
 
-    public Ip4Range[] Union(Ip4Range other)
-    {
-        return !IsIntersects(other) ? [this, other] : [IntersectableUnion(other)];
-    }
-
     public Ip4Range IntersectableIntersect(Ip4Range other)
     {
         var start = Ip4Address.Max(FirstAddress, other.FirstAddress);
@@ -100,12 +94,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         return new Ip4Range(start, end);
     }
 
-    public Ip4Range? Intersect(Ip4Range other)
-    {
-        return !IsIntersects(other) ? null : IntersectableIntersect(other);
-    }
-
-    public Span<Ip4Range> IntersectableExcept(Ip4Range other)
+    public Ip4Range[] IntersectableExcept(Ip4Range other)
     {
         if (other.FirstAddress <= FirstAddress)
         {
@@ -113,62 +102,72 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
             {
                 if (other.LastAddress.ToUInt32() < uint.MaxValue)
                 {
-                    Ip4Range[] result = [new Ip4Range(new Ip4Address(other.LastAddress.ToUInt32() + 1), LastAddress)];
-                    return result.AsSpan();
+                    return [new Ip4Range(new Ip4Address(other.LastAddress.ToUInt32() + 1), LastAddress)];
                 }
                 else
                 {
-                    return Span<Ip4Range>.Empty;
+                    return [];
                 }
             }
             else
             {
-                return Span<Ip4Range>.Empty;
+                return [];
             }
         }
         else
         {
             if (other.LastAddress < LastAddress)
             {
-                List<Ip4Range> result = new();
                 if (other.FirstAddress.ToUInt32() > 0)
                 {
-                    result.Add(new Ip4Range(FirstAddress, new Ip4Address(other.FirstAddress.ToUInt32() - 1)));
+                    if (other.LastAddress.ToUInt32() < uint.MaxValue)
+                    {
+                        return [new Ip4Range(FirstAddress, new Ip4Address(other.FirstAddress.ToUInt32() - 1)), new Ip4Range(new Ip4Address(other.LastAddress.ToUInt32() + 1), LastAddress)];
+                    }
+                    else
+                    {
+                        return [new Ip4Range(FirstAddress, new Ip4Address(other.FirstAddress.ToUInt32() - 1))];
+                    }
                 }
-                if (other.LastAddress.ToUInt32() < uint.MaxValue)
+                else
                 {
-                    result.Add(new Ip4Range(new Ip4Address(other.LastAddress.ToUInt32() + 1), LastAddress));
+                    if (other.LastAddress.ToUInt32() < uint.MaxValue)
+                    {
+                        return [new Ip4Range(new Ip4Address(other.LastAddress.ToUInt32() + 1), LastAddress)];
+                    }
+                    else
+                    {
+                        return [];
+                    }
                 }
-                return CollectionsMarshal.AsSpan(result);
             }
             else
             {
                 if (other.FirstAddress.ToUInt32() > 0)
                 {
-                    Ip4Range[] result = [new Ip4Range(FirstAddress, new Ip4Address(other.FirstAddress.ToUInt32() - 1))];
-                    return result.AsSpan();
+                    return [new Ip4Range(FirstAddress, new Ip4Address(other.FirstAddress.ToUInt32() - 1))];
                 }
                 else
                 {
-                    return Span<Ip4Range>.Empty;
+                    return [];
                 }
             }
         }
     }
 
-    public Span<Ip4Subnet> ToSubnets()
+    public Ip4Subnet[] ToSubnets()
     {
         List<Ip4Subnet> result = [];
         SearchSubnetsWithinRange(this, result, 32);
 
-        return CollectionsMarshal.AsSpan(result);
+        return result.ToArray();
     }
 
     private static void SearchSubnetsWithinRange(Ip4Range ipRange, List<Ip4Subnet> result, int position)
     {
         if (position == 0)
         {
-            result.Add(new Ip4Subnet(ipRange.FirstAddress, 32));
+            result.Add(new Ip4Subnet(ipRange.FirstAddress, Ip4Mask.SingleAddress));
         }
         else
         {
@@ -178,7 +177,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
             {
                 if (GetLastBits(ipRange.FirstAddress.ToUInt32(), position) == 0 && GetLastBits(ipRange.LastAddress.ToUInt32(), position) == GetLastBits(0xFFFFFFFF, position))
                 {
-                    result.Add(new Ip4Subnet(ipRange.FirstAddress, 32 - position));
+                    result.Add(new Ip4Subnet(ipRange.FirstAddress, new Ip4Mask(32 - position)));
                 }
                 else
                 {
