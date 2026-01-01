@@ -12,7 +12,7 @@ internal static class Program
             throw new ArgumentException("missing raw argument, should use raw <ips|subnets|ip ranges>");
         }
 
-        IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(enumerator.Current);
+        Span<Ip4Range> ranges = Ip4SubnetParser.GetRanges(enumerator.Current);
         return new Ip4RangeSet(ranges);
     }
 
@@ -30,8 +30,8 @@ internal static class Program
         string? line;
         while ((line = await streamReader.ReadLineAsync()) is not null)
         {
-            IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
-            result.Union(ranges);
+            Span<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
+            result.Union(ranges.ToArray());
         }
         return result;
     }
@@ -42,8 +42,8 @@ internal static class Program
         string? line;
         while ((line = Console.ReadLine()) is not null)
         {
-            IEnumerable<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
-            result.Union(ranges);
+            Span<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
+            result.Union(ranges.ToArray());
         }
         return result;
     }

@@ -18,7 +18,7 @@ public class Ip4RangeSetStackAllocRealistic
     {
         Random random = new();
         _subnetsText = await FetchAndParseRuAggregatedZoneAsync();
-        _subnets = Ip4SubnetParser.GetSubnets(_subnetsText).ToArray();
+        _subnets = Ip4SubnetParser.GetSubnets(_subnetsText);
         _bogon =
         [
             Ip4Subnet.Parse("0.0.0.0/8"), // "This" network
@@ -60,11 +60,11 @@ public class Ip4RangeSetStackAllocRealistic
     [Benchmark]
     public int Ip4RangeSetStackAlloc_Realistic()
     {
-        var all = Ip4SubnetParser.GetRanges("0.0.0.0/0").ToArray();
-        var ip = Ip4SubnetParser.GetRanges("1.2.3.4").ToArray();
+        var all = Ip4SubnetParser.GetRanges("0.0.0.0/0");
+        var ip = Ip4SubnetParser.GetRanges("1.2.3.4");
         var bogon = _bogon;
 
-        var subnets = Ip4SubnetParser.GetRanges(_subnetsText).ToArray();
+        var subnets = Ip4SubnetParser.GetRanges(_subnetsText);
 
         var result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[20000], all);
         result.ExceptUnsortedModifySpan(ip);

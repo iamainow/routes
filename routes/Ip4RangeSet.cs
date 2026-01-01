@@ -39,6 +39,11 @@ public class Ip4RangeSet
         Union(ranges);
     }
 
+    public Ip4RangeSet(ReadOnlySpan<Ip4Range> ranges) : this()
+    {
+        Union(ranges.ToArray()); // since Union takes IEnumerable
+    }
+
     public Ip4RangeSet(IEnumerable<Ip4Subnet> subnets) : this()
     {
         ArgumentNullException.ThrowIfNull(subnets);

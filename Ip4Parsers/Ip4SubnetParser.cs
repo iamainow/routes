@@ -1,4 +1,4 @@
-﻿using routes;
+using routes;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
@@ -70,16 +70,14 @@ public static partial class Ip4SubnetParser
         return CollectionsMarshal.AsSpan(result);
     }
 
-    public static IEnumerable<Ip4Subnet> GetSubnets(ReadOnlySpan<char> text)
+    public static Ip4Subnet[] GetSubnets(ReadOnlySpan<char> text)
     {
         var ranges = GetRanges(text);
-
+        var list = new List<Ip4Subnet>();
         foreach (var range in ranges)
         {
-            foreach (var subnet in range.ToSubnets())
-            {
-                yield return subnet;
-            }
+            list.AddRange(range.ToSubnets());
         }
+        return list.ToArray();
     }
 }
