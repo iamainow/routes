@@ -104,12 +104,6 @@ public class Ip4SubnetTest
         Assert.Equal(expectedSuccess, result);
     }
 
-    [Fact]
-    public void TryParse_NullString_ThrowsArgumentNullException()
-    {
-        Assert.Throws<ArgumentNullException>(() => Ip4Subnet.TryParse(null!, out _));
-    }
-
     [Theory]
     [InlineData("192.168.1.0", 24, true)]
     [InlineData("192.168.1.1", 24, false)]

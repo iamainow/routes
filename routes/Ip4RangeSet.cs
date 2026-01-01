@@ -112,7 +112,7 @@ public class Ip4RangeSet
             }
             else
             {
-                int compare2 = current.Value.FirstAddress.ToUInt32().CompareTo(currentOther.Value.LastAddress.ToUInt32() + 1UL);
+                int compare2 = ((ulong)current.Value.FirstAddress.ToUInt32()).CompareTo(currentOther.Value.LastAddress.ToUInt32() + 1UL);
                 if (compare2 > 0) // [currentOther]   [current]
                 {
                     if (currentOther.Next is null) return;

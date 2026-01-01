@@ -25,7 +25,7 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     public static bool TryParse(ReadOnlySpan<char> text, out Ip4Subnet result)
     {
         ReadOnlySpan<char> separators = ['/', ' '];
-        var enumerator = text.Split(separators);
+        var enumerator = text.SplitAny(separators);
         if (!enumerator.MoveNext())
         {
             result = default;
