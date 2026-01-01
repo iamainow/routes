@@ -107,6 +107,7 @@ internal static class Program
             .ToArray();
 
         RouteWithMetricDto[] targetRoutes = targetRangeSet.ToIp4Subnets()
+            .ToArray()
             .Select(x => new RouteWithMetricDto(new RouteWithoutMetricDto(x.FirstAddress, x.Mask, gatewayIp), metric))
             .ToArray();
 

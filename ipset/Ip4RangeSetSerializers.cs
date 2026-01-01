@@ -9,6 +9,7 @@ internal static class Ip4RangeSetSerializers
     public static string SerializeToAmneziaJson(Ip4RangeSet set)
     {
         AmneziaItem[] objectToSerialize = set.ToIp4Subnets()
+            .ToArray()
             .Select(x => new AmneziaItem(x.ToCidrString()))
             .ToArray();
 

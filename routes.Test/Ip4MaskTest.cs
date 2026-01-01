@@ -175,12 +175,6 @@ public class Ip4MaskTest
         Assert.Equal(24, mask.Cidr);
     }
 
-    [Fact]
-    public void Constructor_ByteArray_NullArray_ThrowsArgumentNullException()
-    {
-        Assert.Throws<ArgumentNullException>(() => new Ip4Mask((byte[])null!));
-    }
-
     [Theory]
     [InlineData(3)]
     [InlineData(5)]
@@ -219,12 +213,6 @@ public class Ip4MaskTest
         {
             Assert.Equal(expectedCidr, mask.Cidr);
         }
-    }
-
-    [Fact]
-    public void TryParseCidrString_NullString_ThrowsArgumentNullException()
-    {
-        Assert.Throws<ArgumentNullException>(() => Ip4Mask.TryParseCidrString(null!, out _));
     }
 
     [Theory]

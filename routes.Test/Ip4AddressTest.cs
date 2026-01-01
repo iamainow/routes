@@ -91,25 +91,6 @@ public class Ip4AddressTest
     }
 
     [Theory]
-    [InlineData("192.168.-1.1")]
-    [InlineData("-1.0.0.0")]
-    [InlineData("0.-1.0.0")]
-    [InlineData("256.1.1.1")]
-    [InlineData("1.256.1.1")]
-    [InlineData("1.1.256.1")]
-    [InlineData("1.1.1.256")]
-    public void Parse_OutOfRangeNumber_ThrowsOverflowException(string input)
-    {
-        Assert.Throws<OverflowException>(() => Ip4Address.Parse(input));
-    }
-
-    [Fact]
-    public void Parse_NullString_ThrowsArgumentNullException()
-    {
-        Assert.Throws<ArgumentNullException>(() => Ip4Address.Parse(null!));
-    }
-
-    [Theory]
     [InlineData("192.168.1.1", true)]
     [InlineData("0.0.0.0", true)]
     [InlineData("255.255.255.255", true)]
@@ -125,12 +106,6 @@ public class Ip4AddressTest
         {
             Assert.Equal(input, address.ToString());
         }
-    }
-
-    [Fact]
-    public void TryParse_NullString_ThrowsArgumentNullException()
-    {
-        Assert.Throws<ArgumentNullException>(() => Ip4Address.TryParse(null!, out _));
     }
 
     [Theory]

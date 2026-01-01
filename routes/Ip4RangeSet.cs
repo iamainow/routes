@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace routes;
@@ -392,7 +393,16 @@ public class Ip4RangeSet
 
     public Ip4RangeSet MinimizeSubnets(uint delta)
     {
-        return new Ip4RangeSet(ToIp4Subnets().Where(x => x.Count >= delta));
+        List<Ip4Range> result = new();
+        foreach (var range in _list)
+        {
+            if (range.Count >= delta)
+            {
+                result.Add(range);
+            }
+        }
+
+        return new Ip4RangeSet(result);
     }
 
     public Ip4Range[] ToIp4Ranges()
@@ -400,9 +410,14 @@ public class Ip4RangeSet
         return _list.ToArray();
     }
 
-    public Ip4Subnet[] ToIp4Subnets()
+    public Span<Ip4Subnet> ToIp4Subnets()
     {
-        return _list.SelectMany(x => x.ToSubnets()).ToArray();
+        List<Ip4Subnet> result = new();
+        foreach (var range in _list)
+        {
+            result.AddRange(range.ToSubnets());
+        }
+        return CollectionsMarshal.AsSpan(result);
     }
 
     public override string ToString()

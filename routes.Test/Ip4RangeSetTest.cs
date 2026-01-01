@@ -727,7 +727,7 @@ public class Ip4RangeSetTest
             Ip4Address.Parse("192.168.0.255")));
 
         // Act
-        var subnets = set.ToIp4Subnets();
+        var subnets = set.ToIp4Subnets().ToArray();
 
         // Assert
         Assert.NotEmpty(subnets);
@@ -747,7 +747,7 @@ public class Ip4RangeSetTest
         });
 
         // Act
-        var subnets = set.ToIp4Subnets();
+        var subnets = set.ToIp4Subnets().ToArray();
 
         // Assert
         Assert.NotEmpty(subnets);
@@ -762,7 +762,7 @@ public class Ip4RangeSetTest
         var set = new Ip4RangeSet();
 
         // Act
-        var subnets = set.ToIp4Subnets();
+        var subnets = set.ToIp4Subnets().ToArray();
 
         // Assert
         Assert.Empty(subnets);
@@ -777,7 +777,7 @@ public class Ip4RangeSetTest
             Ip4Address.Parse("10.0.0.7")));
 
         // Act
-        var subnets = set.ToIp4Subnets();
+        var subnets = set.ToIp4Subnets().ToArray();
 
         // Assert
         Assert.NotEmpty(subnets);
@@ -803,7 +803,7 @@ public class Ip4RangeSetTest
         var minimized = set.MinimizeSubnets(100);
 
         // Assert: should only keep larger subnets
-        var subnets = minimized.ToIp4Subnets();
+        var subnets = minimized.ToIp4Subnets().ToArray();
         Assert.All(subnets, s => Assert.True(s.Count > 100));
     }
 
@@ -849,7 +849,7 @@ public class Ip4RangeSetTest
         var minimized = set.MinimizeSubnets(1000);
 
         // Assert: should remove all subnets smaller than delta
-        var subnets = minimized.ToIp4Subnets();
+        var subnets = minimized.ToIp4Subnets().ToArray();
         Assert.All(subnets, s => Assert.True(s.Count > 1000));
     }
 

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace routes;
@@ -245,14 +246,20 @@ public class Ip4RangeSetSortedSet
         _set = result;
     }
 
-    public Ip4Range[] ToIp4Ranges()
+    public Span<Ip4Range> ToIp4Ranges()
     {
-        return _set.ToArray();
+        return _set.ToArray().AsSpan();
     }
 
-    public Ip4Subnet[] ToIp4Subnets()
+    public Span<Ip4Subnet> ToIp4Subnets()
     {
-        return _set.SelectMany(x => x.ToSubnets()).ToArray();
+        List<Ip4Subnet> result = new();
+        foreach (var subnet in _set)
+        {
+            result.AddRange(subnet.ToSubnets());
+        }
+
+        return CollectionsMarshal.AsSpan(result);
     }
 
     public override string ToString()

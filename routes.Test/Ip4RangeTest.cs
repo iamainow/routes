@@ -3,43 +3,6 @@ namespace routes.Test;
 public class Ip4RangeTest
 {
     [Theory]
-    [InlineData(0, 10, "0.0.0.11-0.0.0.20")]
-    [InlineData(0, 20, "")]
-    [InlineData(0, 30, "")]
-    [InlineData(10, 15, "0.0.0.16-0.0.0.20")]
-    [InlineData(10, 20, "")]
-    [InlineData(10, 30, "")]
-    [InlineData(15, 20, "0.0.0.10-0.0.0.14")]
-    [InlineData(15, 30, "0.0.0.10-0.0.0.14")]
-    [InlineData(20, 30, "0.0.0.10-0.0.0.19")]
-    public void IntersectableExcept_Intersectable_BorderConditions(uint start, uint end, string expectedResult)
-    {
-        Ip4Range range = new(new Ip4Address(10), new Ip4Address(20));
-
-        Ip4Range[] result = range.Except(new Ip4Range(new Ip4Address(start), new Ip4Address(end)));
-
-        string actualResult = string.Join(',', result);
-
-        Assert.Equal(expectedResult, actualResult);
-    }
-
-    [Theory]
-    [InlineData(0, 15, "0.0.0.16-0.0.0.20")]
-    [InlineData(0, 30, "")]
-    [InlineData(12, 18, "0.0.0.10-0.0.0.11,0.0.0.19-0.0.0.20")]
-    [InlineData(15, 30, "0.0.0.10-0.0.0.14")]
-    public void IntersectableExcept_Intersectable_NormalConditions(uint start, uint end, string expectedResult)
-    {
-        Ip4Range range = new(new Ip4Address(10), new Ip4Address(20));
-
-        Ip4Range[] result = range.Except(new Ip4Range(new Ip4Address(start), new Ip4Address(end)));
-
-        string actualResult = string.Join(',', result);
-
-        Assert.Equal(expectedResult, actualResult);
-    }
-
-    [Theory]
     [InlineData("12.23.34.0", "12.23.34.255", "12.23.34.0/24")]
     [InlineData("12.23.0.0", "12.23.255.255", "12.23.0.0/16")]
     [InlineData("12.0.0.0", "12.255.255.255", "12.0.0.0/8")]
@@ -49,7 +12,7 @@ public class Ip4RangeTest
     {
         Ip4Range range = new(Ip4Address.Parse(start), Ip4Address.Parse(end));
 
-        Assert.Equal(expectedResult, string.Join(", ", range.ToSubnets().OrderBy(x => x.FirstAddress)));
+        Assert.Equal(expectedResult, string.Join(", ", range.ToSubnets().ToArray().OrderBy(x => x.FirstAddress)));
     }
 
     [Theory]
@@ -60,7 +23,7 @@ public class Ip4RangeTest
     {
         Ip4Range range = new(Ip4Address.Parse(start), Ip4Address.Parse(end));
 
-        Assert.Equal(expectedResult, string.Join(", ", range.ToSubnets().OrderBy(x => x.FirstAddress)));
+        Assert.Equal(expectedResult, string.Join(", ", range.ToSubnets().ToArray().OrderBy(x => x.FirstAddress)));
     }
 
     [Fact]
@@ -196,70 +159,6 @@ public class Ip4RangeTest
     }
 
     [Fact]
-    public void Except_DisjointRanges_ReturnsOriginalRange()
-    {
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var range2 = new Ip4Range(new Ip4Address(30), new Ip4Address(40));
-
-        var result = range1.Except(range2);
-
-        Assert.Single(result);
-        Assert.Equal(range1, result[0]);
-    }
-
-    [Fact]
-    public void Except_CompleteOverlap_ReturnsEmpty()
-    {
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var range2 = new Ip4Range(new Ip4Address(5), new Ip4Address(25));
-
-        var result = range1.Except(range2);
-
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public void Except_PartialOverlapAtStart_ReturnsRemainder()
-    {
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var range2 = new Ip4Range(new Ip4Address(5), new Ip4Address(15));
-
-        var result = range1.Except(range2);
-
-        Assert.Single(result);
-        Assert.Equal(new Ip4Address(16), result[0].FirstAddress);
-        Assert.Equal(new Ip4Address(20), result[0].LastAddress);
-    }
-
-    [Fact]
-    public void Except_PartialOverlapAtEnd_ReturnsRemainder()
-    {
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
-        var range2 = new Ip4Range(new Ip4Address(15), new Ip4Address(25));
-
-        var result = range1.Except(range2);
-
-        Assert.Single(result);
-        Assert.Equal(new Ip4Address(10), result[0].FirstAddress);
-        Assert.Equal(new Ip4Address(14), result[0].LastAddress);
-    }
-
-    [Fact]
-    public void Except_MiddleOverlap_ReturnsTwoRanges()
-    {
-        var range1 = new Ip4Range(new Ip4Address(10), new Ip4Address(30));
-        var range2 = new Ip4Range(new Ip4Address(15), new Ip4Address(20));
-
-        var result = range1.Except(range2);
-
-        Assert.Equal(2, result.Length);
-        Assert.Equal(new Ip4Address(10), result[0].FirstAddress);
-        Assert.Equal(new Ip4Address(14), result[0].LastAddress);
-        Assert.Equal(new Ip4Address(21), result[1].FirstAddress);
-        Assert.Equal(new Ip4Address(30), result[1].LastAddress);
-    }
-
-    [Fact]
     public void ToString_ReturnsCorrectFormat()
     {
         var range = new Ip4Range(new Ip4Address(192, 168, 1, 1), new Ip4Address(192, 168, 1, 10));
@@ -335,7 +234,7 @@ public class Ip4RangeTest
     {
         var range = new Ip4Range(new Ip4Address(192, 168, 1, 1), new Ip4Address(192, 168, 1, 1));
 
-        var subnets = range.ToSubnets();
+        var subnets = range.ToSubnets().ToArray();
 
         Assert.Single(subnets);
         Assert.Equal(32, subnets[0].Mask.Cidr);
@@ -346,7 +245,7 @@ public class Ip4RangeTest
     {
         var range = new Ip4Range(Ip4Address.Parse("192.168.1.0"), Ip4Address.Parse("192.168.1.127"));
 
-        var subnets = range.ToSubnets();
+        var subnets = range.ToSubnets().ToArray();
 
         Assert.NotEmpty(subnets);
         // Verify all subnets cover the range
