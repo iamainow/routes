@@ -57,7 +57,7 @@ public class Ip4SubnetParserTest
     [Fact]
     public void GetSubnets_SingleIp_ReturnsSubnet32()
     {
-        var result = Ip4SubnetParser.GetSubnets("192.168.1.1");
+        var result = Ip4SubnetParser.GetSubnets("192.168.1.1").ToArray();
         Assert.Single(result);
         Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 1), 32), result[0]);
     }
@@ -65,7 +65,7 @@ public class Ip4SubnetParserTest
     [Fact]
     public void GetSubnets_CidrSubnet_ReturnsSubnet()
     {
-        var result = Ip4SubnetParser.GetSubnets("192.168.1.0/24");
+        var result = Ip4SubnetParser.GetSubnets("192.168.1.0/24").ToArray();
         Assert.Single(result);
         Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 0), 24), result[0]);
     }
@@ -91,7 +91,7 @@ public class Ip4SubnetParserTest
     [Fact]
     public void GetSubnets_InvalidInputs_SkipsInvalid()
     {
-        var result = Ip4SubnetParser.GetSubnets("invalid 192.168.1.1 garbage");
+        var result = Ip4SubnetParser.GetSubnets("invalid 192.168.1.1 garbage").ToArray();
         Assert.Single(result);
         Assert.Equal(new Ip4Subnet(new Ip4Address(192, 168, 1, 1), 32), result[0]);
     }

@@ -1,20 +1,17 @@
-#pragma warning disable CA1822
-#pragma warning disable CA1515
-#pragma warning disable CA5394
-
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Environments;
-using BenchmarkDotNet.Jobs;
 using routes;
 
 namespace Ip4Parsers.Benchmarks;
 
 [MemoryDiagnoser]
+[ExceptionDiagnoser(false)]
 [Config(typeof(NoPowerPlanConfig))]
 public class Ip4ParsersBenchmarks
 {
-    private string _subnetsText = "";
+    [Params(1_000_000)]
+    public int Count { get; set; }
+
+    private string subnetsText = "";
     private List<Ip4Range> ranges = [];
     private string rangesString = "";
     private List<Ip4Subnet> subnets = [];
@@ -26,8 +23,8 @@ public class Ip4ParsersBenchmarks
     public async Task GlobalSetup()
     {
         Random random = new();
-        _subnetsText = await FetchAndParseRuAggregatedZoneAsync();
-        ranges = Enumerable.Range(0, 1_000_000).Select(_ =>
+        subnetsText = await FetchAndParseRuAggregatedZoneAsync();
+        ranges = Enumerable.Range(0, Count).Select(_ =>
         {
             var address1 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
             var address2 = new Ip4Address((uint)random.NextInt64(0, uint.MaxValue));
@@ -68,42 +65,26 @@ public class Ip4ParsersBenchmarks
     }
 
     [Benchmark]
-    public Ip4Range[] RealisticGetRanges()
+    public int RealisticGetRanges()
     {
-        return Ip4SubnetParser.GetRanges(_subnetsText).ToArray();
+        return Ip4SubnetParser.GetRanges(subnetsText).Length;
     }
 
     [Benchmark]
-    public Ip4Range[] ParseAddressesByGetRanges()
+    public int ParseAddressesByGetRanges()
     {
-        return Ip4SubnetParser.GetRanges(addressesString).ToArray();
+        return Ip4SubnetParser.GetRanges(addressesString).Length;
     }
 
     [Benchmark]
-    public Ip4Range[] ParseRangesByGetRanges()
+    public int ParseRangesByGetRanges()
     {
-        return Ip4SubnetParser.GetRanges(rangesString).ToArray();
+        return Ip4SubnetParser.GetRanges(rangesString).Length;
     }
 
     [Benchmark]
-    public Ip4Range[] ParseSubnetsByGetRanges()
+    public int ParseSubnetsByGetRanges()
     {
-        return Ip4SubnetParser.GetRanges(subnetsString).ToArray();
-    }
-}
-
-public class NoPowerPlanConfig : ManualConfig
-{
-    public NoPowerPlanConfig()
-    {
-        // Explicitly use the user's current power plan to prevent BenchmarkDotNet
-        // from changing the Windows power plan during benchmark execution
-        AddJob(Job.Default
-            .DontEnforcePowerPlan()
-            .WithRuntime(CoreRuntime.Core10_0));
-
-        //AddJob(Job.Default
-        //    .DontEnforcePowerPlan()
-        //    .WithRuntime(NativeAotRuntime.Net10_0));
+        return Ip4SubnetParser.GetRanges(subnetsString).Length;
     }
 }

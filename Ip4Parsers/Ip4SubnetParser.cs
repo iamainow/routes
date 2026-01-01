@@ -70,14 +70,15 @@ public static partial class Ip4SubnetParser
         return CollectionsMarshal.AsSpan(result);
     }
 
-    public static Ip4Subnet[] GetSubnets(ReadOnlySpan<char> text)
+    public static Span<Ip4Subnet> GetSubnets(ReadOnlySpan<char> text)
     {
         var ranges = GetRanges(text);
-        var list = new List<Ip4Subnet>();
+        var result = new List<Ip4Subnet>();
         foreach (var range in ranges)
         {
-            list.AddRange(range.ToSubnets());
+            result.AddRange(range.ToSubnets());
         }
-        return list.ToArray();
+
+        return CollectionsMarshal.AsSpan(result);
     }
 }

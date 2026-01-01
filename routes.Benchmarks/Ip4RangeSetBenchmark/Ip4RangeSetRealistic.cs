@@ -17,7 +17,7 @@ public class Ip4RangeSetRealistic
     {
         Random random = new();
         _subnetsText = await FetchAndParseRuAggregatedZoneAsync();
-        _subnets = Ip4SubnetParser.GetSubnets(_subnetsText);
+        _subnets = Ip4SubnetParser.GetSubnets(_subnetsText).ToArray();
         _bogon =
         [
             Ip4Subnet.Parse("0.0.0.0/8"), // "This" network
