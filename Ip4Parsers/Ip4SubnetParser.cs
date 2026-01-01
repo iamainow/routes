@@ -1,4 +1,5 @@
 ﻿using routes;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace Ip4Parsers;
@@ -8,7 +9,7 @@ public static partial class Ip4SubnetParser
     [GeneratedRegex(@"(?:(?<rangebegin>\d+\.\d+\.\d+\.\d+)\s*\-\s*(?<rangeend>\d+\.\d+\.\d+\.\d+)|(?<cidrip>\d+\.\d+\.\d+\.\d+)(?<cidrmask>\/\d+)|(?<ip>\d+\.\d+\.\d+\.\d+))")]
     public static partial Regex RangeOrCidrOrIp();
 
-    public static Ip4Range[] GetRanges3(ReadOnlySpan<char> texts)
+    public static Span<Ip4Range> GetRanges(ReadOnlySpan<char> texts)
     {
         List<Ip4Range> result = new();
         foreach (var range in texts.Split(['\r', '\n']))
@@ -66,15 +67,19 @@ public static partial class Ip4SubnetParser
             }
         }
 
-        return result.ToArray();
+        return CollectionsMarshal.AsSpan(result);
     }
 
-    public static IEnumerable<Ip4Range> GetRanges(string texts) => GetRanges3(texts);
-
-    public static IEnumerable<Ip4Subnet> GetSubnets(string text)
+    public static IEnumerable<Ip4Subnet> GetSubnets(ReadOnlySpan<char> text)
     {
-        ArgumentException.ThrowIfNullOrEmpty(text);
+        var ranges = GetRanges(text);
 
-        return GetRanges(text).SelectMany(x => x.ToSubnets());
+        foreach (var range in ranges)
+        {
+            foreach (var subnet in range.ToSubnets())
+            {
+                yield return subnet;
+            }
+        }
     }
 }
