@@ -7,7 +7,7 @@ internal static class Ip4RangeSetExtensions
         internal static Ip4RangeSet Generate(int size, Random random)
         {
             SortedSet<Ip4Address> addresses = new();
-            byte[] buffer = new byte[4];
+            Span<byte> buffer = stackalloc byte[4];
             for (int index = 0; index < size; ++index)
             {
                 while (true)

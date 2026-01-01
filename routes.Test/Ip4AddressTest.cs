@@ -158,13 +158,6 @@ public class Ip4AddressTest
         Assert.Equal("192.168.1.1", ip.ToString());
     }
 
-    [Fact]
-    public void Constructor_WithNullByteArray_ThrowsArgumentNullException()
-    {
-        // Arrange & Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new Ip4Address((byte[])null!));
-    }
-
     [Theory]
     [InlineData(3)]
     [InlineData(5)]

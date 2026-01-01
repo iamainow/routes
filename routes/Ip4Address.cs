@@ -10,38 +10,14 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
 {
     /// <param name="text">x.x.x.x format</param>
     /// <exception cref="FormatException"></exception>
-    public static Ip4Address Parse(string text)
+    public static Ip4Address Parse(ReadOnlySpan<char> text)
     {
-        ArgumentNullException.ThrowIfNull(text);
-        if (TryParse(text.AsSpan(), out Ip4Address result))
+        if (TryParse(text, out Ip4Address result))
         {
             return result;
         }
-        // Check if failure is due to out of range numbers
-        var span = text.AsSpan();
-        var enumerator = span.Split('.');
-        int i = 0;
-        foreach (var range in enumerator)
-        {
-            if (i >= 4)
-            {
-                throw new FormatException();
-            }
-            var part = span[range];
-            if (int.TryParse(part, out int val) && (val < 0 || val > 255))
-            {
-                throw new OverflowException();
-            }
-            i++;
-        }
-        throw new FormatException();
-    }
 
-    /// <param name="text">x.x.x.x format</param>
-    public static bool TryParse(string text, out Ip4Address result)
-    {
-        ArgumentNullException.ThrowIfNull(text);
-        return TryParse(text.AsSpan(), out result);
+        throw new FormatException();
     }
 
     public static bool TryParse(ReadOnlySpan<char> text, out Ip4Address result)
@@ -163,13 +139,8 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         _byte4 = byte4;
     }
 
-    public Ip4Address(byte[] bytes)
+    public Ip4Address(ReadOnlySpan<byte> bytes)
     {
-        if (bytes is null)
-        {
-            throw new ArgumentNullException(nameof(bytes), "Byte array cannot be null");
-        }
-
         if (bytes.Length != 4)
         {
             throw new ArgumentException("Byte array must contain exactly 4 bytes", nameof(bytes));
