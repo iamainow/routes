@@ -18,6 +18,5 @@
   <Project Path="routes.PerfomanceProfiles/routes.PerfomanceProfiles.csproj" Id="7799b992-19dc-4188-878d-a45e1da593d6" />
   <Project Path="routes.Test/routes.Test.csproj" />
   <Project Path="routes/routes.csproj" />
-  <Project Path="routesStackAlloc/routesStackAlloc.csproj" Id="fc247abd-909b-4236-b10f-b32a3e9cbed3" />
   <Project Path="routeTable/NativeMethods.Windows.csproj" Id="ed2a6324-edfd-4998-846d-aca0da4d9afa" />
 </Solution>
