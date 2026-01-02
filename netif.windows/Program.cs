@@ -20,17 +20,17 @@ internal static class Program
             .ToList();
 
         Console.WriteLine("{0, 30} {1, 14} {2, 18}", "Name", "InterfaceIndex", "PrimaryGateway");
-        foreach (NetworkInterface? networkInterface in networkInterfaces)
+        foreach (NetworkInterface networkInterface in networkInterfaces)
         {
-            Console.WriteLine("{0, 30} {1, 14} {2, 18}", new string(networkInterface.Name.Take(30).ToArray()), networkInterface.GetInterfaceIndex(), networkInterface.GetPrimaryGateway(() => table.Value));
+            string name = networkInterface.Name;
+            string truncatedName = name.Length <= 30 ? name : name[..30];
+            Console.WriteLine("{0, 30} {1, 14} {2, 18}", truncatedName, networkInterface.GetInterfaceIndex(), networkInterface.GetPrimaryGateway(() => table.Value));
         }
         Console.WriteLine();
     }
 
-    private static void PrintAllRoutes()
+    private static void PrintRouteTable(IEnumerable<Ip4RouteEntry> routeTable)
     {
-        Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable();
-
         Console.WriteLine("{0,21} {1,18} {2,6}", "Subnet", "Gateway", "Metric");
         foreach (Ip4RouteEntry entry in routeTable)
         {
@@ -40,11 +40,16 @@ internal static class Program
         Console.WriteLine();
     }
 
+    private static void PrintAllRoutes()
+    {
+        PrintRouteTable(Ip4RouteTable.GetRouteTable());
+    }
+
     private static void PrintRoutesWithInterfaceName(string name)
     {
         NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()
-            .Where(x => x.Name == name)
-            .First();
+            .SingleOrDefault(x => x.Name == name)
+            ?? throw new InvalidOperationException($"Network interface '{name}' not found");
 
         int interfaceIndex = networkInterface.GetInterfaceIndex();
 
@@ -54,45 +59,30 @@ internal static class Program
     private static void PrintRoutesWithInterfaceNameAndMetric(string name, int metric)
     {
         NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()
-            .Where(x => x.Name == name)
-            .First();
+            .SingleOrDefault(x => x.Name == name)
+            ?? throw new InvalidOperationException($"Network interface '{name}' not found");
 
         int interfaceIndex = networkInterface.GetInterfaceIndex();
 
-        Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable()
-            .Where(x => x.InterfaceIndex == interfaceIndex)
-            .Where(x => x.Metric == metric)
-            .ToArray();
+        var routeTable = Ip4RouteTable.GetRouteTable()
+            .Where(x => x.InterfaceIndex == interfaceIndex && x.Metric == metric);
 
-        Console.WriteLine("{0,21} {1,18} {2,6}", "Subnet", "Gateway", "Metric");
-        foreach (Ip4RouteEntry? entry in routeTable)
-        {
-            Ip4Subnet subnet = new(entry.DestinationIP, entry.SubnetMask);
-            Console.WriteLine("{0,21} {1,18} {2,6}", subnet, entry.GatewayIP, entry.Metric);
-        }
-        Console.WriteLine();
+        PrintRouteTable(routeTable);
     }
 
     private static void PrintRoutesWithInterfaceIndex(int interfaceIndex)
     {
-        Ip4RouteEntry[] routeTable = Ip4RouteTable.GetRouteTable()
-            .Where(x => x.InterfaceIndex == interfaceIndex)
-            .ToArray();
+        var routeTable = Ip4RouteTable.GetRouteTable()
+            .Where(x => x.InterfaceIndex == interfaceIndex);
 
-        Console.WriteLine("{0,21} {1,18} {2,6}", "Subnet", "Gateway", "Metric");
-        foreach (Ip4RouteEntry? entry in routeTable)
-        {
-            Ip4Subnet subnet = new(entry.DestinationIP, entry.SubnetMask);
-            Console.WriteLine("{0,21} {1,18} {2,6}", subnet, entry.GatewayIP, entry.Metric);
-        }
-        Console.WriteLine();
+        PrintRouteTable(routeTable);
     }
 
     private static void ChangeRoutes(Ip4RangeSet targetRangeSet, string interfaceName, int metric, Action<string?> successWriteLine, Action<string?> errorWriteLine)
     {
         NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()
-            .Where(x => x.Name == interfaceName)
-            .Single();
+            .SingleOrDefault(x => x.Name == interfaceName)
+            ?? throw new InvalidOperationException($"Network interface '{interfaceName}' not found");
 
         int interfaceIndex = networkInterface.GetInterfaceIndex();
 
@@ -107,7 +97,6 @@ internal static class Program
             .ToArray();
 
         RouteWithMetricDto[] targetRoutes = targetRangeSet.ToIp4Subnets()
-            .ToArray()
             .Select(x => new RouteWithMetricDto(new RouteWithoutMetricDto(x.FirstAddress, x.Mask, gatewayIp), metric))
             .ToArray();
 
@@ -185,53 +174,84 @@ internal static class Program
         }
     }
 
-    public static void Main(string[] args)
+    private static void PrintUsage()
     {
-        if (args.Length == 3 && args[0] == "set")
+        Console.WriteLine("""
+            usage:
+              ifroute set <interface-name> <metric> < some-ips.txt
+              ifroute print-all-interfaces
+              ifroute print-all-routes
+              ifroute print-routes-with-interface-name <interface-name>
+              ifroute print-routes-with-interface-name-and-metric <interface-name> <metric>
+            """);
+    }
+
+    public static int Main(string[] args)
+    {
+        try
         {
-            string interfaceName = args[1];
-            int metric = int.Parse(args[2]);
-            ITextWriterWrapper errorTextWriterWrapper = Console.IsErrorRedirected ? new TextWriterWrapper(Console.Error) : new AnsiColoredTextWriterWrapper(Console.Error, AnsiColor.Red);
-            string? line;
-            Ip4RangeSet ip4RangeSet = new();
-            while ((line = Console.ReadLine()) != null)
+            if (args.Length == 3 && args[0] == "set")
             {
-                Span<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
-                Ip4RangeSet rangesSet = new(ranges);
+                string interfaceName = args[1];
+                if (!int.TryParse(args[2], out int metric))
+                {
+                    Console.Error.WriteLine($"error: invalid metric value '{args[2]}'");
+                    return 1;
+                }
+                ITextWriterWrapper errorTextWriterWrapper = Console.IsErrorRedirected ? new TextWriterWrapper(Console.Error) : new AnsiColoredTextWriterWrapper(Console.Error, AnsiColor.Red);
+                string? line;
+                Ip4RangeSet ip4RangeSet = new();
+                while ((line = Console.ReadLine()) != null)
+                {
+                    Span<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
+                    Ip4RangeSet rangesSet = new(ranges);
 
-                ip4RangeSet.Union(rangesSet);
+                    ip4RangeSet.Union(rangesSet);
+                }
+
+                ChangeRoutes(ip4RangeSet, interfaceName, metric, Console.WriteLine, errorTextWriterWrapper.WriteLine);
             }
-
-            ChangeRoutes(ip4RangeSet, interfaceName, metric, Console.WriteLine, errorTextWriterWrapper.WriteLine);
+            else if (args.Length == 1 && args[0] == "print-all-interfaces")
+            {
+                PrintAllInterfaces();
+            }
+            else if (args.Length == 1 && args[0] == "print-all-routes")
+            {
+                PrintAllRoutes();
+            }
+            else if (args.Length == 2 && args[0] == "print-routes-with-interface-name")
+            {
+                string interfaceName = args[1];
+                PrintRoutesWithInterfaceName(interfaceName);
+            }
+            else if (args.Length == 3 && args[0] == "print-routes-with-interface-name-and-metric")
+            {
+                string interfaceName = args[1];
+                if (!int.TryParse(args[2], out int metric))
+                {
+                    Console.Error.WriteLine($"error: invalid metric value '{args[2]}'");
+                    return 1;
+                }
+                PrintRoutesWithInterfaceNameAndMetric(interfaceName, metric);
+            }
+            else
+            {
+                PrintUsage();
+                return args.Length == 0 ? 0 : 1;
+            }
+            return 0;
         }
-        else if (args.Length == 1 && args[0] == "print-all-interfaces")
+        catch (InvalidOperationException ex)
         {
-            PrintAllInterfaces();
+            Console.Error.WriteLine($"error: {ex.Message}");
+            return 1;
         }
-        else if (args.Length == 1 && args[0] == "print-all-routes")
+#pragma warning disable CA1031 // Catch general exception in top-level entry point
+        catch (Exception ex)
+#pragma warning restore CA1031
         {
-            PrintAllRoutes();
-        }
-        else if (args.Length == 2 && args[0] == "print-routes-with-interface-name")
-        {
-            string interfaceName = args[1];
-            PrintRoutesWithInterfaceName(interfaceName);
-        }
-        else if (args.Length == 3 && args[0] == "print-routes-with-interface-name-and-metric")
-        {
-            string interfaceName = args[1];
-            int metric = int.Parse(args[2]);
-            PrintRoutesWithInterfaceNameAndMetric(interfaceName, metric);
-        }
-        else
-        {
-            Console.Write("""
-                usage:
-                  ifroute set [interface-name] [metric] < some-ips.txt
-                  ifroute print-all-interfaces
-                  ifroute print-all-routes
-                  ifroute print-routes-with-interface-name [interface-name]
-                """);
+            Console.Error.WriteLine($"unexpected error: {ex.Message}");
+            return 1;
         }
     }
 }

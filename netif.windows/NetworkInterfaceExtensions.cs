@@ -1,4 +1,4 @@
-﻿using NativeMethods.Windows;
+using NativeMethods.Windows;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -27,7 +27,7 @@ internal static class NetworkInterfaceExtensions
         ArgumentNullException.ThrowIfNull(networkInterface);
         try
         {
-            return networkInterface.GetIPProperties().GetIPv4Properties().Index;
+            return networkInterface.GetIPProperties().GetIPv4Properties()?.Index ?? -1;
         }
         catch (NetworkInformationException)
         {
@@ -63,8 +63,9 @@ internal static class NetworkInterfaceExtensions
     {
         ArgumentNullException.ThrowIfNull(networkInterface);
         ArgumentNullException.ThrowIfNull(tableFunc);
-        return GetPrimaryGatewayViaGatewayAddresses(networkInterface.GetIPProperties())
+        IPInterfaceProperties properties = networkInterface.GetIPProperties();
+        return GetPrimaryGatewayViaGatewayAddresses(properties)
             ?? GetPrimaryGatewayViaRouteTable(tableFunc(), networkInterface.GetInterfaceIndex())
-            ?? GetPrimaryGatewayViaDhcpServerAddresses(networkInterface.GetIPProperties());
+            ?? GetPrimaryGatewayViaDhcpServerAddresses(properties);
     }
 }
