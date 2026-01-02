@@ -132,11 +132,6 @@ public ref struct ListStackAlloc<T>
         _size = 0;
     }
 
-    public void Sort<TComparer>(Comparison<T> comparer)
-    {
-        AsSpan().Sort(comparer);
-    }
-
     public readonly Span<T> AsSpan()
     {
         return _items[.._size];

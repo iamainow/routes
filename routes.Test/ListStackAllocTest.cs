@@ -336,22 +336,4 @@ public class ListStackAllocTest
         Assert.Equal(0, list.Count);
         Assert.Equal(5, list.Capacity);
     }
-
-    [Fact]
-    public void Sort_WithComparison_SortsCorrectly()
-    {
-        Span<int> buffer = stackalloc int[5];
-        int[] elements = [3, 1, 4, 1, 5];
-        var list = new ListStackAlloc<int>(buffer);
-        list.AddRange(elements);
-
-        list.Sort<int>((a, b) => a.CompareTo(b));
-
-        Assert.Equal(5, list.Count);
-        Assert.Equal(1, list[0]);
-        Assert.Equal(1, list[1]);
-        Assert.Equal(3, list[2]);
-        Assert.Equal(4, list[3]);
-        Assert.Equal(5, list[4]);
-    }
 }
