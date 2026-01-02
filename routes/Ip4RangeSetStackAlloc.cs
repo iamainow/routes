@@ -31,15 +31,9 @@ public ref struct Ip4RangeSetStackAlloc
                 var current = temp[i];
                 ref var last = ref _ranges.Last();
 
-                if (last.LastAddress.ToUInt32() == uint.MaxValue)
+                if (last.LastAddress.ToUInt32() + 1UL >= current.FirstAddress.ToUInt32())
                 {
-                    last = new Ip4Range(last.FirstAddress, new Ip4Address(uint.MaxValue));
-                    break;
-                }
-                if (last.LastAddress.ToUInt32() + 1 >= current.FirstAddress.ToUInt32())
-                {
-                    var merged = new Ip4Range(last.FirstAddress, current.LastAddress);
-                    last = merged;
+                    last = new Ip4Range(last.FirstAddress, current.LastAddress);
                 }
                 else
                 {

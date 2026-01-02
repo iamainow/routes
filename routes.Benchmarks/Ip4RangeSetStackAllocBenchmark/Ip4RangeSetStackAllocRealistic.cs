@@ -62,13 +62,12 @@ public class Ip4RangeSetStackAllocRealistic
     {
         var all = Ip4SubnetParser.GetRanges("0.0.0.0/0");
         var ip = Ip4SubnetParser.GetRanges("1.2.3.4");
-        var bogon = _bogon;
 
         var subnets = Ip4SubnetParser.GetRanges(_subnetsText);
 
         var result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[20000], all);
         result.ExceptUnsortedModifySpan(ip);
-        result.ExceptUnsortedModifySpan(bogon);
+        result.ExceptUnsortedModifySpan(_bogon);
         result.ExceptUnsortedModifySpan(subnets);
 
         return result.RangesCount;
@@ -79,14 +78,17 @@ public class Ip4RangeSetStackAllocRealistic
     {
         var all = Ip4Range.All;
         var ip = new Ip4Address(1, 2, 3, 4).ToIp4Range();
-        var bogon = _bogon.AsSpan();
 
-        var subnets = _subnets.Select(x => x.ToIp4Range()).ToArray();
+        ListStackAlloc<Ip4Range> subnetList = new(stackalloc Ip4Range[_subnets.Length]);
+        foreach (var subnet in _subnets)
+        {
+            subnetList.Add(subnet.ToIp4Range());
+        }
 
         var result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[20000], MemoryMarshal.CreateSpan(ref all, 1));
         result.ExceptUnsortedModifySpan(MemoryMarshal.CreateSpan(ref ip, 1));
-        result.ExceptUnsortedModifySpan(bogon);
-        result.ExceptUnsortedModifySpan(subnets);
+        result.ExceptUnsortedModifySpan(_bogon);
+        result.ExceptUnsortedModifySpan(subnetList.AsSpan());
 
         return result.RangesCount;
     }

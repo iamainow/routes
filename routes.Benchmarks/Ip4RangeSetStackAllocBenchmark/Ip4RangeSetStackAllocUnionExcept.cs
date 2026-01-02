@@ -13,8 +13,6 @@ public class Ip4RangeSetStackAllocUnionExcept
     [Params(10, 100, 1_000)]
     public int SetSize { get; set; }
 
-    private List<Ip4Range[]> rangesArray_readonly_1 = [];
-    private List<Ip4Range[]> rangesArray_readonly_2 = [];
     private List<Ip4Range[]> rangesArray_1 = [];
     private List<Ip4Range[]> rangesArray_2 = [];
 
@@ -22,8 +20,6 @@ public class Ip4RangeSetStackAllocUnionExcept
     public async Task GlobalSetup()
     {
         Random random = new();
-        rangesArray_readonly_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
-        rangesArray_readonly_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
         rangesArray_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
         rangesArray_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
     }
@@ -35,8 +31,8 @@ public class Ip4RangeSetStackAllocUnionExcept
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
-            var set = new Ip4RangeSetStackAlloc(span, rangesArray_readonly_1[index].AsSpan());
-            set.Union2ModifySpan(rangesArray_1[index].AsSpan());
+            var set = new Ip4RangeSetStackAlloc(span, rangesArray_1[index]);
+            set.Union2ModifySpan(rangesArray_2[index]);
             result += set.RangesCount;
         }
 
@@ -50,8 +46,8 @@ public class Ip4RangeSetStackAllocUnionExcept
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
-            var set = new Ip4RangeSetStackAlloc(span, rangesArray_readonly_1[index].AsSpan());
-            set.ExceptUnsortedModifySpan(rangesArray_2[index].AsSpan());
+            var set = new Ip4RangeSetStackAlloc(span, rangesArray_1[index]);
+            set.ExceptUnsortedModifySpan(rangesArray_2[index]);
             result += set.RangesCount;
         }
 
