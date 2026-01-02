@@ -19,23 +19,68 @@ internal static class Program
             .OrderBy(x => x.GetInterfaceIndex())
             .ToList();
 
-        Console.WriteLine("{0, 30} {1, 14} {2, 18}", "Name", "InterfaceIndex", "PrimaryGateway");
-        foreach (NetworkInterface networkInterface in networkInterfaces)
+        if (networkInterfaces.Count == 0)
         {
-            string name = networkInterface.Name;
-            string truncatedName = name.Length <= 30 ? name : name[..30];
-            Console.WriteLine("{0, 30} {1, 14} {2, 18}", truncatedName, networkInterface.GetInterfaceIndex(), networkInterface.GetPrimaryGateway(() => table.Value));
+            Console.WriteLine("No IPv4 network interfaces found.");
+            return;
+        }
+
+        const string nameHeader = "Name";
+        const string indexHeader = "InterfaceIndex";
+        const string gatewayHeader = "PrimaryGateway";
+
+        // Pre-compute data to calculate column widths
+        var rows = networkInterfaces.Select(ni => new
+        {
+            Name = ni.Name,
+            Index = ni.GetInterfaceIndex().ToString(),
+            Gateway = ni.GetPrimaryGateway(() => table.Value)?.ToString() ?? ""
+        }).ToList();
+
+        int nameWidth = Math.Max(nameHeader.Length, rows.Max(r => r.Name.Length));
+        int indexWidth = Math.Max(indexHeader.Length, rows.Max(r => r.Index.Length));
+        int gatewayWidth = Math.Max(gatewayHeader.Length, rows.Max(r => r.Gateway.Length));
+
+        string format = $"{{0,{nameWidth}}} {{1,{indexWidth}}} {{2,{gatewayWidth}}}";
+
+        Console.WriteLine(format, nameHeader, indexHeader, gatewayHeader);
+        foreach (var row in rows)
+        {
+            Console.WriteLine(format, row.Name, row.Index, row.Gateway);
         }
         Console.WriteLine();
     }
 
     private static void PrintRouteTable(IEnumerable<Ip4RouteEntry> routeTable)
     {
-        Console.WriteLine("{0,21} {1,18} {2,6}", "Subnet", "Gateway", "Metric");
-        foreach (Ip4RouteEntry entry in routeTable)
+        const string subnetHeader = "Subnet";
+        const string gatewayHeader = "Gateway";
+        const string metricHeader = "Metric";
+
+        // Pre-compute data to calculate column widths
+        var rows = routeTable.Select(entry => new
         {
-            Ip4Subnet subnet = new(entry.DestinationIP, entry.SubnetMask);
-            Console.WriteLine("{0,21} {1,18} {2,6}", subnet, entry.GatewayIP, entry.Metric);
+            Subnet = new Ip4Subnet(entry.DestinationIP, entry.SubnetMask).ToString(),
+            Gateway = entry.GatewayIP.ToString(),
+            Metric = entry.Metric.ToString()
+        }).ToList();
+
+        if (rows.Count == 0)
+        {
+            Console.WriteLine("No routes found.");
+            return;
+        }
+
+        int subnetWidth = Math.Max(subnetHeader.Length, rows.Max(r => r.Subnet.Length));
+        int gatewayWidth = Math.Max(gatewayHeader.Length, rows.Max(r => r.Gateway.Length));
+        int metricWidth = Math.Max(metricHeader.Length, rows.Max(r => r.Metric.Length));
+
+        string format = $"{{0,{subnetWidth}}} {{1,{gatewayWidth}}} {{2,{metricWidth}}}";
+
+        Console.WriteLine(format, subnetHeader, gatewayHeader, metricHeader);
+        foreach (var row in rows)
+        {
+            Console.WriteLine(format, row.Subnet, row.Gateway, row.Metric);
         }
         Console.WriteLine();
     }
