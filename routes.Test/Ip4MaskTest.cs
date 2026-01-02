@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 
 namespace routes.Test;
 
@@ -127,9 +127,9 @@ public class Ip4MaskTest
     [InlineData(-1)]
     [InlineData(33)]
     [InlineData(100)]
-    public void Constructor_FromCidr_InvalidCidr_ThrowsArgumentException(int invalidCidr)
+    public void Constructor_FromCidr_InvalidCidr_ThrowsArgumentOutOfRangeException(int invalidCidr)
     {
-        Assert.Throws<ArgumentException>(() => new Ip4Mask(invalidCidr));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Ip4Mask(invalidCidr));
     }
 
     [Theory]

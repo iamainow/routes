@@ -8,112 +8,8 @@ namespace routes;
 [StructLayout(LayoutKind.Explicit)]
 public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Address>
 {
-    /// <param name="text">x.x.x.x format</param>
-    /// <exception cref="FormatException"></exception>
-    public static Ip4Address Parse(scoped ReadOnlySpan<char> text)
-    {
-        if (TryParse(text, out Ip4Address result))
-        {
-            return result;
-        }
-
-        throw new FormatException();
-    }
-
-    /// <param name="text">x.x.x.x format</param>
-    public static bool TryParse(scoped ReadOnlySpan<char> text, out Ip4Address result)
-    {
-        Span<byte> bytes = stackalloc byte[4];
-        var enumerator = text.Split('.');
-        int i = 0;
-        foreach (var range in enumerator)
-        {
-            if (i >= 4 || !byte.TryParse(text[range], out bytes[i]))
-            {
-                result = default;
-                return false;
-            }
-            i++;
-        }
-        if (i != 4)
-        {
-            result = default;
-            return false;
-        }
-
-        result = new Ip4Address(bytes[0], bytes[1], bytes[2], bytes[3]);
-        return true;
-    }
-
-    public static Ip4Address Min(Ip4Address left, Ip4Address right)
-    {
-        return left < right ? left : right;
-    }
-
-    public static Ip4Address Max(Ip4Address left, Ip4Address right)
-    {
-        return left > right ? left : right;
-    }
-
-    public static bool operator <=(Ip4Address left, Ip4Address right)
-    {
-        return left.CompareTo(right) <= 0;
-    }
-
-    public static bool operator >=(Ip4Address left, Ip4Address right)
-    {
-        return left.CompareTo(right) >= 0;
-    }
-
-    public static bool operator <(Ip4Address left, Ip4Address right)
-    {
-        return left.CompareTo(right) < 0;
-    }
-
-    public static bool operator >(Ip4Address left, Ip4Address right)
-    {
-        return left.CompareTo(right) > 0;
-    }
-
-    public static bool operator ==(Ip4Address left, Ip4Address right)
-    {
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(Ip4Address left, Ip4Address right)
-    {
-        return !left.Equals(right);
-    }
-
-    public static explicit operator uint(Ip4Address address)
-    {
-        return address.ToUInt32();
-    }
-
-    public static implicit operator Ip4Range(Ip4Address address)
-    {
-        return address.ToIp4Range();
-    }
-
-    public static implicit operator Ip4Subnet(Ip4Address address)
-    {
-        return address.ToIp4Subnet();
-    }
-
-    public static implicit operator Ip4RangeSet(Ip4Address address)
-    {
-        return address.ToIp4RangeSet();
-    }
-
-    public static implicit operator IPAddress(Ip4Address address)
-    {
-        return address.ToIPAddress();
-    }
-
-    public static implicit operator Ip4Address(IPAddress address)
-    {
-        return FromIPAddress(address);
-    }
+    public static readonly Ip4Address MinValue = new(0x00000000);
+    public static readonly Ip4Address MaxValue = new(0xFFFFFFFF);
 
     [FieldOffset(0)]
     private readonly uint _address;
@@ -143,9 +39,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public Ip4Address(scoped ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length != 4)
-        {
             throw new ArgumentException("Byte array must contain exactly 4 bytes", nameof(bytes));
-        }
 
         _byte1 = bytes[0];
         _byte2 = bytes[1];
@@ -153,55 +47,45 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         _byte4 = bytes[3];
     }
 
-    public uint ToUInt32()
+    public static Ip4Address Parse(scoped ReadOnlySpan<char> text)
     {
-        return _address;
+        if (TryParse(text, out var result))
+            return result;
+
+        throw new FormatException();
     }
 
-    public byte[] ToByteArray()
+    public static bool TryParse(scoped ReadOnlySpan<char> text, out Ip4Address result)
     {
-        return [_byte1, _byte2, _byte3, _byte4];
+        Span<byte> bytes = stackalloc byte[4];
+        if (!TryParseOctets(text, bytes))
+        {
+            result = default;
+            return false;
+        }
+
+        result = new Ip4Address(bytes[0], bytes[1], bytes[2], bytes[3]);
+        return true;
     }
 
-    public int CompareTo(Ip4Address other)
+    private static bool TryParseOctets(scoped ReadOnlySpan<char> text, Span<byte> bytes)
     {
-        return _address.CompareTo(other._address);
+        var enumerator = text.Split('.');
+        int i = 0;
+
+        foreach (var range in enumerator)
+        {
+            if (i >= 4 || !byte.TryParse(text[range], out bytes[i]))
+                return false;
+            i++;
+        }
+
+        return i == 4;
     }
 
-    public bool Equals(Ip4Address other)
-    {
-        return _address.Equals(other._address);
-    }
+    public static Ip4Address Min(Ip4Address left, Ip4Address right) => left <= right ? left : right;
 
-    public override bool Equals(object? obj)
-    {
-        return obj is Ip4Address address && Equals(address);
-    }
-
-    public override int GetHashCode()
-    {
-        return _address.GetHashCode();
-    }
-
-    public Ip4Range ToIp4Range()
-    {
-        return new Ip4Range(this, this);
-    }
-
-    public Ip4Subnet ToIp4Subnet()
-    {
-        return new Ip4Subnet(this, Ip4Mask.SingleAddress);
-    }
-
-    public Ip4RangeSet ToIp4RangeSet()
-    {
-        return new Ip4RangeSet(this);
-    }
-
-    public override string ToString()
-    {
-        return $"{_byte1}.{_byte2}.{_byte3}.{_byte4}";
-    }
+    public static Ip4Address Max(Ip4Address left, Ip4Address right) => left >= right ? left : right;
 
     public static Ip4Address FromIPAddress(IPAddress address)
     {
@@ -209,8 +93,39 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         return new Ip4Address(address.GetAddressBytes());
     }
 
-    public IPAddress ToIPAddress()
-    {
-        return new IPAddress([_byte1, _byte2, _byte3, _byte4]);
-    }
+    public static bool operator <=(Ip4Address left, Ip4Address right) => left.CompareTo(right) <= 0;
+    public static bool operator >=(Ip4Address left, Ip4Address right) => left.CompareTo(right) >= 0;
+    public static bool operator <(Ip4Address left, Ip4Address right) => left.CompareTo(right) < 0;
+    public static bool operator >(Ip4Address left, Ip4Address right) => left.CompareTo(right) > 0;
+    public static bool operator ==(Ip4Address left, Ip4Address right) => left.Equals(right);
+    public static bool operator !=(Ip4Address left, Ip4Address right) => !left.Equals(right);
+
+    public static explicit operator uint(Ip4Address address) => address.ToUInt32();
+    public static implicit operator Ip4Range(Ip4Address address) => address.ToIp4Range();
+    public static implicit operator Ip4Subnet(Ip4Address address) => address.ToIp4Subnet();
+    public static implicit operator Ip4RangeSet(Ip4Address address) => address.ToIp4RangeSet();
+    public static implicit operator IPAddress(Ip4Address address) => address.ToIPAddress();
+    public static implicit operator Ip4Address(IPAddress address) => FromIPAddress(address);
+
+    public uint ToUInt32() => _address;
+
+    public byte[] ToByteArray() => [_byte1, _byte2, _byte3, _byte4];
+
+    public int CompareTo(Ip4Address other) => _address.CompareTo(other._address);
+
+    public bool Equals(Ip4Address other) => _address.Equals(other._address);
+
+    public override bool Equals(object? obj) => obj is Ip4Address address && Equals(address);
+
+    public override int GetHashCode() => _address.GetHashCode();
+
+    public Ip4Range ToIp4Range() => new(this, this);
+
+    public Ip4Subnet ToIp4Subnet() => new(this, Ip4Mask.SingleAddress);
+
+    public Ip4RangeSet ToIp4RangeSet() => new(this);
+
+    public IPAddress ToIPAddress() => new([_byte1, _byte2, _byte3, _byte4]);
+
+    public override string ToString() => $"{_byte1}.{_byte2}.{_byte3}.{_byte4}";
 }
