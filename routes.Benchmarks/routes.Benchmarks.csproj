@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ip4Parsers\Ip4Parsers.csproj" />
+    <ProjectReference Include="..\routes.Extensions\routes.Extensions.csproj" />
     <ProjectReference Include="..\routes\routes.csproj" />
   </ItemGroup>
 

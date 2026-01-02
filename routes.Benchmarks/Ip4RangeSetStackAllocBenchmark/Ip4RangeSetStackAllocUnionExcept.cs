@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Attributes;
+using routes.Extensions;
 
 namespace routes.Benchmarks.Ip4RangeSetStackAllocBenchmark;
 
