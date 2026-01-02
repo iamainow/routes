@@ -291,12 +291,5 @@ internal static class Program
             Console.Error.WriteLine($"error: {ex.Message}");
             return 1;
         }
-#pragma warning disable CA1031 // Catch general exception in top-level entry point
-        catch (Exception ex)
-#pragma warning restore CA1031
-        {
-            Console.Error.WriteLine($"unexpected error: {ex.Message}");
-            return 1;
-        }
     }
 }
