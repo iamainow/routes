@@ -7,7 +7,7 @@ public class Ip4SubnetTest
     [InlineData("193.228.161.128/25", "193.228.161.128", "193.228.161.255")]
     [InlineData("193.233.80.188/32", "193.233.80.188", "193.233.80.188")]
     [InlineData("217.197.2.16/31", "217.197.2.16", "217.197.2.17")]
-    public void CreateByUInt_Check_FirstAddress_LastAddress(string subnetString, string firstIp, string lastIp)
+    public void Parse_ValidSubnet_ReturnsCorrectFirstAndLastAddress(string subnetString, string firstIp, string lastIp)
     {
         var subnet = Ip4Subnet.Parse(subnetString);
         string actualResult = $"{subnet.FirstAddress}-{subnet.LastAddress}";
@@ -325,4 +325,93 @@ public class Ip4SubnetTest
         Assert.Equal(subnet1, subnet2);
         Assert.Equal(subnet2, subnet3);
     }
+
+    #region HasSupernet/GetSupernet Tests
+
+    [Theory]
+    [InlineData("192.168.1.0/24", true)]
+    [InlineData("10.0.0.0/8", true)]
+    [InlineData("192.168.1.1/32", true)]
+    [InlineData("0.0.0.0/0", false)]
+    public void HasSupernet_VariousMasks_ReturnsExpectedResult(string subnetString, bool expected)
+    {
+        var subnet = Ip4Subnet.Parse(subnetString);
+
+        Assert.Equal(expected, subnet.HasSupernet());
+    }
+
+    [Theory]
+    [InlineData("192.168.1.0/24", "192.168.0.0/23")]
+    [InlineData("10.0.0.0/8", "10.0.0.0/7")]
+    [InlineData("192.168.1.128/25", "192.168.1.0/24")]
+    [InlineData("192.168.1.1/32", "192.168.1.0/31")]
+    public void GetSupernet_ValidSubnet_ReturnsCorrectSupernet(string subnetString, string expectedSupernet)
+    {
+        var subnet = Ip4Subnet.Parse(subnetString);
+
+        var supernet = subnet.GetSupernet();
+
+        Assert.Equal(expectedSupernet, supernet.ToString());
+    }
+
+    [Fact]
+    public void GetSupernet_AllEncompassingSubnet_ThrowsInvalidOperationException()
+    {
+        var subnet = Ip4Subnet.All;
+
+        Assert.Throws<InvalidOperationException>(() => subnet.GetSupernet());
+    }
+
+    #endregion
+
+    #region HasSubnets/GetSubnets Tests
+
+    [Theory]
+    [InlineData("192.168.1.0/24", true)]
+    [InlineData("10.0.0.0/8", true)]
+    [InlineData("192.168.1.0/31", true)]
+    [InlineData("192.168.1.1/32", false)]
+    public void HasSubnets_VariousMasks_ReturnsExpectedResult(string subnetString, bool expected)
+    {
+        var subnet = Ip4Subnet.Parse(subnetString);
+
+        Assert.Equal(expected, subnet.HasSubnets());
+    }
+
+    [Theory]
+    [InlineData("192.168.1.0/24", "192.168.1.0/25", "192.168.1.128/25")]
+    [InlineData("10.0.0.0/8", "10.0.0.0/9", "10.128.0.0/9")]
+    [InlineData("192.168.1.0/31", "192.168.1.0/32", "192.168.1.1/32")]
+    public void GetSubnets_ValidSubnet_ReturnsTwoSubnets(string subnetString, string expectedFirst, string expectedSecond)
+    {
+        var subnet = Ip4Subnet.Parse(subnetString);
+
+        var subnets = subnet.GetSubnets();
+
+        Assert.Equal(2, subnets.Length);
+        Assert.Equal(expectedFirst, subnets[0].ToString());
+        Assert.Equal(expectedSecond, subnets[1].ToString());
+    }
+
+    [Fact]
+    public void GetSubnets_SingleAddressSubnet_ThrowsInvalidOperationException()
+    {
+        var subnet = Ip4Subnet.Parse("192.168.1.1/32");
+
+        Assert.Throws<InvalidOperationException>(() => subnet.GetSubnets());
+    }
+
+    [Fact]
+    public void GetSubnets_ResultSubnetsCoverOriginal()
+    {
+        var subnet = Ip4Subnet.Parse("192.168.1.0/24");
+
+        var subnets = subnet.GetSubnets();
+
+        Assert.Equal(subnet.FirstAddress, subnets[0].FirstAddress);
+        Assert.Equal(subnet.LastAddress, subnets[1].LastAddress);
+        Assert.Equal(new Ip4Address(subnets[0].LastAddress.ToUInt32() + 1), subnets[1].FirstAddress);
+    }
+
+    #endregion
 }

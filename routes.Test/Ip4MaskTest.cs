@@ -39,7 +39,7 @@ public class Ip4MaskTest
     [InlineData(1, "128.0.0.0")]
     [InlineData(0, "0.0.0.0")]
 
-    public void ParseFromCidr_CheckSubnet(int cidr, string subnet)
+    public void Constructor_FromCidr_ReturnsCorrectFullString(int cidr, string subnet)
     {
         Ip4Mask mask = new(cidr);
 
@@ -80,14 +80,14 @@ public class Ip4MaskTest
     [InlineData(2)]
     [InlineData(1)]
     [InlineData(0)]
-    public void AsUInt32_AsCidr_EqualsTo_JustCidr(int cidr)
+    public void Constructor_RoundTrip_CidrToUInt32ToCidr_PreservesCidr(int cidr)
     {
         Assert.Equal(new Ip4Mask(new Ip4Mask(cidr).ToUInt32()).Cidr, cidr);
     }
 
     [Theory]
     [InlineData("255.192.0.0")]
-    public void ToIPAddress(string address)
+    public void ImplicitCast_ToIPAddress_ReturnsCorrectAddress(string address)
     {
         var ip4mask = Ip4Mask.Parse(address);
         var ipAddress = (IPAddress)ip4mask;
@@ -99,7 +99,7 @@ public class Ip4MaskTest
 
     [Theory]
     [InlineData("255.192.0.0")]
-    public void FromIPAddress(string address)
+    public void ImplicitCast_FromIPAddress_ReturnsCorrectMask(string address)
     {
         var ipAddress = IPAddress.Parse(address);
         var ip4mask = (Ip4Mask)ipAddress;
