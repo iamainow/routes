@@ -16,13 +16,13 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     }
 
     /// <param name="text">x.x.x.x/yy or x.x.x.x y.y.y.y</param>
-    public static Ip4Subnet Parse(ReadOnlySpan<char> text)
+    public static Ip4Subnet Parse(scoped ReadOnlySpan<char> text)
     {
         return TryParse(text, out Ip4Subnet result) ? result : throw new FormatException();
     }
 
     /// <param name="text">x.x.x.x/yy or x.x.x.x y.y.y.y</param>
-    public static bool TryParse(ReadOnlySpan<char> text, out Ip4Subnet result)
+    public static bool TryParse(scoped ReadOnlySpan<char> text, out Ip4Subnet result)
     {
         ReadOnlySpan<char> separators = ['/', ' '];
         var enumerator = text.SplitAny(separators);

@@ -13,7 +13,7 @@ public ref struct Ip4RangeSetStackAlloc
         _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer);
     }
 
-    public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer, ReadOnlySpan<Ip4Range> elements) // elements may be unsorted, may overlapping, may adjacent/disjoint
+    public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer, scoped ReadOnlySpan<Ip4Range> elements) // elements may be unsorted, may overlapping, may adjacent/disjoint
     {
         _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer);
 
@@ -88,20 +88,20 @@ public ref struct Ip4RangeSetStackAlloc
         SmartUnionSorted(other.ToReadOnlySpan());
     }
 
-    public void Union2ModifySpan(Span<Ip4Range> other)
+    public void Union2ModifySpan(scoped Span<Ip4Range> other)
     {
         other.Sort(Ip4RangeComparer.Instance);
         SmartUnionSorted(other);
     }
 
-    public void SmartUnionUnorderedModifySpan(Span<Ip4Range> other)
+    public void SmartUnionUnorderedModifySpan(scoped Span<Ip4Range> other)
     {
         other.Sort(Ip4RangeComparer.Instance);
         SmartUnionSorted(other);
     }
 
     // merge sorted arrays into some temp span and then in the end copy to this._range
-    private void SmartUnionSorted(ReadOnlySpan<Ip4Range> other)
+    private void SmartUnionSorted(scoped ReadOnlySpan<Ip4Range> other)
     {
         ListStackAlloc<Ip4Range> temp = new ListStackAlloc<Ip4Range>(stackalloc Ip4Range[_ranges.Count + other.Length]);
         int i = 0;
@@ -167,13 +167,13 @@ public ref struct Ip4RangeSetStackAlloc
         return (left + right);
     }
 
-    public void ExceptUnsortedModifySpan(Span<Ip4Range> other)
+    public void ExceptUnsortedModifySpan(scoped Span<Ip4Range> other)
     {
         other.Sort(Ip4RangeComparer.Instance);
         ExceptSorted(other);
     }
 
-    private void ExceptSorted(ReadOnlySpan<Ip4Range> other)
+    private void ExceptSorted(scoped ReadOnlySpan<Ip4Range> other)
     {
         if (_ranges.Count == 0 || other.Length == 0)
             return;

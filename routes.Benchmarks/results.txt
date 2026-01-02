@@ -1,33 +1,33 @@
 ﻿| Method                              | Mean       | Error    | StdDev   | Gen0     | Gen1    | Gen2    | Allocated |
 |------------------------------------ |-----------:|---------:|---------:|---------:|--------:|--------:|----------:|
-| Ip4RangeSet_Realistic_WithParser    | 1,921.0 us | 24.77 us | 21.96 us | 123.0469 | 82.0313 | 41.0156 |   1.27 MB |
-| Ip4RangeSet_Realistic_WithoutParser |   401.5 us |  4.19 us |  3.92 us | 101.5625 | 83.0078 |       - |   1.02 MB |
+| Ip4RangeSet_Realistic_WithParser    | 2,147.7 us | 33.19 us | 31.04 us | 121.0938 | 78.1250 | 39.0625 |   1.27 MB |
+| Ip4RangeSet_Realistic_WithoutParser |   398.5 us |  3.03 us |  2.83 us | 101.5625 | 83.0078 |       - |   1.02 MB |
 
-| Method                           | Count | SetSize | Mean          | Error        | StdDev       | Gen0      | Gen1      | Gen2     | Allocated  |
-|--------------------------------- |------ |-------- |--------------:|-------------:|-------------:|----------:|----------:|---------:|-----------:|
-| Ip4RangeSet_Union_Ip4RangeSet    | 1000  | 10      |     161.47 us |     1.599 us |     1.496 us |         - |         - |        - |          - |
-| Ip4RangeSet_Union_Ip4RangeArray  | 1000  | 10      |     346.06 us |     6.821 us |     7.004 us |   62.0117 |   30.7617 |        - |   648592 B |
-| Ip4RangeSet_Except_Ip4RangeSet   | 1000  | 10      |      78.08 us |     0.575 us |     0.538 us |         - |         - |        - |          - |
-| Ip4RangeSet_Except_Ip4RangeArray | 1000  | 10      |     250.96 us |     4.940 us |     7.085 us |   64.9414 |         - |        - |   680000 B |
-| Ip4RangeSet_Union_Ip4RangeSet    | 1000  | 100     |   1,170.94 us |    15.007 us |    14.038 us |         - |         - |        - |          - |
-| Ip4RangeSet_Union_Ip4RangeArray  | 1000  | 100     |   5,316.14 us |   105.627 us |   133.584 us |  476.5625 |  468.7500 |        - |  4995136 B |
-| Ip4RangeSet_Except_Ip4RangeSet   | 1000  | 100     |     594.87 us |    11.596 us |    15.079 us |         - |         - |        - |          - |
-| Ip4RangeSet_Except_Ip4RangeArray | 1000  | 100     |   2,215.15 us |    32.315 us |    28.647 us |  476.5625 |    7.8125 |        - |  5000000 B |
-| Ip4RangeSet_Union_Ip4RangeSet    | 1000  | 1000    |  14,328.17 us |    99.173 us |    87.914 us |         - |         - |        - |          - |
-| Ip4RangeSet_Union_Ip4RangeArray  | 1000  | 1000    | 114,009.52 us | 2,225.937 us | 1,858.758 us | 5200.0000 | 5000.0000 | 600.0000 | 48153264 B |
-| Ip4RangeSet_Except_Ip4RangeSet   | 1000  | 1000    |   8,387.89 us |   148.628 us |   131.754 us |         - |         - |        - |          - |
-| Ip4RangeSet_Except_Ip4RangeArray | 1000  | 1000    |  25,475.59 us |   225.764 us |   200.134 us | 4593.7500 |  593.7500 |        - | 48200000 B |
+| Method                           | Count | SetSize | Mean          | Error        | StdDev        | Median        | Gen0      | Gen1      | Gen2     | Allocated  |
+|--------------------------------- |------ |-------- |--------------:|-------------:|--------------:|--------------:|----------:|----------:|---------:|-----------:|
+| Ip4RangeSet_Union_Ip4RangeSet    | 1000  | 10      |     164.78 us |     0.552 us |      0.489 us |     164.73 us |         - |         - |        - |          - |
+| Ip4RangeSet_Union_Ip4RangeArray  | 1000  | 10      |     347.79 us |     5.572 us |      5.212 us |     346.31 us |   61.5234 |   30.7617 |        - |   644416 B |
+| Ip4RangeSet_Except_Ip4RangeSet   | 1000  | 10      |      79.31 us |     0.886 us |      0.829 us |      79.48 us |         - |         - |        - |          - |
+| Ip4RangeSet_Except_Ip4RangeArray | 1000  | 10      |     243.28 us |     2.530 us |      2.367 us |     242.60 us |   64.9414 |         - |        - |   680000 B |
+| Ip4RangeSet_Union_Ip4RangeSet    | 1000  | 100     |   1,196.20 us |    23.923 us |     29.379 us |   1,192.38 us |         - |         - |        - |          - |
+| Ip4RangeSet_Union_Ip4RangeArray  | 1000  | 100     |   5,242.02 us |   103.316 us |    163.870 us |   5,172.48 us |  468.7500 |  460.9375 |        - |  4967824 B |
+| Ip4RangeSet_Except_Ip4RangeSet   | 1000  | 100     |     651.37 us |    12.667 us |     13.553 us |     651.71 us |         - |         - |        - |          - |
+| Ip4RangeSet_Except_Ip4RangeArray | 1000  | 100     |   2,199.64 us |    34.061 us |     31.860 us |   2,195.92 us |  476.5625 |    7.8125 |        - |  5000000 B |
+| Ip4RangeSet_Union_Ip4RangeSet    | 1000  | 1000    |  13,979.02 us |    93.969 us |     83.301 us |  13,965.83 us |         - |         - |        - |          - |
+| Ip4RangeSet_Union_Ip4RangeArray  | 1000  | 1000    | 142,476.51 us | 3,549.887 us | 10,466.923 us | 145,867.57 us | 5200.0000 | 5000.0000 | 600.0000 | 48144474 B |
+| Ip4RangeSet_Except_Ip4RangeSet   | 1000  | 1000    |   8,354.77 us |   134.873 us |    112.625 us |   8,378.31 us |         - |         - |        - |          - |
+| Ip4RangeSet_Except_Ip4RangeArray | 1000  | 1000    |  25,634.81 us |   174.157 us |    162.906 us |  25,671.59 us | 4593.7500 |  593.7500 |        - | 48199952 B |
 
 | Method                                       | Mean        | Error     | StdDev    | Gen0    | Gen1    | Gen2    | Allocated |
 |--------------------------------------------- |------------:|----------:|----------:|--------:|--------:|--------:|----------:|
-| Ip4RangeSetStackAlloc_Realistic              | 1,483.18 us | 16.051 us | 15.014 us | 41.0156 | 41.0156 | 41.0156 |  263019 B |
-| Ip4RangeSetStackAlloc_RealisticWithoutParser |    88.75 us |  0.488 us |  0.433 us |       - |       - |       - |     320 B |
+| Ip4RangeSetStackAlloc_Realistic              | 1,773.28 us | 22.053 us | 20.628 us | 41.0156 | 41.0156 | 41.0156 |  263019 B |
+| Ip4RangeSetStackAlloc_RealisticWithoutParser |    91.33 us |  0.668 us |  0.625 us |       - |       - |       - |     320 B |
 
 | Method                                         | Count | SetSize | Mean        | Error     | StdDev    | Gen0      | Allocated   |
 |----------------------------------------------- |------ |-------- |------------:|----------:|----------:|----------:|------------:|
-| Ip4RangeSetStackAlloc_ctor_Union2_span         | 1000  | 10      |    262.5 us |   1.70 us |   1.42 us |   12.2070 |      125 KB |
-| Ip4RangeSetStackAlloc_ctor_ExceptUnsorted_span | 1000  | 10      |    286.8 us |   3.34 us |   2.96 us |   28.3203 |   290.63 KB |
-| Ip4RangeSetStackAlloc_ctor_Union2_span         | 1000  | 100     |  2,778.2 us |  31.90 us |  29.84 us |   11.7188 |      125 KB |
-| Ip4RangeSetStackAlloc_ctor_ExceptUnsorted_span | 1000  | 100     |  3,168.9 us |  33.44 us |  29.65 us |  171.8750 |  1784.19 KB |
-| Ip4RangeSetStackAlloc_ctor_Union2_span         | 1000  | 1000    | 31,929.3 us | 203.13 us | 169.62 us |         - |      125 KB |
-| Ip4RangeSetStackAlloc_ctor_ExceptUnsorted_span | 1000  | 1000    | 36,029.1 us | 329.46 us | 308.18 us | 1571.4286 | 16730.34 KB |
+| Ip4RangeSetStackAlloc_ctor_Union2_span         | 1000  | 10      |    259.6 us |   2.53 us |   2.37 us |   12.2070 |      125 KB |
+| Ip4RangeSetStackAlloc_ctor_ExceptUnsorted_span | 1000  | 10      |    288.2 us |   1.55 us |   1.29 us |   28.3203 |   293.44 KB |
+| Ip4RangeSetStackAlloc_ctor_Union2_span         | 1000  | 100     |  2,851.1 us |  52.26 us |  48.89 us |   11.7188 |      125 KB |
+| Ip4RangeSetStackAlloc_ctor_ExceptUnsorted_span | 1000  | 100     |  3,077.8 us |  27.55 us |  25.77 us |  171.8750 |  1782.95 KB |
+| Ip4RangeSetStackAlloc_ctor_Union2_span         | 1000  | 1000    | 32,610.8 us | 511.88 us | 478.81 us |         - |      125 KB |
+| Ip4RangeSetStackAlloc_ctor_ExceptUnsorted_span | 1000  | 1000    | 36,695.5 us | 703.88 us | 810.58 us | 1571.4286 | 16719.68 KB |

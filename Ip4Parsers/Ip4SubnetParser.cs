@@ -10,7 +10,7 @@ public static partial class Ip4SubnetParser
     [GeneratedRegex(@"(?:(?<rangebegin>\d+\.\d+\.\d+\.\d+)\s*\-\s*(?<rangeend>\d+\.\d+\.\d+\.\d+)|(?<cidrip>\d+\.\d+\.\d+\.\d+)(?<cidrmask>\/\d+)|(?<ip>\d+\.\d+\.\d+\.\d+))")]
     public static partial Regex RangeOrCidrOrIp();
 
-    public static Span<Ip4Range> GetRanges(ReadOnlySpan<char> texts)
+    public static Span<Ip4Range> GetRanges(scoped ReadOnlySpan<char> texts)
     {
         List<Ip4Range> result = new();
         ReadOnlySpan<char> separators = stackalloc char[] { '\r', '\n' };
@@ -74,7 +74,7 @@ public static partial class Ip4SubnetParser
         return CollectionsMarshal.AsSpan(result);
     }
 
-    public static Span<Ip4Subnet> GetSubnets(ReadOnlySpan<char> text)
+    public static Span<Ip4Subnet> GetSubnets(scoped ReadOnlySpan<char> text)
     {
         var ranges = GetRanges(text);
         var result = new List<Ip4Subnet>();

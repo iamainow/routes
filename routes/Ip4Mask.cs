@@ -14,13 +14,13 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
 
     /// <param name="text">x.x.x.x format</param>
     /// <exception cref="FormatException"></exception>
-    public static Ip4Mask ParseFullString(ReadOnlySpan<char> text)
+    public static Ip4Mask ParseFullString(scoped ReadOnlySpan<char> text)
     {
         return TryParseFullString(text, out Ip4Mask result) ? result : throw new FormatException();
     }
 
     /// <param name="text">x.x.x.x format</param>
-    public static bool TryParseFullString(ReadOnlySpan<char> text, out Ip4Mask result)
+    public static bool TryParseFullString(scoped ReadOnlySpan<char> text, out Ip4Mask result)
     {
         Span<byte> bytes = stackalloc byte[4];
         var enumerator = text.Split('.');
@@ -45,13 +45,13 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     }
 
     /// <param name="text">/xx or xx format</param>
-    public static Ip4Mask ParseCidrString(ReadOnlySpan<char> text)
+    public static Ip4Mask ParseCidrString(scoped ReadOnlySpan<char> text)
     {
         return TryParseCidrString(text, out Ip4Mask mask) ? mask : throw new FormatException();
     }
 
     /// <param name="text">/xx or xx format</param>
-    public static bool TryParseCidrString(ReadOnlySpan<char> text, out Ip4Mask result)
+    public static bool TryParseCidrString(scoped ReadOnlySpan<char> text, out Ip4Mask result)
     {
         if (text.StartsWith('/'))
         {
@@ -75,13 +75,13 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     }
 
     /// <param name="text">/xx, xx or x.x.x.x</param>
-    public static Ip4Mask Parse(ReadOnlySpan<char> text)
+    public static Ip4Mask Parse(scoped ReadOnlySpan<char> text)
     {
         return TryParse(text, out Ip4Mask result) ? result : throw new FormatException();
     }
 
     /// <param name="text">/xx, xx or x.x.x.x</param>
-    public static bool TryParse(ReadOnlySpan<char> text, out Ip4Mask result)
+    public static bool TryParse(scoped ReadOnlySpan<char> text, out Ip4Mask result)
     {
         if (TryParseCidrString(text, out Ip4Mask result2))
         {
@@ -215,7 +215,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     }
 
     /// <exception cref="ArgumentException"></exception>
-    public Ip4Mask(ReadOnlySpan<byte> bytes)
+    public Ip4Mask(scoped ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length != 4)
         {

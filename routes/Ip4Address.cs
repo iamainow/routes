@@ -10,7 +10,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
 {
     /// <param name="text">x.x.x.x format</param>
     /// <exception cref="FormatException"></exception>
-    public static Ip4Address Parse(ReadOnlySpan<char> text)
+    public static Ip4Address Parse(scoped ReadOnlySpan<char> text)
     {
         if (TryParse(text, out Ip4Address result))
         {
@@ -20,7 +20,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         throw new FormatException();
     }
 
-    public static bool TryParse(ReadOnlySpan<char> text, out Ip4Address result)
+    public static bool TryParse(scoped ReadOnlySpan<char> text, out Ip4Address result)
     {
         Span<byte> bytes = stackalloc byte[4];
         var enumerator = text.Split('.');
@@ -139,7 +139,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         _byte4 = byte4;
     }
 
-    public Ip4Address(ReadOnlySpan<byte> bytes)
+    public Ip4Address(scoped ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length != 4)
         {
