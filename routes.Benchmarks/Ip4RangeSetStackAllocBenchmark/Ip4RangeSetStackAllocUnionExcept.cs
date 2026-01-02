@@ -46,7 +46,7 @@ public class Ip4RangeSetStackAllocUnionExcept
         for (int index = 0; index < Count; ++index)
         {
             var set = new Ip4RangeSetStackAlloc(span, rangesArray_1[index]);
-            set.ExceptUnsortedModifySpan(rangesArray_2[index]);
+            set.ExceptModifySpan(rangesArray_2[index]);
             result += set.RangesCount;
         }
 

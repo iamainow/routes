@@ -64,9 +64,9 @@ public class Ip4RangeSetStackAllocRealistic
         var subnets = Ip4SubnetParser.GetRanges(_subnetsText);
 
         var result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[20000], all);
-        result.ExceptUnsortedModifySpan(ip);
-        result.ExceptUnsortedModifySpan(_bogon);
-        result.ExceptUnsortedModifySpan(subnets);
+        result.ExceptModifySpan(ip);
+        result.ExceptModifySpan(_bogon);
+        result.ExceptModifySpan(subnets);
 
         return result.RangesCount;
     }
@@ -84,9 +84,9 @@ public class Ip4RangeSetStackAllocRealistic
         }
 
         var result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[20000], MemoryMarshal.CreateSpan(ref all, 1));
-        result.ExceptUnsortedModifySpan(MemoryMarshal.CreateSpan(ref ip, 1));
-        result.ExceptUnsortedModifySpan(_bogon);
-        result.ExceptUnsortedModifySpan(subnetList.AsSpan());
+        result.ExceptModifySpan(MemoryMarshal.CreateSpan(ref ip, 1));
+        result.ExceptModifySpan(_bogon);
+        result.ExceptModifySpan(subnetList.AsSpan());
 
         return result.RangesCount;
     }

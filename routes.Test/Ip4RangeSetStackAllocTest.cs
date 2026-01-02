@@ -199,7 +199,7 @@ public class Ip4RangeSetStackAllocTest
         Assert.Equal(1, initialSpans2.Length);
 
         // Act
-        set1.Union1(set2);
+        set1.Union(set2);
 
         // Assert
         var spans = set1.ToReadOnlySpan();
@@ -231,7 +231,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Union1(set2);
+        set1.Union(set2);
 
         // Assert
         var spans = set1.ToReadOnlySpan();
@@ -253,7 +253,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2);
 
         // Act
-        set1.Union1(set2);
+        set1.Union(set2);
 
         // Assert: set1 should remain unchanged
         var spans = set1.ToReadOnlySpan();
@@ -275,7 +275,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Union1(set2);
+        set1.Union(set2);
 
         // Assert: set1 should now contain set2's range
         var spans = set1.ToReadOnlySpan();
@@ -305,7 +305,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, ranges2);
 
         // Act
-        set1.Union1(set2);
+        set1.Union(set2);
 
         // Assert: should have [10-35], [40-50], [60-70]
         var spans = set1.ToReadOnlySpan();
@@ -337,7 +337,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act: Union with same single IP
-        set1.Union1(set2);
+        set1.Union(set2);
 
         // Assert
         var spans = set1.ToReadOnlySpan();
@@ -391,13 +391,12 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act: union with full range
-        set1.Union1(set2);
+        set1.Union(set2);
 
         // Assert: should result in full range
         var spans = set1.ToReadOnlySpan();
         Assert.Equal(1, spans.Length);
-        Assert.Equal(new Ip4Address(0), spans[0].FirstAddress);
-        Assert.Equal(new Ip4Address(uint.MaxValue), spans[0].LastAddress);
+        Assert.Equal(new Ip4Range(new Ip4Address(0), new Ip4Address(uint.MaxValue)), spans[0]);
     }
 
     [Fact]
@@ -415,7 +414,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act: union with another large range
-        set1.Union1(set2);
+        set1.Union(set2);
 
         // Assert: should merge correctly
         var spans = set1.ToReadOnlySpan();
@@ -439,7 +438,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Union1(set2);
+        set1.Union(set2);
 
         // Assert
         var spans = set1.ToReadOnlySpan();
@@ -463,7 +462,7 @@ public class Ip4RangeSetStackAllocTest
         var set2 = new Ip4RangeSetStackAlloc(buffer2, elements2);
 
         // Act
-        set1.Union1(set2);
+        set1.Union(set2);
 
         // Assert
         var spans = set1.ToReadOnlySpan();
