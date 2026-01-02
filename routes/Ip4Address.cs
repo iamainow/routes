@@ -20,6 +20,7 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
         throw new FormatException();
     }
 
+    /// <param name="text">x.x.x.x format</param>
     public static bool TryParse(scoped ReadOnlySpan<char> text, out Ip4Address result)
     {
         Span<byte> bytes = stackalloc byte[4];

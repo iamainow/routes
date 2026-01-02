@@ -45,6 +45,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     }
 
     /// <param name="text">/xx or xx format</param>
+    /// <exception cref="FormatException"></exception>
     public static Ip4Mask ParseCidrString(scoped ReadOnlySpan<char> text)
     {
         return TryParseCidrString(text, out Ip4Mask mask) ? mask : throw new FormatException();
@@ -64,7 +65,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
             return false;
         }
 
-        if (cidr is < 0 or > 32)
+        if (cidr < 0 || cidr > 32)
         {
             result = default;
             return false;
@@ -75,6 +76,7 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     }
 
     /// <param name="text">/xx, xx or x.x.x.x</param>
+    /// <exception cref="FormatException"></exception>
     public static Ip4Mask Parse(scoped ReadOnlySpan<char> text)
     {
         return TryParse(text, out Ip4Mask result) ? result : throw new FormatException();
