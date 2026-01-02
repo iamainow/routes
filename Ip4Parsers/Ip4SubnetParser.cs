@@ -1,4 +1,5 @@
 using routes;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
@@ -12,11 +13,14 @@ public static partial class Ip4SubnetParser
     public static Span<Ip4Range> GetRanges(ReadOnlySpan<char> texts)
     {
         List<Ip4Range> result = new();
-        foreach (var range in texts.Split(['\r', '\n']))
+        ReadOnlySpan<char> separators = stackalloc char[] { '\r', '\n' };
+
+        foreach (var range in texts.SplitAny(separators))
         {
             var text = texts[range];
             foreach (var matchRange in RangeOrCidrOrIp().EnumerateMatches(text))
             {
+                Debug.Assert(matchRange.Length > 0);
                 var match = text[matchRange.Index..(matchRange.Index + matchRange.Length)];
                 int dashIndex = match.IndexOf('-');
                 if (dashIndex >= 0)
