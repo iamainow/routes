@@ -39,10 +39,10 @@ public class Ip4ParsersBenchmarks
         }).ToList();
         rangesString = string.Join("\n", ranges.Select(r => r.ToString()));
 
-        subnets = ranges.ToArray().SelectMany(x => x.ToSubnets().ToArray()).Take(1_000_000).ToList();
+        subnets = ranges.ToArray().SelectMany(x => x.ToSubnets().ToArray()).Take(Count).ToList();
         subnetsString = string.Join("\n", subnets.Select(r => r.ToCidrString()));
 
-        addresses = ranges.SelectMany(x => new[] { x.FirstAddress, x.LastAddress }).Take(1_000_000).ToList();
+        addresses = ranges.SelectMany(x => new[] { x.FirstAddress, x.LastAddress }).Take(Count).ToList();
         addressesString = string.Join("\n", addresses.Select(r => r.ToString()));
     }
 
