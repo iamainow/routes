@@ -36,18 +36,18 @@ internal static class NativeMethods
 
     public static IPForwardTable ReadIPForwardTable(nint tablePtr)
     {
-        IPForwardTable result = Marshal.PtrToStructure<IPForwardTable>(tablePtr);
+        uint size = Marshal.PtrToStructure<uint>(tablePtr);
+        var table = new MIB_IPFORWARDROW[size];
 
-        var table = new MIB_IPFORWARDROW[result.Size];
-        nint p = new(tablePtr.ToInt64() + Marshal.SizeOf(result.Size));
-        for (int i = 0; i < result.Size; ++i)
+        int rowSize = Marshal.SizeOf<MIB_IPFORWARDROW>();
+        nint rowPtr = tablePtr + sizeof(uint);
+
+        for (int i = 0; i < size; i++, rowPtr += rowSize)
         {
-            table[i] = Marshal.PtrToStructure<MIB_IPFORWARDROW>(p);
-            p = new nint(p.ToInt64() + Marshal.SizeOf<MIB_IPFORWARDROW>());
+            table[i] = Marshal.PtrToStructure<MIB_IPFORWARDROW>(rowPtr);
         }
-        result.Table = table;
 
-        return result;
+        return new IPForwardTable { Size = size, Table = table };
     }
 
     [DllImport("iphlpapi", CharSet = CharSet.Auto)]
