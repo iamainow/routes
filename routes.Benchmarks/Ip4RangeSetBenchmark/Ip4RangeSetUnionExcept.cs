@@ -2,9 +2,7 @@ using BenchmarkDotNet.Attributes;
 
 namespace routes.Benchmarks.Ip4RangeSetBenchmark;
 
-[MemoryDiagnoser]
-[ExceptionDiagnoser(false)]
-[Config(typeof(NoPowerPlanConfig))]
+[Config(typeof(BenchmarkManualConfig))]
 public class Ip4RangeSetUnionExcept
 {
     [Params(1_000)]

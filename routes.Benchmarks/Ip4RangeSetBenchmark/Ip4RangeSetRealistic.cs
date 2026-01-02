@@ -3,9 +3,7 @@ using Ip4Parsers;
 
 namespace routes.Benchmarks.Ip4RangeSetBenchmark;
 
-[MemoryDiagnoser]
-[ExceptionDiagnoser(false)]
-[Config(typeof(NoPowerPlanConfig))]
+[Config(typeof(BenchmarkManualConfig))]
 public class Ip4RangeSetRealistic
 {
     private string _subnetsText = "";

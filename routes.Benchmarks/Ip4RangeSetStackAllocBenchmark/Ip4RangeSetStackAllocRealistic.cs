@@ -4,9 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace routes.Benchmarks.Ip4RangeSetStackAllocBenchmark;
 
-[MemoryDiagnoser]
-[ExceptionDiagnoser(false)]
-[Config(typeof(NoPowerPlanConfig))]
+[Config(typeof(BenchmarkManualConfig))]
 public class Ip4RangeSetStackAllocRealistic
 {
     private string _subnetsText = "";

@@ -2,9 +2,7 @@ using BenchmarkDotNet.Attributes;
 
 namespace routes.Benchmarks.Ip4RangeSetStackAllocBenchmark;
 
-[MemoryDiagnoser]
-[ExceptionDiagnoser(false)]
-[Config(typeof(NoPowerPlanConfig))]
+[Config(typeof(BenchmarkManualConfig))]
 public class Ip4RangeSetStackAllocUnionExcept
 {
     [Params(1_000)]

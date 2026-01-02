@@ -4,16 +4,15 @@ using BenchmarkDotNet.Jobs;
 
 namespace routes.Benchmarks;
 
-public class NoPowerPlanConfig : ManualConfig
+public class BenchmarkManualConfig : ManualConfig
 {
-    public NoPowerPlanConfig()
+    public BenchmarkManualConfig()
     {
-        // Explicitly use the user's current power plan to prevent BenchmarkDotNet
-        // from changing the Windows power plan during benchmark execution
         AddJob(Job.Default
             .DontEnforcePowerPlan()
             .WithRuntime(CoreRuntime.Core10_0))
-            .WithOptions(ConfigOptions.DisableOptimizationsValidator);
+            .AddDiagnoser(new BenchmarkDotNet.Diagnosers.MemoryDiagnoser(new BenchmarkDotNet.Diagnosers.MemoryDiagnoserConfig()))
+            .AddDiagnoser(new BenchmarkDotNet.Diagnosers.ExceptionDiagnoser(new BenchmarkDotNet.Attributes.ExceptionDiagnoserConfig(false)));
 
         //AddJob(Job.Default
         //    .DontEnforcePowerPlan()

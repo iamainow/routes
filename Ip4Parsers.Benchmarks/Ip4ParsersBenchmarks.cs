@@ -3,9 +3,7 @@ using routes;
 
 namespace Ip4Parsers.Benchmarks;
 
-[MemoryDiagnoser]
-[ExceptionDiagnoser(false)]
-[Config(typeof(NoPowerPlanConfig))]
+[Config(typeof(BenchmarkManualConfig))]
 public class Ip4ParsersBenchmarks
 {
     [Params(1_000_000)]
