@@ -85,7 +85,7 @@ public class Ip4RangeReadonlySpanRealistic
     }
 
     [Benchmark]
-    public int Ip4RangeReadonlySpan_RealisticWithoutParser()
+    public int Ip4RangeReadonlySpan_Realistic_WithoutParser_WithoutBuilder()
     {
         var all0 = Ip4Range.All;
         var all = MemoryMarshal.CreateSpan(ref all0, 1);
@@ -120,5 +120,38 @@ public class Ip4RangeReadonlySpanRealistic
         var result3 = new Ip4RangeReadonlySpan(s3[..l3]);
 
         return result3.RangesCount;
+    }
+
+    [Benchmark]
+    public int Ip4RangeReadonlySpan_RealisticW_WithoutParser_WithBuilder()
+    {
+        var all0 = Ip4Range.All;
+        var all = MemoryMarshal.CreateSpan(ref all0, 1);
+
+        var ip0 = new Ip4Address(1, 2, 3, 4).ToIp4Range();
+        var ip = MemoryMarshal.CreateSpan(ref ip0, 1);
+
+        ListStackAlloc<Ip4Range> subnetList = new(stackalloc Ip4Range[_subnets.Length]);
+        foreach (var subnet in _subnets)
+        {
+            subnetList.Add(subnet.ToIp4Range());
+        }
+
+        Span<Ip4Range> subnets = subnetList.AsSpan();
+
+        // Estimate buffers: operations: 3 (union, except, except), ranges: all + ip + bogon + subnets
+        Span<Ip4RangeReadonlySpanBuilder.OperationData> ops = stackalloc Ip4RangeReadonlySpanBuilder.OperationData[16];
+        Span<Ip4Range> rangeBuffer = stackalloc Ip4Range[all.Length + ip.Length + _bogon.Length + subnets.Length];
+        var builder = new Ip4RangeReadonlySpanBuilder(ReadOnlySpan<Ip4Range>.Empty, rangeBuffer, ops)
+            .Union(all)
+            .Except(ip)
+            .Except(_bogon)
+            .Except(subnets);
+
+        int totalBuffer = builder.CalcTotalBuffer();
+        Span<Ip4Range> resultBuffer = stackalloc Ip4Range[totalBuffer];
+        var result = builder.Execute(resultBuffer);
+
+        return result.RangesCount;
     }
 }

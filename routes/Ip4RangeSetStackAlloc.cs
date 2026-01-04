@@ -186,4 +186,9 @@ public ref struct Ip4RangeSetStackAlloc
             _ranges.Add(temp[k]);
         }
     }
+
+    private static int CalcIntersectBufferSize(int left, int right)
+    {
+        return Math.Max(left + right - 1, 0);
+    }
 }
