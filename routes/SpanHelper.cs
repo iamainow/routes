@@ -210,6 +210,16 @@ public static class SpanHelper
 
     public static int ExceptNormalizedSorted(ReadOnlySpan<Ip4Range> normalized, ReadOnlySpan<Ip4Range> sorted, Span<Ip4Range> result)
     {
+        if (result.Overlaps(normalized))
+        {
+            throw new ArgumentException($"result can't overlap with normalized", nameof(result));
+        }
+
+        if (result.Overlaps(sorted))
+        {
+            throw new ArgumentException("result can't overlap with sorted", nameof(result));
+        }
+
         if (normalized.Length == 0)
         {
             return 0;
@@ -261,31 +271,37 @@ public static class SpanHelper
                 // Ranges overlap - compute the difference
                 (bool hasLeftPart, bool hasRightPart) = currentRange.IntersectableExcept(otherCurr, out var leftPart, out var rightPart);
 
-                if (!hasLeftPart && !hasRightPart)
+                if (hasLeftPart)
                 {
-                    // Current range completely covered by exclusion - move to next normalized range
-                    i++;
-                    curr = i < normalized.Length ? normalized[i] : null;
-                }
-                else if (hasLeftPart && !hasRightPart)
-                {
-                    // Left part only - it ends before the exclusion starts, so it's finalized
-                    resultList.Add(leftPart);
-                    i++;
-                    curr = i < normalized.Length ? normalized[i] : null;
-                }
-                else if (!hasLeftPart && hasRightPart)
-                {
-                    // Right part only - it starts after exclusion ends, may overlap with next exclusions
-                    curr = rightPart;
-                    j++;
+                    if (hasRightPart)
+                    {
+                        // Two parts: left part is finalized, right part needs further processing
+                        resultList.Add(leftPart);
+                        curr = rightPart;
+                        j++;
+                    }
+                    else
+                    {
+                        // Left part only - it ends before the exclusion starts, so it's finalized
+                        resultList.Add(leftPart);
+                        i++;
+                        curr = i < normalized.Length ? normalized[i] : null;
+                    }
                 }
                 else
                 {
-                    // Two parts: left part is finalized, right part needs further processing
-                    resultList.Add(leftPart);
-                    curr = rightPart;
-                    j++;
+                    if (hasRightPart)
+                    {
+                        // Right part only - it starts after exclusion ends, may overlap with next exclusions
+                        curr = rightPart;
+                        j++;
+                    }
+                    else
+                    {
+                        // Current range completely covered by exclusion - move to next normalized range
+                        i++;
+                        curr = i < normalized.Length ? normalized[i] : null;
+                    }
                 }
             }
         }
