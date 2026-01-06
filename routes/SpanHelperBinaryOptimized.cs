@@ -4,8 +4,17 @@ namespace routes;
 
 public static class SpanHelperBinaryOptimized
 {
-    private static SearchResult SearchFirstAddressGreaterOrEqualsTo(ReadOnlySpan<Ip4Range> sorted, Predicate<Ip4Range> ascPredicate, out int index)
+    /// <summary>
+    /// ascPredicate of sorted must be F...F or T...T or F...FT...T
+    /// meaning sorted array is sorted in asc order of predicate ascPredicate
+    /// 
+    /// example of usage:
+    /// FindFirst([0,2,4,6,8], x => x >= 5) should return index of number 6, it's 3
+    /// FindFirst([0,5,5,5,8], x => x >= 5) should return index of first number 5, it's 1
+    /// </summary>
+    public static SearchResult FindFirst<T>(ReadOnlySpan<T> sorted, Predicate<T> ascPredicate, out int index)
     {
+        ArgumentNullException.ThrowIfNull(ascPredicate);
         switch (sorted.Length)
         {
             case 0:
@@ -63,7 +72,7 @@ public static class SpanHelperBinaryOptimized
                     }
                 }
             default:
-                Debug.Assert(sorted.Length > 3, "sortedByFirstAddress.Length > 3");
+                Debug.Assert(sorted.Length > 3, "sorted.Length > 3");
 
                 if (ascPredicate(sorted[0])) // optional perf optimization? - if first element in sorted asc array >= firstAddress then all elements >= firstAddress
                 {
@@ -77,25 +86,15 @@ public static class SpanHelperBinaryOptimized
                     return SearchResult.AllElementsNotSatisfiesCondition; // if last element in sorted asc array < firstAddress then all elements < firstAddress
                 }
 
-                index = 1 + FindIndexFirstAddressGreaterOrEqualsTo(sorted[1..], ascPredicate);
+                index = 1 + FindFirst(sorted[1..], ascPredicate);
                 return SearchResult.ElementFound;
-
-                //or
-
-                //if (!(sortedByFirstAddress[^1].FirstAddress >= firstAddress))
-                //{
-                //    index = default;
-                //    return SearchResult.AllElementsNotSatisfiesCondition; // if last element in sorted asc array < firstAddress then all elements < firstAddress
-                //}
-
-                //index = FindIndexFirstAddressGreaterOrEqualsTo(sortedByFirstAddress, firstAddress, 0, sortedByFirstAddress.Length);
-                //return SearchResult.ElementFound;
         }
     }
 
-    private static int FindIndexFirstAddressGreaterOrEqualsTo(ReadOnlySpan<Ip4Range> sorted, Predicate<Ip4Range> ascPredicate)
+    private static int FindFirst<T>(ReadOnlySpan<T> sorted, Predicate<T> ascPredicate)
     {
-        Debug.Assert(ascPredicate(sorted[^1]), "ascPredicate(sorted[^1].FirstAddress)");
+        ArgumentNullException.ThrowIfNull(ascPredicate);
+        Debug.Assert(ascPredicate(sorted[^1]), "ascPredicate(sorted[^1]");
         Debug.Assert(sorted.Length >= 3, "sorted.Length >= 3");
 
         switch (sorted.Length)
@@ -184,14 +183,214 @@ public static class SpanHelperBinaryOptimized
                     // [?] [?] [t] [t] [t] [t]
                     //         ^^^
                     // [         ]
-                    return FindIndexFirstAddressGreaterOrEqualsTo(sorted[..(mid + 1)], ascPredicate);
+                    return FindFirst(sorted[..(mid + 1)], ascPredicate);
                 }
                 else
                 {
                     // [?] [?] [f] [?] [?] [t]
                     //         ^^^
                     //             [         ]
-                    return (mid + 1) + FindIndexFirstAddressGreaterOrEqualsTo(sorted[(mid + 1)..], ascPredicate);
+                    return (mid + 1) + FindFirst(sorted[(mid + 1)..], ascPredicate);
+                }
+        }
+    }
+
+
+
+    /// <summary>
+    /// descPredicate of sorted must be F...F or T...T or T...TF...F
+    /// meaning sorted array is sorted in desc order of predicate descPredicate
+    /// 
+    /// example of usage:
+    /// FindFirst([0,2,4,6,8], x => x <= 5) should return index of number 4, it's 2
+    /// FindFirst([0,5,5,5,8], x => x <= 5) should return index of last number 5, it's 3
+    /// </summary>
+    public static SearchResult FindLast<T>(ReadOnlySpan<T> sorted, Predicate<T> descPredicate, out int index)
+    {
+        ArgumentNullException.ThrowIfNull(descPredicate);
+        switch (sorted.Length)
+        {
+            case 0:
+                index = default;
+                return SearchResult.ArrayIsEmpty;
+            case 1:
+                if (descPredicate(sorted[0]))
+                {
+                    index = 0;
+                    return SearchResult.ElementFound;
+                }
+
+                index = default;
+                return SearchResult.AllElementsNotSatisfiesCondition;
+            case 2:
+                if (descPredicate(sorted[1]))
+                {
+                    index = 1;
+                    return SearchResult.ElementFound;
+                }
+
+                if (descPredicate(sorted[0]))
+                {
+                    index = 0;
+                    return SearchResult.ElementFound;
+                }
+
+                index = default;
+                return SearchResult.AllElementsNotSatisfiesCondition;
+            case 3:
+                if (descPredicate(sorted[1]))
+                {
+                    if (descPredicate(sorted[2]))
+                    {
+                        index = 2;
+                        return SearchResult.ElementFound;
+                    }
+                    else
+                    {
+                        index = 1;
+                        return SearchResult.ElementFound;
+                    }
+                }
+                else
+                {
+                    if (descPredicate(sorted[0]))
+                    {
+                        index = 0;
+                        return SearchResult.ElementFound;
+                    }
+                    else
+                    {
+                        index = default;
+                        return SearchResult.AllElementsNotSatisfiesCondition;
+                    }
+                }
+            default:
+                Debug.Assert(sorted.Length > 3, "sorted.Length > 3");
+
+                if (descPredicate(sorted[^1])) // optional perf optimization?
+                {
+                    index = sorted.Length - 1;
+                    return SearchResult.ElementFound;
+                }
+
+                if (!descPredicate(sorted[0]))
+                {
+                    index = default;
+                    return SearchResult.AllElementsNotSatisfiesCondition;
+                }
+
+                // [t] [x] [x] [x] [f]
+                // [             ]
+                index = FindLast(sorted[..^1], descPredicate);
+                return SearchResult.ElementFound;
+        }
+    }
+    private static int FindLast<T>(ReadOnlySpan<T> sorted, Predicate<T> descPredicate)
+    {
+        ArgumentNullException.ThrowIfNull(descPredicate);
+        Debug.Assert(descPredicate(sorted[0]), "descPredicate(sorted[0]");
+        Debug.Assert(sorted.Length >= 3, "sorted.Length >= 3");
+
+        switch (sorted.Length)
+        {
+            //case 1:
+            //    return 0;
+            //case 2:
+            //    if (ascPredicate(sorted[0]))
+            //    {
+            //        return 0;
+            //    }
+            //    else
+            //    {
+            //        return 1;
+            //    }
+            case 3:
+                // [t] [x] [x]
+                if (descPredicate(sorted[2]))
+                {
+                    return 2;
+                }
+                else if (descPredicate(sorted[1]))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return 0;
+                }
+            case 4:
+                // [t] [x] [x] [x]
+                if (descPredicate(sorted[2]))
+                {
+                    if (descPredicate(sorted[3]))
+                    {
+                        return 3;
+                    }
+                    else
+                    {
+                        return 2;
+                    }
+                }
+                else
+                {
+                    // [t] [x] [f] [f]
+                    if (descPredicate(sorted[1]))
+                    {
+                        return 1;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+            case 5:
+                // [t] [x] [x] [x] [x]
+                if (descPredicate(sorted[2]))
+                {
+                    if (descPredicate(sorted[3]))
+                    {
+                        if (descPredicate(sorted[4]))
+                        {
+                            return 4;
+                        }
+                        else
+                        {
+                            return 3;
+                        }
+                    }
+                    else
+                    {
+                        return 2;
+                    }
+                }
+                else
+                {
+                    if (descPredicate(sorted[1]))
+                    {
+                        return 1;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+            default:
+                // [t] [x] [x] [x] [x] [x]
+                //             ^^^
+                int mid = 1 + (sorted.Length - 1) >> 1;
+                if (descPredicate(sorted[mid]))
+                {
+                    // [t] [x] [x] [t] [x] [x]
+                    //             ^^^
+                    //             [         ]
+                    return mid + FindLast(sorted[mid..], descPredicate);
+                }
+                else
+                {
+                    // [t] [x] [x] [f] [f] [f]
+                    //             ^^^
+                    // [         ]
+                    return FindLast(sorted[..mid], descPredicate);
                 }
         }
     }
