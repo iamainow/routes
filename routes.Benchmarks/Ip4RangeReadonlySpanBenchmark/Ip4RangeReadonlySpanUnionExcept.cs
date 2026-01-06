@@ -24,30 +24,44 @@ public class Ip4RangeReadonlySpanUnionExcept
     }
 
     [Benchmark]
-    public int Ip4RangeSetStackAlloc_ctor_Union2_span()
+    public int Ip4RangeReadonlySpan_Union_Union()
     {
-        Span<Ip4Range> span = stackalloc Ip4Range[SetSize * 2];
+        Span<Ip4Range> s0 = stackalloc Ip4Range[SetSize];
+        Span<Ip4Range> s1 = stackalloc Ip4Range[SetSize * 2];
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
-            var set = new Ip4RangeSetStackAlloc(span, rangesArray_1[index]);
-            set.Union2ModifySpan(rangesArray_2[index]);
-            result += set.RangesCount;
+            var resultInit = new Ip4RangeReadonlySpan();
+
+            int l0 = resultInit.Union(rangesArray_1[index], s0);
+            var result0 = new Ip4RangeReadonlySpan(s0[..l0]);
+
+            int l1 = result0.Union(rangesArray_2[index], s1);
+            var result1 = new Ip4RangeReadonlySpan(s1[..l1]);
+
+            result += result1.RangesCount;
         }
 
         return result;
     }
 
     [Benchmark]
-    public int Ip4RangeSetStackAlloc_ctor_ExceptUnsorted_span()
+    public int Ip4RangeReadonlySpan_Union_Except()
     {
-        Span<Ip4Range> span = stackalloc Ip4Range[SetSize * 2];
+        Span<Ip4Range> s0 = stackalloc Ip4Range[SetSize];
+        Span<Ip4Range> s1 = stackalloc Ip4Range[SetSize * 2];
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
-            var set = new Ip4RangeSetStackAlloc(span, rangesArray_1[index]);
-            set.ExceptModifySpan(rangesArray_2[index]);
-            result += set.RangesCount;
+            var resultInit = new Ip4RangeReadonlySpan();
+
+            int l0 = resultInit.Union(rangesArray_1[index], s0);
+            var result0 = new Ip4RangeReadonlySpan(s0[..l0]);
+
+            int l1 = result0.Except(rangesArray_2[index], s1);
+            var result1 = new Ip4RangeReadonlySpan(s1[..l1]);
+
+            result += result1.RangesCount;
         }
 
         return result;
