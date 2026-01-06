@@ -114,44 +114,6 @@ public readonly ref struct Ip4RangeReadonlySpan
     }
     private int ExceptSorted(scoped ReadOnlySpan<Ip4Range> other, scoped Span<Ip4Range> result)
     {
-        if (_ranges.Length == 0 || other.Length == 0)
-            return 0;
-
-        ListStackAlloc<Ip4Range> resultList = new ListStackAlloc<Ip4Range>(result);
-        int i = 0;
-        int j = 0;
-        while (i < _ranges.Length)
-        {
-            if (j >= other.Length)
-            {
-                // Add remaining ranges from this set
-                while (i < _ranges.Length)
-                {
-                    resultList.Add(_ranges[i++]);
-                }
-                break;
-            }
-            var curr = _ranges[i];
-            var otherCurr = other[j];
-            if (curr.LastAddress.ToUInt32() < otherCurr.FirstAddress.ToUInt32())
-            {
-                resultList.Add(curr);
-                i++;
-            }
-            else if (curr.FirstAddress.ToUInt32() > otherCurr.LastAddress.ToUInt32())
-            {
-                j++;
-            }
-            else
-            {
-                var excepted = curr.IntersectableExcept(otherCurr);
-                foreach (var ex in excepted)
-                {
-                    resultList.Add(ex);
-                }
-                i++;
-            }
-        }
-        return resultList.Count;
+        return SpanHelper.ExceptNormalizedSorted(_ranges, other, result);
     }
 }

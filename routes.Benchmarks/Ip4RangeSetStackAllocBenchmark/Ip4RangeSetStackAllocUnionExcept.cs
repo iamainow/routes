@@ -12,26 +12,26 @@ public class Ip4RangeSetStackAllocUnionExcept
     [Params(10, 100, 1_000)]
     public int SetSize { get; set; }
 
-    private List<Ip4Range[]> rangesArray_1 = [];
-    private List<Ip4Range[]> rangesArray_2 = [];
+    private Ip4Range[][] rangesArray_1 = [];
+    private Ip4Range[][] rangesArray_2 = [];
 
     [GlobalSetup]
     public async Task GlobalSetup()
     {
         Random random = new();
-        rangesArray_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
-        rangesArray_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
+        rangesArray_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToArray();
+        rangesArray_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToArray();
     }
 
     [Benchmark]
-    public int Ip4RangeSetStackAlloc_ctor_Union2_span()
+    public int Ip4RangeSetStackAlloc_ctor_Union_span()
     {
         Span<Ip4Range> span = stackalloc Ip4Range[SetSize * 2];
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
             var set = new Ip4RangeSetStackAlloc(span, rangesArray_1[index]);
-            set.Union2ModifySpan(rangesArray_2[index]);
+            set.Union(rangesArray_2[index]);
             result += set.RangesCount;
         }
 
@@ -39,14 +39,14 @@ public class Ip4RangeSetStackAllocUnionExcept
     }
 
     [Benchmark]
-    public int Ip4RangeSetStackAlloc_ctor_ExceptUnsorted_span()
+    public int Ip4RangeSetStackAlloc_ctor_Except_span()
     {
         Span<Ip4Range> span = stackalloc Ip4Range[SetSize * 2];
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
             var set = new Ip4RangeSetStackAlloc(span, rangesArray_1[index]);
-            set.ExceptModifySpan(rangesArray_2[index]);
+            set.Except(rangesArray_2[index]);
             result += set.RangesCount;
         }
 

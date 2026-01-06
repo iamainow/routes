@@ -472,4 +472,209 @@ public class Ip4RangeSetStackAllocTest
     }
 
     #endregion
+
+    #region Except Tests
+
+    [Fact]
+    public void Except_SingleRangeWithMultipleExclusions_ExcludesAll()
+    {
+        // Arrange: [0-100] except [20-30] and [50-60]
+        // Expected result: [0-19], [31-49], [61-100]
+        Span<Ip4Range> buffer = stackalloc Ip4Range[20];
+        var range = new Ip4Range(new Ip4Address(0), new Ip4Address(100));
+        Ip4Range[] elements = [range];
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        Span<Ip4Range> exclusions = [
+            new Ip4Range(new Ip4Address(20), new Ip4Address(30)),
+            new Ip4Range(new Ip4Address(50), new Ip4Address(60))
+        ];
+
+        // Act
+        set.Except(exclusions);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(3, spans.Length);
+        Assert.Equal(new Ip4Address(0), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(19), spans[0].LastAddress);
+        Assert.Equal(new Ip4Address(31), spans[1].FirstAddress);
+        Assert.Equal(new Ip4Address(49), spans[1].LastAddress);
+        Assert.Equal(new Ip4Address(61), spans[2].FirstAddress);
+        Assert.Equal(new Ip4Address(100), spans[2].LastAddress);
+    }
+
+    [Fact]
+    public void Except_SingleRangeWithThreeExclusions_ExcludesAll()
+    {
+        // Arrange: [0-100] except [10-20], [40-50], [70-80]
+        // Expected result: [0-9], [21-39], [51-69], [81-100]
+        Span<Ip4Range> buffer = stackalloc Ip4Range[20];
+        var range = new Ip4Range(new Ip4Address(0), new Ip4Address(100));
+        Ip4Range[] elements = [range];
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        Span<Ip4Range> exclusions = [
+            new Ip4Range(new Ip4Address(10), new Ip4Address(20)),
+            new Ip4Range(new Ip4Address(40), new Ip4Address(50)),
+            new Ip4Range(new Ip4Address(70), new Ip4Address(80))
+        ];
+
+        // Act
+        set.Except(exclusions);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(4, spans.Length);
+        Assert.Equal(new Ip4Address(0), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(9), spans[0].LastAddress);
+        Assert.Equal(new Ip4Address(21), spans[1].FirstAddress);
+        Assert.Equal(new Ip4Address(39), spans[1].LastAddress);
+        Assert.Equal(new Ip4Address(51), spans[2].FirstAddress);
+        Assert.Equal(new Ip4Address(69), spans[2].LastAddress);
+        Assert.Equal(new Ip4Address(81), spans[3].FirstAddress);
+        Assert.Equal(new Ip4Address(100), spans[3].LastAddress);
+    }
+
+    [Fact]
+    public void Except_ExclusionAtStart_ExcludesCorrectly()
+    {
+        // Arrange: [0-100] except [0-30]
+        // Expected result: [31-100]
+        Span<Ip4Range> buffer = stackalloc Ip4Range[20];
+        var range = new Ip4Range(new Ip4Address(0), new Ip4Address(100));
+        Ip4Range[] elements = [range];
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        Span<Ip4Range> exclusions = [new Ip4Range(new Ip4Address(0), new Ip4Address(30))];
+
+        // Act
+        set.Except(exclusions);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(31), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(100), spans[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_ExclusionAtEnd_ExcludesCorrectly()
+    {
+        // Arrange: [0-100] except [70-100]
+        // Expected result: [0-69]
+        Span<Ip4Range> buffer = stackalloc Ip4Range[20];
+        var range = new Ip4Range(new Ip4Address(0), new Ip4Address(100));
+        Ip4Range[] elements = [range];
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        Span<Ip4Range> exclusions = [new Ip4Range(new Ip4Address(70), new Ip4Address(100))];
+
+        // Act
+        set.Except(exclusions);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(0), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(69), spans[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_CompleteOverlap_ReturnsEmpty()
+    {
+        // Arrange: [10-50] except [0-100]
+        // Expected result: empty
+        Span<Ip4Range> buffer = stackalloc Ip4Range[20];
+        var range = new Ip4Range(new Ip4Address(10), new Ip4Address(50));
+        Ip4Range[] elements = [range];
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        Span<Ip4Range> exclusions = [new Ip4Range(new Ip4Address(0), new Ip4Address(100))];
+
+        // Act
+        set.Except(exclusions);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(0, spans.Length);
+    }
+
+    [Fact]
+    public void Except_DisjointRanges_NoChange()
+    {
+        // Arrange: [10-20] except [50-60]
+        // Expected result: [10-20] unchanged
+        Span<Ip4Range> buffer = stackalloc Ip4Range[20];
+        var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        Ip4Range[] elements = [range];
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        Span<Ip4Range> exclusions = [new Ip4Range(new Ip4Address(50), new Ip4Address(60))];
+
+        // Act
+        set.Except(exclusions);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(20), spans[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_EmptyExclusion_NoChange()
+    {
+        // Arrange: [10-20] except empty
+        // Expected result: [10-20] unchanged
+        Span<Ip4Range> buffer = stackalloc Ip4Range[20];
+        var range = new Ip4Range(new Ip4Address(10), new Ip4Address(20));
+        Ip4Range[] elements = [range];
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        Span<Ip4Range> exclusions = [];
+
+        // Act
+        set.Except(exclusions);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(1, spans.Length);
+        Assert.Equal(new Ip4Address(10), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(20), spans[0].LastAddress);
+    }
+
+    [Fact]
+    public void Except_MultipleRangesWithMultipleExclusions_HandlesCorrectly()
+    {
+        // Arrange: [0-50], [100-150] except [20-30], [120-130]
+        // Expected result: [0-19], [31-50], [100-119], [131-150]
+        Span<Ip4Range> buffer = stackalloc Ip4Range[20];
+        var range1 = new Ip4Range(new Ip4Address(0), new Ip4Address(50));
+        var range2 = new Ip4Range(new Ip4Address(100), new Ip4Address(150));
+        Ip4Range[] elements = [range1, range2];
+        var set = new Ip4RangeSetStackAlloc(buffer, elements);
+
+        Span<Ip4Range> exclusions = [
+            new Ip4Range(new Ip4Address(20), new Ip4Address(30)),
+            new Ip4Range(new Ip4Address(120), new Ip4Address(130))
+        ];
+
+        // Act
+        set.Except(exclusions);
+
+        // Assert
+        var spans = set.ToReadOnlySpan();
+        Assert.Equal(4, spans.Length);
+        Assert.Equal(new Ip4Address(0), spans[0].FirstAddress);
+        Assert.Equal(new Ip4Address(19), spans[0].LastAddress);
+        Assert.Equal(new Ip4Address(31), spans[1].FirstAddress);
+        Assert.Equal(new Ip4Address(50), spans[1].LastAddress);
+        Assert.Equal(new Ip4Address(100), spans[2].FirstAddress);
+        Assert.Equal(new Ip4Address(119), spans[2].LastAddress);
+        Assert.Equal(new Ip4Address(131), spans[3].FirstAddress);
+        Assert.Equal(new Ip4Address(150), spans[3].LastAddress);
+    }
+
+    #endregion
 }

@@ -56,7 +56,7 @@ public class Ip4RangeReadonlySpanRealistic
     }
 
     [Benchmark]
-    public int Ip4RangeReadonlySpan_Realistic()
+    public int Ip4RangeReadonlySpan_Realistic_WithParser_WithoutBuilder()
     {
         var all = Ip4SubnetParser.GetRanges("0.0.0.0/0");
         var ip = Ip4SubnetParser.GetRanges("1.2.3.4");
@@ -123,7 +123,7 @@ public class Ip4RangeReadonlySpanRealistic
     }
 
     [Benchmark]
-    public int Ip4RangeReadonlySpan_RealisticW_WithoutParser_WithBuilder()
+    public int Ip4RangeReadonlySpan_Realistic_WithoutParser_WithBuilder()
     {
         var all0 = Ip4Range.All;
         var all = MemoryMarshal.CreateSpan(ref all0, 1);

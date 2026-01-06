@@ -65,24 +65,69 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
 
     public Ip4Range[] IntersectableExcept(Ip4Range other)
     {
-        bool hasLeftPart = other.FirstAddress > FirstAddress && CanDecrement(other.FirstAddress);
-        bool hasRightPart = other.LastAddress < LastAddress && CanIncrement(other.LastAddress);
-
-        if (hasLeftPart && hasRightPart)
-            return [CreateLeftPart(other.FirstAddress), CreateRightPart(other.LastAddress)];
+        bool hasLeftPart = other.FirstAddress > FirstAddress && other.FirstAddress > Ip4Address.MinValue;
+        bool hasRightPart = other.LastAddress < LastAddress && other.LastAddress < Ip4Address.MaxValue;
 
         if (hasLeftPart)
-            return [CreateLeftPart(other.FirstAddress)];
-
-        if (hasRightPart)
-            return [CreateRightPart(other.LastAddress)];
-
-        return [];
+        {
+            if (hasRightPart)
+            {
+                return [CreateLeftPart(other.FirstAddress), CreateRightPart(other.LastAddress)];
+            }
+            else
+            {
+                return [CreateLeftPart(other.FirstAddress)];
+            }
+        }
+        else
+        {
+            if (hasRightPart)
+            {
+                return [CreateRightPart(other.LastAddress)];
+            }
+            else
+            {
+                return [];
+            }
+        }
     }
 
-    private static bool CanIncrement(Ip4Address address) => address.ToUInt32() < uint.MaxValue;
+    public (bool hasLeft, bool hasRight) IntersectableExcept(Ip4Range other, out Ip4Range leftResult, out Ip4Range rightResult)
+    {
+        bool hasLeftPart = other.FirstAddress > FirstAddress && other.FirstAddress > Ip4Address.MinValue;
+        bool hasRightPart = other.LastAddress < LastAddress && other.LastAddress < Ip4Address.MaxValue;
 
-    private static bool CanDecrement(Ip4Address address) => address.ToUInt32() > 0;
+        if (hasLeftPart)
+        {
+            if (hasRightPart)
+            {
+                leftResult = CreateLeftPart(other.FirstAddress);
+                rightResult = CreateRightPart(other.LastAddress);
+                return (true, true);
+            }
+            else
+            {
+                leftResult = CreateLeftPart(other.FirstAddress);
+                rightResult = default;
+                return (true, false);
+            }
+        }
+        else
+        {
+            if (hasRightPart)
+            {
+                leftResult = default;
+                rightResult = CreateRightPart(other.LastAddress);
+                return (false, true);
+            }
+            else
+            {
+                leftResult = default;
+                rightResult = default;
+                return (false, false);
+            }
+        }
+    }
 
     private Ip4Range CreateLeftPart(Ip4Address otherStart)
     {

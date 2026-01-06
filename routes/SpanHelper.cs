@@ -5,53 +5,95 @@ namespace routes;
 // normalized - sorted, not overlapped, non-adjacent
 public static class SpanHelper
 {
-    public static int MakeNormalizedFromSorted(ReadOnlySpan<Ip4Range> sorted, Span<Ip4Range> result)
+    public static int MakeNormalizedFromSorted(Span<Ip4Range> result)
     {
-        var resultList = new ListStackAlloc<Ip4Range>(result);
+        if (result.Length <= 1) return result.Length;
 
-        if (sorted.Length > 0)
+        var resultList = new ListStackAlloc<Ip4Range>(result, 1);
+
+        for (int i = 1; i < result.Length; i++)
         {
-            resultList.Add(sorted[0]);
-            for (int i = 1; i < sorted.Length; i++)
-            {
-                var current = sorted[i];
-                ref var last = ref resultList.Last();
+            var current = result[i];
+            ref var last = ref resultList.Last();
 
-                if (last.LastAddress.ToUInt32() + 1UL >= current.FirstAddress.ToUInt32())
-                {
-                    last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, current.LastAddress));
-                }
-                else
-                {
-                    resultList.Add(current);
-                }
+            if (last.LastAddress.ToUInt32() + 1UL >= current.FirstAddress.ToUInt32())
+            {
+                last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, current.LastAddress));
+            }
+            else
+            {
+                resultList.Add(current);
             }
         }
 
         return resultList.Count;
     }
 
-    public static int MakeNormalizedFromUnsorted(Span<Ip4Range> unsorted, Span<Ip4Range> result)
+    public static int MakeNormalizedFromUnsorted(Span<Ip4Range> result)
     {
-        unsorted.Sort(Ip4RangeComparer.Instance);
-        return MakeNormalizedFromSorted(unsorted, result);
-    }
-
-    public static int MakeNormalizedFromUnsorted(ReadOnlySpan<Ip4Range> unsorted, Span<Ip4Range> result)
-    {
-        Span<Ip4Range> temp = stackalloc Ip4Range[unsorted.Length];
-        unsorted.CopyTo(temp);
-        temp.Sort(Ip4RangeComparer.Instance);
-        return MakeNormalizedFromSorted(temp, result);
+        result.Sort(Ip4RangeComparer.Instance);
+        return MakeNormalizedFromSorted(result);
     }
 
 
 
     public static int UnionSortedSorted(ReadOnlySpan<Ip4Range> sorted1, ReadOnlySpan<Ip4Range> sorted2, Span<Ip4Range> result)
     {
-        ListStackAlloc<Ip4Range> temp = new ListStackAlloc<Ip4Range>(stackalloc Ip4Range[sorted1.Length + sorted2.Length]);
+        if (result.Overlaps(sorted1))
+        {
+            throw new ArgumentException($"result can't overlap with sorted1", nameof(result));
+        }
+
+        if (result.Overlaps(sorted2))
+        {
+            throw new ArgumentException("result can't overlap with sorted2", nameof(result));
+        }
+
+        if (sorted1.Length == 0)
+        {
+            sorted2.CopyTo(result);
+            return sorted2.Length;
+        }
+
+        if (sorted2.Length == 0)
+        {
+            sorted1.CopyTo(result);
+            return sorted1.Length;
+        }
+
+        ListStackAlloc<Ip4Range> resultList = new ListStackAlloc<Ip4Range>(result);
         int i = 0;
         int j = 0;
+
+        {
+            Ip4Range curr;
+            if (i >= sorted1.Length)
+            {
+                curr = sorted2[j++];
+            }
+            else if (j >= sorted2.Length)
+            {
+                curr = sorted1[i++];
+            }
+            else
+            {
+                var left = sorted1[i];
+                var right = sorted2[j];
+                if (left.FirstAddress.ToUInt32() <= right.FirstAddress.ToUInt32())
+                {
+                    curr = left;
+                    i++;
+                }
+                else
+                {
+                    curr = right;
+                    j++;
+                }
+            }
+
+            resultList.Add(curr);
+        }
+
         while (i < sorted1.Length || j < sorted2.Length)
         {
             Ip4Range curr;
@@ -79,26 +121,18 @@ public static class SpanHelper
                 }
             }
 
-            if (temp.Count == 0)
+            ref var last = ref resultList.Last();
+            if (last.LastAddress.ToUInt32() + 1UL >= curr.FirstAddress.ToUInt32())
             {
-                temp.Add(curr);
+                last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, curr.LastAddress));
             }
             else
             {
-                ref var last = ref temp.Last();
-                if (last.LastAddress.ToUInt32() + 1UL >= curr.FirstAddress.ToUInt32())
-                {
-                    last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, curr.LastAddress));
-                }
-                else
-                {
-                    temp.Add(curr);
-                }
+                resultList.Add(curr);
             }
         }
 
-        temp.AsReadOnlySpan().CopyTo(result);
-        return temp.Count;
+        return resultList.Count;
     }
 
     public static int UnionNormalizedNormalized(ReadOnlySpan<Ip4Range> normalized1, ReadOnlySpan<Ip4Range> normalized2, Span<Ip4Range> result)
@@ -170,5 +204,111 @@ public static class SpanHelper
         unsorted2.Sort(Ip4RangeComparer.Instance);
 
         return UnionSortedSorted(unsorted1, unsorted2, result);
+    }
+
+
+
+    public static int ExceptNormalizedSorted(ReadOnlySpan<Ip4Range> normalized, ReadOnlySpan<Ip4Range> sorted, Span<Ip4Range> result)
+    {
+        if (normalized.Length == 0)
+        {
+            return 0;
+        }
+
+        if (sorted.Length == 0)
+        {
+            normalized.CopyTo(result);
+            return normalized.Length;
+        }
+
+        ListStackAlloc<Ip4Range> resultList = new ListStackAlloc<Ip4Range>(result);
+
+        int i = 0;
+        int j = 0;
+        Ip4Range? curr = normalized[i];
+
+        while (curr.HasValue)
+        {
+            if (j >= sorted.Length)
+            {
+                // No more exclusion ranges, add current and remaining ranges
+                resultList.Add(curr.Value);
+                i++;
+                while (i < normalized.Length)
+                {
+                    resultList.Add(normalized[i++]);
+                }
+                break;
+            }
+
+            var currentRange = curr.Value;
+            var otherCurr = sorted[j];
+
+            if (currentRange.LastAddress.ToUInt32() < otherCurr.FirstAddress.ToUInt32())
+            {
+                // Current range is entirely before exclusion range - keep it and move to next
+                resultList.Add(currentRange);
+                i++;
+                curr = i < normalized.Length ? normalized[i] : null;
+            }
+            else if (currentRange.FirstAddress.ToUInt32() > otherCurr.LastAddress.ToUInt32())
+            {
+                // Current range is entirely after exclusion range - move to next exclusion
+                j++;
+            }
+            else
+            {
+                // Ranges overlap - compute the difference
+                (bool hasLeftPart, bool hasRightPart) = currentRange.IntersectableExcept(otherCurr, out var leftPart, out var rightPart);
+
+                if (!hasLeftPart && !hasRightPart)
+                {
+                    // Current range completely covered by exclusion - move to next normalized range
+                    i++;
+                    curr = i < normalized.Length ? normalized[i] : null;
+                }
+                else if (hasLeftPart && !hasRightPart)
+                {
+                    // Left part only - it ends before the exclusion starts, so it's finalized
+                    resultList.Add(leftPart);
+                    i++;
+                    curr = i < normalized.Length ? normalized[i] : null;
+                }
+                else if (!hasLeftPart && hasRightPart)
+                {
+                    // Right part only - it starts after exclusion ends, may overlap with next exclusions
+                    curr = rightPart;
+                    j++;
+                }
+                else
+                {
+                    // Two parts: left part is finalized, right part needs further processing
+                    resultList.Add(leftPart);
+                    curr = rightPart;
+                    j++;
+                }
+            }
+        }
+
+        return resultList.Count;
+    }
+
+    public static int ExceptNormalizedNormalized(ReadOnlySpan<Ip4Range> normalized1, ReadOnlySpan<Ip4Range> normalized2, Span<Ip4Range> result)
+    {
+        return ExceptNormalizedSorted(normalized1, normalized2, result);
+    }
+
+    public static int ExceptNormalizedUnsorted(ReadOnlySpan<Ip4Range> normalized, ReadOnlySpan<Ip4Range> unsorted, Span<Ip4Range> result)
+    {
+        Span<Ip4Range> temp = stackalloc Ip4Range[unsorted.Length];
+        unsorted.CopyTo(temp);
+        temp.Sort(Ip4RangeComparer.Instance);
+        return ExceptNormalizedSorted(normalized, temp, result);
+    }
+
+    public static int ExceptNormalizedUnsorted(ReadOnlySpan<Ip4Range> normalized, Span<Ip4Range> unsorted, Span<Ip4Range> result)
+    {
+        unsorted.Sort(Ip4RangeComparer.Instance);
+        return ExceptNormalizedSorted(normalized, unsorted, result);
     }
 }

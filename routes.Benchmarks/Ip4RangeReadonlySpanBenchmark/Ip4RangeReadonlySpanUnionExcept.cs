@@ -12,15 +12,15 @@ public class Ip4RangeReadonlySpanUnionExcept
     [Params(10, 100, 1_000)]
     public int SetSize { get; set; }
 
-    private List<Ip4Range[]> rangesArray_1 = [];
-    private List<Ip4Range[]> rangesArray_2 = [];
+    private Ip4Range[][] rangesArray_1 = [];
+    private Ip4Range[][] rangesArray_2 = [];
 
     [GlobalSetup]
     public async Task GlobalSetup()
     {
         Random random = new();
-        rangesArray_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
-        rangesArray_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToList();
+        rangesArray_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToArray();
+        rangesArray_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToArray();
     }
 
     [Benchmark]

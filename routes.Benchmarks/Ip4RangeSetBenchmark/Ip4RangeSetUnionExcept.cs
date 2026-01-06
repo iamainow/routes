@@ -12,21 +12,21 @@ public class Ip4RangeSetUnionExcept
     [Params(10, 100, 1_000)]
     public int SetSize { get; set; }
 
-    private List<Ip4RangeSet> rangeSets_1 = [];
-    private List<Ip4RangeSet> rangeSets_2 = [];
-    private List<Ip4Range[]> rangesArray_2 = [];
+    private Ip4RangeSet[] rangeSets_1 = [];
+    private Ip4RangeSet[] rangeSets_2 = [];
+    private Ip4Range[][] rangesArray_2 = [];
 
     [GlobalSetup]
     public async Task GlobalSetup()
     {
         Random random = new();
-        rangeSets_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).ToList();
-        rangeSets_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).ToList();
-        rangesArray_2 = rangeSets_2.Select(x => x.ToIp4Ranges()).ToList();
+        rangeSets_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).ToArray();
+        rangeSets_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).ToArray();
+        rangesArray_2 = rangeSets_2.Select(x => x.ToIp4Ranges()).ToArray();
     }
 
     [Benchmark]
-    public int Ip4RangeSet_Union_Ip4RangeSet()
+    public int Ip4RangeSet_Union_set()
     {
         int result = 0;
         for (int index = 0; index < Count; ++index)
@@ -39,7 +39,7 @@ public class Ip4RangeSetUnionExcept
     }
 
     [Benchmark]
-    public int Ip4RangeSet_Union_Ip4RangeArray()
+    public int Ip4RangeSet_Union_span()
     {
         int result = 0;
         for (int index = 0; index < Count; ++index)
@@ -52,7 +52,7 @@ public class Ip4RangeSetUnionExcept
     }
 
     [Benchmark]
-    public int Ip4RangeSet_Except_Ip4RangeSet()
+    public int Ip4RangeSet_Except_set()
     {
         int result = 0;
         for (int index = 0; index < Count; ++index)
@@ -65,7 +65,7 @@ public class Ip4RangeSetUnionExcept
     }
 
     [Benchmark]
-    public int Ip4RangeSet_Except_Ip4RangeArray()
+    public int Ip4RangeSet_Except_span()
     {
         int result = 0;
         for (int index = 0; index < Count; ++index)

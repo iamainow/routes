@@ -72,7 +72,7 @@ public ref struct ListStackAlloc<T>
         _items[_size++] = item;
     }
 
-    public void AddRange(Span<T> items)
+    public void AddRange(scoped Span<T> items)
     {
         if (Count + items.Length > Capacity)
         {
@@ -82,7 +82,7 @@ public ref struct ListStackAlloc<T>
         _size += items.Length;
     }
 
-    public void AddRange(ReadOnlySpan<T> items)
+    public void AddRange(scoped ReadOnlySpan<T> items)
     {
         if (Count + items.Length > Capacity)
         {
@@ -92,7 +92,7 @@ public ref struct ListStackAlloc<T>
         _size += items.Length;
     }
 
-    public void AddRange(ListStackAlloc<T> items)
+    public void AddRange(scoped ListStackAlloc<T> items)
     {
         AddRange(items.AsReadOnlySpan());
     }

@@ -8,187 +8,64 @@ public ref struct Ip4RangeSetStackAlloc
 
     public readonly int RangesCount => _ranges.Count;
 
-    public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer)
+    public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer, int count = 0)
     {
-        _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer);
+        _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer, count);
     }
 
     /// <param name="elements">span of values, values may be unsorted, may overlapping, may adjacent/disjoint</param>
     public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer, scoped ReadOnlySpan<Ip4Range> elements)
     {
-        _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer);
-
-        Span<Ip4Range> temp = stackalloc Ip4Range[elements.Length];
-        elements.CopyTo(temp);
-        temp.Sort(Ip4RangeComparer.Instance);
-
-        // here temp sorted, but may overlap or be adjacent/disjoint
-
-        if (temp.Length > 0)
-        {
-            _ranges.Add(temp[0]);
-            for (int i = 1; i < temp.Length; i++)
-            {
-                var current = temp[i];
-                ref var last = ref _ranges.Last();
-
-                if (last.LastAddress.ToUInt32() + 1UL >= current.FirstAddress.ToUInt32())
-                {
-                    last = new Ip4Range(last.FirstAddress, current.LastAddress);
-                }
-                else
-                {
-                    _ranges.Add(current);
-                }
-            }
-        }
+        elements.CopyTo(rewritableInternalBuffer);
+        int length = SpanHelper.MakeNormalizedFromUnsorted(rewritableInternalBuffer[..elements.Length]);
+        _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer, length);
     }
 
-    public void Union(Ip4RangeSetStackAlloc other)
+    public void Union(scoped Ip4RangeSetStackAlloc other)
     {
-        SmartUnionSorted(other.ToReadOnlySpan());
-    }
-
-    public void Union2ModifySpan(scoped Span<Ip4Range> other)
-    {
-        other.Sort(Ip4RangeComparer.Instance);
-        SmartUnionSorted(other);
-    }
-
-    public void SmartUnionUnorderedModifySpan(scoped Span<Ip4Range> other)
-    {
-        other.Sort(Ip4RangeComparer.Instance);
-        SmartUnionSorted(other);
-    }
-
-    // merge sorted arrays into some temp span and then in the end copy to this._range
-    private void SmartUnionSorted(scoped ReadOnlySpan<Ip4Range> other)
-    {
-        ListStackAlloc<Ip4Range> temp = new ListStackAlloc<Ip4Range>(stackalloc Ip4Range[_ranges.Count + other.Length]);
-        int i = 0;
-        int j = 0;
-        while (i < _ranges.Count || j < other.Length)
-        {
-            Ip4Range curr;
-            if (i >= _ranges.Count)
-            {
-                curr = other[j++];
-            }
-            else if (j >= other.Length)
-            {
-                curr = _ranges[i++];
-            }
-            else
-            {
-                var left = _ranges[i];
-                var right = other[j];
-                if (left.FirstAddress.ToUInt32() <= right.FirstAddress.ToUInt32())
-                {
-                    curr = left;
-                    i++;
-                }
-                else
-                {
-                    curr = right;
-                    j++;
-                }
-            }
-            if (temp.Count == 0)
-            {
-                temp.Add(curr);
-            }
-            else
-            {
-                ref var last = ref temp.Last();
-                if (last.LastAddress.ToUInt32() == uint.MaxValue)
-                {
-                    last = new Ip4Range(last.FirstAddress, new Ip4Address(uint.MaxValue));
-                    break;
-                }
-                if (last.LastAddress.ToUInt32() + 1UL >= curr.FirstAddress.ToUInt32())
-                {
-                    last = new Ip4Range(last.FirstAddress, new Ip4Address(Math.Max(last.LastAddress.ToUInt32(), curr.LastAddress.ToUInt32())));
-                }
-                else
-                {
-                    temp.Add(curr);
-                }
-            }
-        }
-
+        Span<Ip4Range> temp = stackalloc Ip4Range[this.RangesCount + other.RangesCount];
+        int length = SpanHelper.UnionNormalizedNormalized(_ranges.AsReadOnlySpan(), other.ToReadOnlySpan(), temp);
         _ranges.Clear();
-        for (int k = 0; k < temp.Count; k++)
-        {
-            _ranges.Add(temp.AsSpan()[k]);
-        }
+        _ranges.AddRange(temp[..length]);
     }
 
-    private static int CalcExceptBufferSize(int left, int right)
+    public void Union(scoped ReadOnlySpan<Ip4Range> other)
     {
-        return (left + right);
-    }
-
-    public void ExceptModifySpan(scoped Span<Ip4Range> other)
-    {
-        other.Sort(Ip4RangeComparer.Instance);
-        InternalExceptSorted(other);
-    }
-
-    private void InternalExceptSorted(scoped ReadOnlySpan<Ip4Range> other)
-    {
-        if (_ranges.Count == 0 || other.Length == 0)
-            return;
-
-        Span<Ip4Range> temp = stackalloc Ip4Range[CalcExceptBufferSize(_ranges.Count, other.Length)];
-        int count = 0;
-
-        int i = 0;
-        int j = 0;
-
-        while (i < _ranges.Count)
-        {
-            if (j >= other.Length)
-            {
-                // Add remaining ranges from this set
-                while (i < _ranges.Count)
-                {
-                    temp[count++] = _ranges[i++];
-                }
-                break;
-            }
-
-            var curr = _ranges[i];
-            var otherCurr = other[j];
-
-            if (curr.LastAddress.ToUInt32() < otherCurr.FirstAddress.ToUInt32())
-            {
-                temp[count++] = curr;
-                i++;
-            }
-            else if (curr.FirstAddress.ToUInt32() > otherCurr.LastAddress.ToUInt32())
-            {
-                j++;
-            }
-            else
-            {
-                var excepted = curr.IntersectableExcept(otherCurr);
-                foreach (var ex in excepted)
-                {
-                    temp[count++] = ex;
-                }
-                i++;
-            }
-        }
-
+        Span<Ip4Range> temp = stackalloc Ip4Range[this.RangesCount + other.Length];
+        int length = SpanHelper.UnionNormalizedUnsorted(_ranges.AsReadOnlySpan(), other, temp);
         _ranges.Clear();
-        for (int k = 0; k < count; k++)
-        {
-            _ranges.Add(temp[k]);
-        }
+        _ranges.AddRange(temp[..length]);
     }
 
-    private static int CalcIntersectBufferSize(int left, int right)
+    public void Union(scoped Span<Ip4Range> other)
     {
-        return Math.Max(left + right - 1, 0);
+        Span<Ip4Range> temp = stackalloc Ip4Range[this.RangesCount + other.Length];
+        int length = SpanHelper.UnionNormalizedUnsorted(_ranges.AsReadOnlySpan(), other, temp);
+        _ranges.Clear();
+        _ranges.AddRange(temp[..length]);
+    }
+
+    public void Except(scoped Ip4RangeSetStackAlloc other)
+    {
+        Span<Ip4Range> temp = stackalloc Ip4Range[this.RangesCount + other.RangesCount];
+        int length = SpanHelper.ExceptNormalizedNormalized(_ranges.AsReadOnlySpan(), other.ToReadOnlySpan(), temp);
+        _ranges.Clear();
+        _ranges.AddRange(temp[..length]);
+    }
+
+    public void Except(scoped ReadOnlySpan<Ip4Range> other)
+    {
+        Span<Ip4Range> temp = stackalloc Ip4Range[this.RangesCount + other.Length];
+        int length = SpanHelper.ExceptNormalizedUnsorted(_ranges.AsReadOnlySpan(), other, temp);
+        _ranges.Clear();
+        _ranges.AddRange(temp[..length]);
+    }
+
+    public void Except(scoped Span<Ip4Range> other)
+    {
+        Span<Ip4Range> temp = stackalloc Ip4Range[this.RangesCount + other.Length];
+        int length = SpanHelper.ExceptNormalizedUnsorted(_ranges.AsReadOnlySpan(), other, temp);
+        _ranges.Clear();
+        _ranges.AddRange(temp[..length]);
     }
 }
