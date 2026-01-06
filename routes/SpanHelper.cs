@@ -1,8 +1,8 @@
-﻿namespace routes;
+namespace routes;
 
 // unsorted - unsorted, overlapping/adjacent
 // sorted - sorted but overlapping/adjacent
-// normalized - sorted, not oveplaped, non-adjacent
+// normalized - sorted, not overlapped, non-adjacent
 public static class SpanHelper
 {
     public static int MakeNormalizedFromSorted(ReadOnlySpan<Ip4Range> sorted, Span<Ip4Range> result)
@@ -19,7 +19,7 @@ public static class SpanHelper
 
                 if (last.LastAddress.ToUInt32() + 1UL >= current.FirstAddress.ToUInt32())
                 {
-                    last = new Ip4Range(last.FirstAddress, current.LastAddress);
+                    last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, current.LastAddress));
                 }
                 else
                 {
@@ -44,6 +44,8 @@ public static class SpanHelper
         temp.Sort(Ip4RangeComparer.Instance);
         return MakeNormalizedFromSorted(temp, result);
     }
+
+
 
     public static int UnionSortedSorted(ReadOnlySpan<Ip4Range> sorted1, ReadOnlySpan<Ip4Range> sorted2, Span<Ip4Range> result)
     {
@@ -120,6 +122,53 @@ public static class SpanHelper
     public static int UnionNormalizedUnsorted(ReadOnlySpan<Ip4Range> normalized, Span<Ip4Range> unsorted, Span<Ip4Range> result)
     {
         unsorted.Sort(Ip4RangeComparer.Instance);
-        return UnionSortedSorted(normalized, unsorted, result);
+        return UnionNormalizedSorted(normalized, unsorted, result);
+    }
+
+    public static int UnionSortedUnsorted(ReadOnlySpan<Ip4Range> sorted, ReadOnlySpan<Ip4Range> unsorted, Span<Ip4Range> result)
+    {
+        Span<Ip4Range> temp = stackalloc Ip4Range[unsorted.Length];
+        unsorted.CopyTo(temp);
+        temp.Sort(Ip4RangeComparer.Instance);
+        return UnionSortedSorted(sorted, temp, result);
+    }
+
+    public static int UnionSortedUnsorted(ReadOnlySpan<Ip4Range> sorted, Span<Ip4Range> unsorted, Span<Ip4Range> result)
+    {
+        unsorted.Sort(Ip4RangeComparer.Instance);
+        return UnionSortedSorted(sorted, unsorted, result);
+    }
+
+    public static int UnionUnsortedUnsorted(ReadOnlySpan<Ip4Range> unsorted1, ReadOnlySpan<Ip4Range> unsorted2, Span<Ip4Range> result)
+    {
+        Span<Ip4Range> temp1 = stackalloc Ip4Range[unsorted1.Length];
+        unsorted1.CopyTo(temp1);
+        temp1.Sort(Ip4RangeComparer.Instance);
+
+        Span<Ip4Range> temp2 = stackalloc Ip4Range[unsorted2.Length];
+        unsorted2.CopyTo(temp2);
+        temp2.Sort(Ip4RangeComparer.Instance);
+
+        return UnionSortedSorted(temp1, temp2, result);
+    }
+
+    public static int UnionUnsortedUnsorted(ReadOnlySpan<Ip4Range> unsorted1, Span<Ip4Range> unsorted2, Span<Ip4Range> result)
+    {
+        Span<Ip4Range> temp1 = stackalloc Ip4Range[unsorted1.Length];
+        unsorted1.CopyTo(temp1);
+        temp1.Sort(Ip4RangeComparer.Instance);
+
+        unsorted2.Sort(Ip4RangeComparer.Instance);
+
+        return UnionSortedSorted(temp1, unsorted2, result);
+    }
+
+    public static int UnionUnsortedUnsorted(Span<Ip4Range> unsorted1, Span<Ip4Range> unsorted2, Span<Ip4Range> result)
+    {
+        unsorted1.Sort(Ip4RangeComparer.Instance);
+
+        unsorted2.Sort(Ip4RangeComparer.Instance);
+
+        return UnionSortedSorted(unsorted1, unsorted2, result);
     }
 }
