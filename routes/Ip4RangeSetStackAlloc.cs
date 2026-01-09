@@ -8,7 +8,12 @@ public ref struct Ip4RangeSetStackAlloc
 
     public readonly int RangesCount => _ranges.Count;
 
-    public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer, int count = 0)
+    public Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer)
+    {
+        _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer);
+    }
+
+    private Ip4RangeSetStackAlloc(Span<Ip4Range> rewritableInternalBuffer, int count)
     {
         _ranges = new ListStackAlloc<Ip4Range>(rewritableInternalBuffer, count);
     }

@@ -133,7 +133,7 @@ public static class SpanHelper
                 last = new Ip4Range(last.FirstAddress, Ip4Address.MaxValue);
                 return resultList.Count;
             }
-            else if (last.LastAddress.ToUInt32() + 1UL >= curr.FirstAddress.ToUInt32())
+            else if (last.LastAddress.ToUInt32() + 1U >= curr.FirstAddress.ToUInt32())
             {
                 last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, curr.LastAddress));
             }
