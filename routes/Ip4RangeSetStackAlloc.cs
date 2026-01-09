@@ -50,6 +50,46 @@ public ref struct Ip4RangeSetStackAlloc
         _ranges.AddRange(temp[..length]);
     }
 
+    public readonly Ip4RangeSetStackAlloc UnionAsNew(scoped Ip4RangeSetStackAlloc other, Span<Ip4Range> resultBuffer)
+    {
+        int length = SpanHelper.UnionNormalizedNormalized(_ranges.AsReadOnlySpan(), other.ToReadOnlySpan(), resultBuffer);
+        return new Ip4RangeSetStackAlloc(resultBuffer, length);
+    }
+
+    public readonly Ip4RangeSetStackAlloc UnionAsNew(scoped ReadOnlySpan<Ip4Range> other, Span<Ip4Range> resultBuffer)
+    {
+        int length = SpanHelper.UnionNormalizedUnsorted(_ranges.AsReadOnlySpan(), other, resultBuffer);
+        return new Ip4RangeSetStackAlloc(resultBuffer, length);
+    }
+
+    public readonly Ip4RangeSetStackAlloc UnionAsNew(scoped Span<Ip4Range> other, Span<Ip4Range> resultBuffer)
+    {
+        int length = SpanHelper.UnionNormalizedUnsorted(_ranges.AsReadOnlySpan(), other, resultBuffer);
+        return new Ip4RangeSetStackAlloc(resultBuffer, length);
+    }
+
+    public readonly Ip4RangeSetStackAlloc UnionAsNewHeap(scoped Ip4RangeSetStackAlloc other)
+    {
+        Span<Ip4Range> temp = new Ip4Range[this.RangesCount + other.RangesCount];
+        int length = SpanHelper.UnionNormalizedNormalized(_ranges.AsReadOnlySpan(), other.ToReadOnlySpan(), temp);
+        return new Ip4RangeSetStackAlloc(temp, length);
+    }
+
+    public readonly Ip4RangeSetStackAlloc UnionAsNewHeap(scoped ReadOnlySpan<Ip4Range> other)
+    {
+        Span<Ip4Range> temp = new Ip4Range[this.RangesCount + other.Length];
+        int length = SpanHelper.UnionNormalizedUnsorted(_ranges.AsReadOnlySpan(), other, temp);
+        return new Ip4RangeSetStackAlloc(temp, length);
+    }
+
+    public readonly Ip4RangeSetStackAlloc UnionAsNewHeap(scoped Span<Ip4Range> other)
+    {
+        Span<Ip4Range> temp = new Ip4Range[this.RangesCount + other.Length];
+        int length = SpanHelper.UnionNormalizedUnsorted(_ranges.AsReadOnlySpan(), other, temp);
+        return new Ip4RangeSetStackAlloc(temp, length);
+    }
+
+
     public void Except(scoped Ip4RangeSetStackAlloc other)
     {
         Span<Ip4Range> temp = stackalloc Ip4Range[this.RangesCount + other.RangesCount];
