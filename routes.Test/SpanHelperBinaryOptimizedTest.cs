@@ -994,4 +994,188 @@ public class SpanHelperBinaryOptimizedTest
     }
 
     #endregion
+
+    #region FindFirstAndFindLast Tests
+
+    [Fact]
+    public void FindFirstAndFindLast_EmptyArray_ReturnsArrayIsEmpty()
+    {
+        ReadOnlySpan<int> empty = [];
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(empty, x => x >= 5, x => x <= 10, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.ArrayIsEmpty, result);
+        Assert.Equal(0, firstIndex);
+        Assert.Equal(0, lastIndex);
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_NoAscSatisfaction_ReturnsOutOfBoundsAtRight()
+    {
+        ReadOnlySpan<int> array = [0, 2, 4];
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= 10, x => x <= 15, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.OutOfBoundsAtRight, result);
+        Assert.Equal(0, firstIndex);
+        Assert.Equal(0, lastIndex);
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_AscSatisfied_NoDescSatisfaction_ReturnsOutOfBoundsAtLeft()
+    {
+        ReadOnlySpan<int> array = [0, 2, 4, 6, 8];
+
+        try
+        {
+            SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= 5, x => x <= 3, out var firstIndex, out var lastIndex);
+            Assert.Fail("Expected ArgumentNullException");
+        }
+        catch (ArgumentException)
+        {
+            // Expected
+        }
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_SingleElement_BothSatisfy_ReturnsElementFound()
+    {
+        ReadOnlySpan<int> array = [10];
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= 5, x => x <= 15, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.ElementFound, result);
+        Assert.Equal(0, firstIndex);
+        Assert.Equal(0, lastIndex);
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_TwoElements_BothSatisfy_ReturnsIndices()
+    {
+        ReadOnlySpan<int> array = [5, 10];
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= 0, x => x <= 15, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.ElementFound, result);
+        Assert.Equal(0, firstIndex);
+        Assert.Equal(1, lastIndex);
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_ThreeElements_PartialSatisfy_ReturnsCorrectIndices()
+    {
+        ReadOnlySpan<int> array = [0, 2, 4, 6, 8];
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= 2, x => x <= 6, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.ElementFound, result);
+        Assert.Equal(1, firstIndex); // 2
+        Assert.Equal(3, lastIndex); // 6 (relative to subspan starting at 1: [2,4,6,8] -> last <=6 is 6 at index 2, so absolute 1+2=3)
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_DocumentedExample_RangeMinus10To5_ReturnsIndices0To2()
+    {
+        ReadOnlySpan<int> array = [0, 2, 4, 6, 8];
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= -10, x => x <= 5, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.ElementFound, result);
+        Assert.Equal(0, firstIndex);
+        Assert.Equal(2, lastIndex);
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_DocumentedExample_Range5To10_ReturnsIndices3To4()
+    {
+        ReadOnlySpan<int> array = [0, 2, 4, 6, 8];
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= 5, x => x <= 10, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.ElementFound, result);
+        Assert.Equal(3, firstIndex); // 6
+        Assert.Equal(4, lastIndex); // 8
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_WithDuplicates_ReturnsCorrectRange()
+    {
+        ReadOnlySpan<int> array = [0, 5, 5, 5, 8];
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= 5, x => x <= 5, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.ElementFound, result);
+        Assert.Equal(1, firstIndex); // first 5
+        Assert.Equal(3, lastIndex); // last 5
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_AllElementsSatisfy_ReturnsFullRange()
+    {
+        ReadOnlySpan<int> array = [0, 2, 4];
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= -1, x => x <= 10, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.ElementFound, result);
+        Assert.Equal(0, firstIndex);
+        Assert.Equal(2, lastIndex);
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_FirstAndLastSameIndex_ReturnsSameIndex()
+    {
+        ReadOnlySpan<int> array = [0, 5, 10];
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= 5, x => x <= 5, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.ElementFound, result);
+        Assert.Equal(1, firstIndex);
+        Assert.Equal(1, lastIndex);
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_LargeArray_FindsCorrectIndices()
+    {
+        var array = Enumerable.Range(0, 100).ToArray().AsSpan();
+
+        var result = SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= 20, x => x <= 50, out var firstIndex, out var lastIndex);
+
+        Assert.Equal(SearchResult2.ElementFound, result);
+        Assert.Equal(20, firstIndex);
+        Assert.Equal(50, lastIndex);
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_NullAscPredicate_ThrowsArgumentNullException()
+    {
+        ReadOnlySpan<int> array = [0, 2, 4];
+
+        try
+        {
+            SpanHelperBinaryOptimized.FindFirstAndFindLast(array, null!, x => x <= 5, out _, out _);
+            Assert.Fail("Expected ArgumentNullException");
+        }
+        catch (ArgumentNullException)
+        {
+            // Expected
+        }
+    }
+
+    [Fact]
+    public void FindFirstAndFindLast_NullDescPredicate_ThrowsArgumentNullException()
+    {
+        ReadOnlySpan<int> array = [0, 2, 4];
+
+        try
+        {
+            SpanHelperBinaryOptimized.FindFirstAndFindLast(array, x => x >= 0, null!, out _, out _);
+            Assert.Fail("Expected ArgumentNullException");
+        }
+        catch (ArgumentNullException)
+        {
+            // Expected
+        }
+    }
+
+    #endregion
 }

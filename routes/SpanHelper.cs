@@ -16,7 +16,12 @@ public static class SpanHelper
             var current = result[i];
             ref var last = ref resultList.Last();
 
-            if (last.LastAddress.ToUInt32() + 1UL >= current.FirstAddress.ToUInt32())
+            if (last.LastAddress == Ip4Address.MaxValue)
+            {
+                last = new Ip4Range(last.FirstAddress, Ip4Address.MaxValue);
+                return resultList.Count;
+            }
+            else if (last.LastAddress.ToUInt32() + 1U >= current.FirstAddress.ToUInt32())
             {
                 last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, current.LastAddress));
             }
@@ -65,6 +70,7 @@ public static class SpanHelper
         int i = 0;
         int j = 0;
 
+        // first pass
         {
             Ip4Range curr;
             if (i >= sorted1.Length)
@@ -79,7 +85,7 @@ public static class SpanHelper
             {
                 var left = sorted1[i];
                 var right = sorted2[j];
-                if (left.FirstAddress.ToUInt32() <= right.FirstAddress.ToUInt32())
+                if (left.FirstAddress <= right.FirstAddress)
                 {
                     curr = left;
                     i++;
@@ -109,7 +115,7 @@ public static class SpanHelper
             {
                 var left = sorted1[i];
                 var right = sorted2[j];
-                if (left.FirstAddress.ToUInt32() <= right.FirstAddress.ToUInt32())
+                if (left.FirstAddress <= right.FirstAddress)
                 {
                     curr = left;
                     i++;
@@ -122,7 +128,12 @@ public static class SpanHelper
             }
 
             ref var last = ref resultList.Last();
-            if (last.LastAddress.ToUInt32() + 1UL >= curr.FirstAddress.ToUInt32())
+            if (last.LastAddress == Ip4Address.MaxValue)
+            {
+                last = new Ip4Range(last.FirstAddress, Ip4Address.MaxValue);
+                return resultList.Count;
+            }
+            else if (last.LastAddress.ToUInt32() + 1UL >= curr.FirstAddress.ToUInt32())
             {
                 last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, curr.LastAddress));
             }
@@ -254,14 +265,14 @@ public static class SpanHelper
             var currentRange = curr.Value;
             var otherCurr = sorted[j];
 
-            if (currentRange.LastAddress.ToUInt32() < otherCurr.FirstAddress.ToUInt32())
+            if (currentRange.LastAddress < otherCurr.FirstAddress)
             {
                 // Current range is entirely before exclusion range - keep it and move to next
                 resultList.Add(currentRange);
                 i++;
                 curr = i < normalized.Length ? normalized[i] : null;
             }
-            else if (currentRange.FirstAddress.ToUInt32() > otherCurr.LastAddress.ToUInt32())
+            else if (currentRange.FirstAddress > otherCurr.LastAddress)
             {
                 // Current range is entirely after exclusion range - move to next exclusion
                 j++;

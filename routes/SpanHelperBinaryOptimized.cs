@@ -285,6 +285,7 @@ public static class SpanHelperBinaryOptimized
                 return SearchResult.ElementFound;
         }
     }
+
     private static int FindLast<T>(ReadOnlySpan<T> sorted, Predicate<T> descPredicate)
     {
         ArgumentNullException.ThrowIfNull(descPredicate);
@@ -393,5 +394,47 @@ public static class SpanHelperBinaryOptimized
                     return FindLast(sorted[..mid], descPredicate);
                 }
         }
+    }
+
+    public static SearchResult2 FindFirstAndFindLast<T>(ReadOnlySpan<T> sorted, Predicate<T> ascPredicate, Predicate<T> descPredicate, out int firstIndex, out int lastIndex)
+    {
+        var findFirst = FindFirst(sorted, ascPredicate, out int firstIndex2);
+        if (findFirst == SearchResult.ArrayIsEmpty)
+        {
+            firstIndex = default;
+            lastIndex = default;
+            return SearchResult2.ArrayIsEmpty;
+        }
+        else if (findFirst == SearchResult.AllElementsNotSatisfiesCondition)
+        {
+            firstIndex = default;
+            lastIndex = default;
+            return SearchResult2.OutOfBoundsAtRight;
+        }
+
+        var findLast = FindLast(sorted[firstIndex2..], descPredicate, out int lastIndex2);
+        if (findLast == SearchResult.ArrayIsEmpty)
+        {
+            firstIndex = default;
+            lastIndex = default;
+            return SearchResult2.ArrayIsEmpty;
+        }
+        else if (findLast == SearchResult.AllElementsNotSatisfiesCondition)
+        {
+            if (firstIndex2 == 0)
+            {
+                firstIndex = default;
+                lastIndex = default;
+                return SearchResult2.OutOfBoundsAtLeft;
+            }
+            else
+            {
+                throw new ArgumentException($"{nameof(ascPredicate)} and {nameof(descPredicate)} is invalid and return nonsence");
+            }
+        }
+
+        firstIndex = firstIndex2;
+        lastIndex = firstIndex2 + lastIndex2;
+        return SearchResult2.ElementFound;
     }
 }
