@@ -306,7 +306,6 @@ public static class SpanHelperBinaryOptimized
             //        return 1;
             //    }
             case 3:
-                // [t] [x] [x]
                 if (descPredicate(sorted[2]))
                 {
                     return 2;
@@ -320,7 +319,6 @@ public static class SpanHelperBinaryOptimized
                     return 0;
                 }
             case 4:
-                // [t] [x] [x] [x]
                 if (descPredicate(sorted[2]))
                 {
                     if (descPredicate(sorted[3]))
@@ -334,7 +332,6 @@ public static class SpanHelperBinaryOptimized
                 }
                 else
                 {
-                    // [t] [x] [f] [f]
                     if (descPredicate(sorted[1]))
                     {
                         return 1;
@@ -345,7 +342,6 @@ public static class SpanHelperBinaryOptimized
                     }
                 }
             case 5:
-                // [t] [x] [x] [x] [x]
                 if (descPredicate(sorted[2]))
                 {
                     if (descPredicate(sorted[3]))
@@ -376,8 +372,6 @@ public static class SpanHelperBinaryOptimized
                     }
                 }
             default:
-                // [t] [x] [x] [x] [x] [x]
-                //             ^^^
                 int mid = 1 + (sorted.Length - 1) >> 1;
                 if (descPredicate(sorted[mid]))
                 {

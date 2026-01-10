@@ -39,6 +39,37 @@ public class Ip4RangeSetStackAllocUnionExcept
     }
 
     [Benchmark]
+    public int Ip4RangeSetStackAlloc_ctor_UnionAsNew_span()
+    {
+        Span<Ip4Range> span1 = stackalloc Ip4Range[SetSize];
+        Span<Ip4Range> span2 = stackalloc Ip4Range[SetSize * 2];
+        int result = 0;
+        for (int index = 0; index < Count; ++index)
+        {
+            var set1 = new Ip4RangeSetStackAlloc(span1, rangesArray_1[index]);
+            var set2 = set1.UnionAsNew(rangesArray_2[index], span2);
+            result += set2.RangesCount;
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int Ip4RangeSetStackAlloc_ctor_UnionAsNewHeap_span()
+    {
+        Span<Ip4Range> span1 = stackalloc Ip4Range[SetSize];
+        int result = 0;
+        for (int index = 0; index < Count; ++index)
+        {
+            var set1 = new Ip4RangeSetStackAlloc(span1, rangesArray_1[index]);
+            var set2 = set1.UnionAsNew(rangesArray_2[index]);
+            result += set2.RangesCount;
+        }
+
+        return result;
+    }
+
+    [Benchmark]
     public int Ip4RangeSetStackAlloc_ctor_Except_span()
     {
         Span<Ip4Range> span = stackalloc Ip4Range[SetSize * 2];
@@ -48,6 +79,37 @@ public class Ip4RangeSetStackAllocUnionExcept
             var set = new Ip4RangeSetStackAlloc(span, rangesArray_1[index]);
             set.Except(rangesArray_2[index]);
             result += set.RangesCount;
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int Ip4RangeSetStackAlloc_ctor_ExceptAsNew_span()
+    {
+        Span<Ip4Range> span1 = stackalloc Ip4Range[SetSize];
+        Span<Ip4Range> span2 = stackalloc Ip4Range[SetSize * 2];
+        int result = 0;
+        for (int index = 0; index < Count; ++index)
+        {
+            var set1 = new Ip4RangeSetStackAlloc(span1, rangesArray_1[index]);
+            var set2 = set1.ExceptAsNew(rangesArray_2[index], span2);
+            result += set2.RangesCount;
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int Ip4RangeSetStackAlloc_ctor_ExceptAsNewHeap_span()
+    {
+        Span<Ip4Range> span1 = stackalloc Ip4Range[SetSize];
+        int result = 0;
+        for (int index = 0; index < Count; ++index)
+        {
+            var set1 = new Ip4RangeSetStackAlloc(span1, rangesArray_1[index]);
+            var set2 = set1.ExceptAsNew(rangesArray_2[index]);
+            result += set2.RangesCount;
         }
 
         return result;
