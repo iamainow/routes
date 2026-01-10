@@ -90,4 +90,40 @@ public class Ip4RangeSetStackAllocRealistic
 
         return result.RangesCount;
     }
+
+    [Benchmark]
+    public int Ip4RangeSetStackAlloc2_Realistic_WithParser()
+    {
+        var all = Ip4SubnetParser.GetRanges("0.0.0.0/0");
+        var ip = Ip4SubnetParser.GetRanges("1.2.3.4");
+
+        var subnets = Ip4SubnetParser.GetRanges(_subnetsText);
+
+        var result = Ip4RangeSetStackAlloc2.Create(all)
+            .Except(ip)
+            .Except(_bogon)
+            .Except(subnets);
+
+        return result.RangesCount;
+    }
+
+    [Benchmark]
+    public int Ip4RangeSetStackAlloc2_Realistic_WithoutParser()
+    {
+        var all = Ip4Range.All;
+        var ip = new Ip4Address(1, 2, 3, 4).ToIp4Range();
+
+        ListStackAlloc<Ip4Range> subnetList = new(stackalloc Ip4Range[_subnets.Length]);
+        foreach (var subnet in _subnets)
+        {
+            subnetList.Add(subnet.ToIp4Range());
+        }
+
+        var result = Ip4RangeSetStackAlloc2.Create(MemoryMarshal.CreateSpan(ref all, 1))
+            .Except(MemoryMarshal.CreateSpan(ref ip, 1))
+            .Except(_bogon)
+            .Except(subnetList.AsSpan());
+
+        return result.RangesCount;
+    }
 }

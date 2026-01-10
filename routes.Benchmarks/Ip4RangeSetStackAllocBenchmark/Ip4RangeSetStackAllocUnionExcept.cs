@@ -114,4 +114,32 @@ public class Ip4RangeSetStackAllocUnionExcept
 
         return result;
     }
+
+    [Benchmark]
+    public int Ip4RangeSetStackAlloc2_Create_Union_span()
+    {
+        int result = 0;
+        for (int index = 0; index < Count; ++index)
+        {
+            result += Ip4RangeSetStackAlloc2.Create(rangesArray_1[index])
+                .Union(rangesArray_2[index])
+                .RangesCount;
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int Ip4RangeSetStackAlloc2_Create_Except_span()
+    {
+        int result = 0;
+        for (int index = 0; index < Count; ++index)
+        {
+            result += Ip4RangeSetStackAlloc2.Create(rangesArray_1[index])
+                .Except(rangesArray_2[index])
+                .RangesCount;
+        }
+
+        return result;
+    }
 }
