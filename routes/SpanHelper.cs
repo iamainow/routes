@@ -246,14 +246,14 @@ public static class SpanHelper
 
         int i = 0;
         int j = 0;
-        Ip4Range? curr = normalized[i];
+        Ip4Range currentRange = normalized[0];
 
-        while (curr.HasValue)
+        while (true)
         {
             if (j >= sorted.Length)
             {
                 // No more exclusion ranges, add current and remaining ranges
-                resultList.Add(curr.Value);
+                resultList.Add(currentRange);
                 i++;
                 while (i < normalized.Length)
                 {
@@ -262,7 +262,6 @@ public static class SpanHelper
                 break;
             }
 
-            var currentRange = curr.Value;
             var otherCurr = sorted[j];
 
             if (currentRange.LastAddress < otherCurr.FirstAddress)
@@ -270,7 +269,11 @@ public static class SpanHelper
                 // Current range is entirely before exclusion range - keep it and move to next
                 resultList.Add(currentRange);
                 i++;
-                curr = i < normalized.Length ? normalized[i] : null;
+                if (i >= normalized.Length)
+                {
+                    break;
+                }
+                currentRange = normalized[i];
             }
             else if (currentRange.FirstAddress > otherCurr.LastAddress)
             {
@@ -286,15 +289,20 @@ public static class SpanHelper
                 {
                     resultList.Add(leftPart.Value);
                 }
+
                 if (rightPart.HasValue)
                 {
-                    curr = rightPart.Value;
+                    currentRange = rightPart.Value;
                     j++;
                 }
                 else
                 {
                     i++;
-                    curr = i < normalized.Length ? normalized[i] : null;
+                    if (i >= normalized.Length)
+                    {
+                        break;
+                    }
+                    currentRange = normalized[i];
                 }
             }
         }

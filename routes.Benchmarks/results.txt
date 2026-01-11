@@ -1,11 +1,11 @@
 ﻿| Method                           | Count | SetSize | Mean        | Error     | StdDev    | Gen0      | Gen1    | Allocated   |
 |--------------------------------- |------ |-------- |------------:|----------:|----------:|----------:|--------:|------------:|
-| Ip4RangeArray_Create_Union_span  | 1000  | 10      |    127.3 us |   2.05 us |   1.92 us |   32.7148 |       - |   335.94 KB |
-| Ip4RangeArray_Create_Except_span | 1000  | 10      |    106.6 us |   1.96 us |   1.83 us |   32.8369 |       - |   335.94 KB |
-| Ip4RangeArray_Create_Union_span  | 1000  | 100     |  1,675.0 us |  19.36 us |  18.11 us |  169.9219 |       - |  1742.19 KB |
-| Ip4RangeArray_Create_Except_span | 1000  | 100     |  1,372.5 us |  15.39 us |  13.64 us |  169.9219 |       - |  1742.19 KB |
-| Ip4RangeArray_Create_Union_span  | 1000  | 1000    | 23,197.5 us | 128.79 us | 107.54 us | 1531.2500 | 62.5000 | 15804.69 KB |
-| Ip4RangeArray_Create_Except_span | 1000  | 1000    | 20,546.5 us |  86.18 us |  76.39 us | 1531.2500 | 62.5000 | 15804.69 KB |
+| Ip4RangeArray_Create_Union_span  | 1000  | 10      |    126.2 us |   2.23 us |   1.87 us |   32.7148 |       - |   335.94 KB |
+| Ip4RangeArray_Create_Except_span | 1000  | 10      |    105.6 us |   1.82 us |   1.70 us |   32.8369 |       - |   335.94 KB |
+| Ip4RangeArray_Create_Union_span  | 1000  | 100     |  1,649.5 us |  17.76 us |  16.61 us |  169.9219 |       - |  1742.19 KB |
+| Ip4RangeArray_Create_Except_span | 1000  | 100     |  1,505.8 us |  11.58 us |  10.27 us |  169.9219 |       - |  1742.19 KB |
+| Ip4RangeArray_Create_Union_span  | 1000  | 1000    | 23,444.8 us | 186.98 us | 174.90 us | 1531.2500 | 62.5000 | 15804.69 KB |
+| Ip4RangeArray_Create_Except_span | 1000  | 1000    | 19,767.4 us | 119.67 us | 111.94 us | 1531.2500 | 62.5000 | 15804.69 KB |
 
 | Method                                | Mean        | Error     | StdDev    | Gen0    | Gen1    | Gen2    | Allocated |
 |-------------------------------------- |------------:|----------:|----------:|--------:|--------:|--------:|----------:|
