@@ -123,7 +123,7 @@ internal static class Program
         PrintRouteTable(routeTable);
     }
 
-    private static void ChangeRoutes(Ip4RangeSet targetRangeSet, string interfaceName, int metric, Action<string?> successWriteLine, Action<string?> errorWriteLine)
+    private static void ChangeRoutes(Ip4RangeArray targetRangeSet, string interfaceName, int metric, Action<string?> successWriteLine, Action<string?> errorWriteLine)
     {
         NetworkInterface networkInterface = NetworkInterface.GetAllNetworkInterfaces()
             .SingleOrDefault(x => x.Name == interfaceName)
@@ -245,13 +245,11 @@ internal static class Program
                 }
                 ITextWriterWrapper errorTextWriterWrapper = Console.IsErrorRedirected ? new TextWriterWrapper(Console.Error) : new AnsiColoredTextWriterWrapper(Console.Error, AnsiColor.Red);
                 string? line;
-                Ip4RangeSet ip4RangeSet = new();
+                Ip4RangeArray ip4RangeSet = new();
                 while ((line = Console.ReadLine()) != null)
                 {
                     Span<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
-                    Ip4RangeSet rangesSet = new(ranges);
-
-                    ip4RangeSet.Union(rangesSet);
+                    ip4RangeSet = ip4RangeSet.Union(ranges);
                 }
 
                 ChangeRoutes(ip4RangeSet, interfaceName, metric, Console.WriteLine, errorTextWriterWrapper.WriteLine);

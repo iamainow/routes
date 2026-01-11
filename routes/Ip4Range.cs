@@ -35,8 +35,6 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         return (first.FirstAddress.CompareTo(second.FirstAddress), first.LastAddress.CompareTo(second.LastAddress));
     }
 
-    public static implicit operator Ip4RangeSet(Ip4Range range) => new(range);
-
     public static bool operator ==(Ip4Range left, Ip4Range right) => left.Equals(right);
     public static bool operator !=(Ip4Range left, Ip4Range right) => !left.Equals(right);
 
@@ -195,8 +193,6 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
     {
         return count == 0 ? 0 : (value >> (32 - count)) << (32 - count);
     }
-
-    public Ip4RangeSet ToIp4RangeSet() => new(this);
 
     public override string ToString() => $"{FirstAddress}-{LastAddress}";
 

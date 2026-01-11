@@ -103,7 +103,6 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public static explicit operator uint(Ip4Address address) => address.ToUInt32();
     public static implicit operator Ip4Range(Ip4Address address) => address.ToIp4Range();
     public static implicit operator Ip4Subnet(Ip4Address address) => address.ToIp4Subnet();
-    public static implicit operator Ip4RangeSet(Ip4Address address) => address.ToIp4RangeSet();
     public static implicit operator IPAddress(Ip4Address address) => address.ToIPAddress();
     public static implicit operator Ip4Address(IPAddress address) => FromIPAddress(address);
 
@@ -122,8 +121,6 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public Ip4Range ToIp4Range() => new(this, this);
 
     public Ip4Subnet ToIp4Subnet() => new(this, Ip4Mask.SingleAddress);
-
-    public Ip4RangeSet ToIp4RangeSet() => new(this);
 
     public IPAddress ToIPAddress() => new([_byte1, _byte2, _byte3, _byte4]);
 

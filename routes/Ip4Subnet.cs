@@ -67,14 +67,11 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     }
 
     public static implicit operator Ip4Range(Ip4Subnet subnet) => subnet.ToIp4Range();
-    public static implicit operator Ip4RangeSet(Ip4Subnet subnet) => subnet.ToIp4RangeSet();
 
     public static bool operator ==(Ip4Subnet left, Ip4Subnet right) => left.Equals(right);
     public static bool operator !=(Ip4Subnet left, Ip4Subnet right) => !left.Equals(right);
 
     public Ip4Range ToIp4Range() => new(FirstAddress, LastAddress);
-
-    public Ip4RangeSet ToIp4RangeSet() => new(this);
 
     public bool HasSupernet() => Mask != Ip4Mask.All;
 

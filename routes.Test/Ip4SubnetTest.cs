@@ -176,19 +176,6 @@ public class Ip4SubnetTest
         Assert.Equal(subnet.LastAddress, range.LastAddress);
     }
 
-    [Fact]
-    public void ToIp4RangeSet_CreatesSetWithSingleRange()
-    {
-        var subnet = Ip4Subnet.Parse("192.168.1.0/24");
-
-        var set = subnet.ToIp4RangeSet();
-
-        var ranges = set.ToIp4Ranges();
-        Assert.Single(ranges);
-        Assert.Equal(subnet.FirstAddress, ranges[0].FirstAddress);
-        Assert.Equal(subnet.LastAddress, ranges[0].LastAddress);
-    }
-
     [Theory]
     [InlineData("192.168.1.0/24", "192.168.1.0 255.255.255.0")]
     [InlineData("10.0.0.0/8", "10.0.0.0 255.0.0.0")]
@@ -270,17 +257,6 @@ public class Ip4SubnetTest
 
         Assert.Equal(subnet.FirstAddress, range.FirstAddress);
         Assert.Equal(subnet.LastAddress, range.LastAddress);
-    }
-
-    [Fact]
-    public void ImplicitCast_ToIp4RangeSet_CreatesSetWithSingleRange()
-    {
-        var subnet = Ip4Subnet.Parse("192.168.1.0/24");
-
-        Ip4RangeSet set = subnet;
-
-        var ranges = set.ToIp4Ranges();
-        Assert.Single(ranges);
     }
 
     [Fact]

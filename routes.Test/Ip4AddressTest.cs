@@ -270,19 +270,6 @@ public class Ip4AddressTest
     }
 
     [Fact]
-    public void ImplicitCast_ToIp4RangeSet_CreatesSetWithSingleAddress()
-    {
-        var ip = new Ip4Address(100);
-
-        Ip4RangeSet set = ip;
-
-        var ranges = set.ToIp4Ranges();
-        Assert.Single(ranges);
-        Assert.Equal(ip, ranges[0].FirstAddress);
-        Assert.Equal(ip, ranges[0].LastAddress);
-    }
-
-    [Fact]
     public void ToIp4Range_CreatesRangeWithSameStartEnd()
     {
         var ip = new Ip4Address(100);
@@ -302,18 +289,6 @@ public class Ip4AddressTest
 
         Assert.Equal(ip, subnet.FirstAddress);
         Assert.Equal(Ip4Mask.SingleAddress, subnet.Mask);
-    }
-
-    [Fact]
-    public void ToIp4RangeSet_CreatesSetWithSingleAddress()
-    {
-        var ip = new Ip4Address(100);
-
-        var set = ip.ToIp4RangeSet();
-
-        var ranges = set.ToIp4Ranges();
-        Assert.Single(ranges);
-        Assert.Equal(ip, ranges[0].FirstAddress);
     }
 
     [Fact]

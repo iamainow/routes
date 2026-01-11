@@ -19,8 +19,8 @@ public class Ip4RangeArrayUnionExcept
     public async Task GlobalSetup()
     {
         Random random = new();
-        rangesArray_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToArray();
-        rangesArray_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeSet.Generate(SetSize, random)).Select(x => x.ToIp4Ranges()).ToArray();
+        rangesArray_1 = Enumerable.Range(0, Count).Select(_ => Ip4RangeArrayExtensions.Generate(SetSize, random)).ToArray();
+        rangesArray_2 = Enumerable.Range(0, Count).Select(_ => Ip4RangeArrayExtensions.Generate(SetSize, random)).ToArray();
     }
 
     [Benchmark]

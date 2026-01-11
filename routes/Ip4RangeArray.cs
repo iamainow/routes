@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace routes;
 
@@ -75,14 +76,15 @@ public readonly ref struct Ip4RangeArray
         return new Ip4RangeArray(CollectionsMarshal.AsSpan(result));
     }
 
-    public Span<Ip4Subnet> ToIp4Subnets()
+    public Ip4Subnet[] ToIp4Subnets()
     {
         List<Ip4Subnet> result = new();
         foreach (var item in _items)
         {
             result.AddRange(item.ToSubnets());
         }
-        return CollectionsMarshal.AsSpan(result);
+
+        return result.ToArray();
     }
 
     public Ip4Range[] ToIp4Ranges()
@@ -90,5 +92,16 @@ public readonly ref struct Ip4RangeArray
         Ip4Range[] result = new Ip4Range[_items.Length];
         _items.CopyTo(result);
         return result;
+    }
+
+    public override string ToString()
+    {
+        StringBuilder result = new();
+        foreach (Ip4Range item in _items)
+        {
+            result.AppendLine(item.ToString());
+        }
+
+        return result.ToString();
     }
 }
