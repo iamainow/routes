@@ -1,6 +1,6 @@
 ﻿| Method                    | Count   | Mean       | Error     | StdDev    | Gen0    | Allocated   |
 |-------------------------- |-------- |-----------:|----------:|----------:|--------:|------------:|
-| RealisticGetRanges        | 1000000 |   1.662 ms | 0.0136 ms | 0.0121 ms | 11.7188 |    256.3 KB |
-| ParseAddressesByGetRanges | 1000000 | 194.387 ms | 2.0714 ms | 1.9376 ms |       - | 16384.45 KB |
-| ParseRangesByGetRanges    | 1000000 | 263.221 ms | 5.1478 ms | 5.5081 ms |       - | 16384.45 KB |
-| ParseSubnetsByGetRanges   | 1000000 | 187.161 ms | 2.9347 ms | 2.7451 ms |       - | 16384.45 KB |
+| RealisticGetRanges        | 1000000 |   1.631 ms | 0.0188 ms | 0.0176 ms | 11.7188 |    256.3 KB |
+| ParseAddressesByGetRanges | 1000000 | 195.735 ms | 2.1144 ms | 1.8744 ms |       - | 16384.45 KB |
+| ParseRangesByGetRanges    | 1000000 | 262.210 ms | 1.8342 ms | 1.6260 ms |       - | 16384.45 KB |
+| ParseSubnetsByGetRanges   | 1000000 | 189.421 ms | 1.2902 ms | 1.2068 ms |       - | 16384.45 KB |
