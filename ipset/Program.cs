@@ -5,7 +5,7 @@ namespace ipops;
 
 internal static class Program
 {
-    private static Ip4RangeSet raw(IEnumerator<string> enumerator)
+    private static Ip4RangeArray raw(IEnumerator<string> enumerator)
     {
         if (!enumerator.MoveNext())
         {
@@ -13,10 +13,10 @@ internal static class Program
         }
 
         Span<Ip4Range> ranges = Ip4SubnetParser.GetRanges(enumerator.Current);
-        return new Ip4RangeSet(ranges);
+        return Ip4RangeArray.Create(ranges);
     }
 
-    private static async Task<Ip4RangeSet> fileAsync(IEnumerator<string> enumerator)
+    private static Ip4RangeArray file(IEnumerator<string> enumerator)
     {
         if (!enumerator.MoveNext())
         {
@@ -26,31 +26,26 @@ internal static class Program
         using FileStream fileStream = File.Open(enumerator.Current, FileMode.Open, FileAccess.Read, FileShare.Read);
         using StreamReader streamReader = new(fileStream);
 
-        Ip4RangeSet result = new();
-        string? line;
-        while ((line = await streamReader.ReadLineAsync()) is not null)
-        {
-            Span<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
-            result.Union(ranges.ToArray());
-        }
-        return result;
+        string text = streamReader.ReadToEnd();
+        var ranges = Ip4SubnetParser.GetRanges(text);
+        return Ip4RangeArray.Create(ranges);
     }
 
-    private static Ip4RangeSet stdin()
+    private static Ip4RangeArray stdin()
     {
-        Ip4RangeSet result = new();
+        Ip4RangeArray result = new();
         string? line;
         while ((line = Console.ReadLine()) is not null)
         {
             Span<Ip4Range> ranges = Ip4SubnetParser.GetRanges(line);
-            result.Union(ranges.ToArray());
+            result = result.Union(ranges.ToArray());
         }
         return result;
     }
 
-    private static Ip4RangeSet bogon()
+    private static Ip4RangeArray bogon()
     {
-        return new Ip4RangeSet(
+        return Ip4RangeArray.Create(
         [
             Ip4Subnet.Parse("0.0.0.0/8"), // "This" network
             Ip4Subnet.Parse("10.0.0.0/8"), // Private-use networks
@@ -72,7 +67,7 @@ internal static class Program
 
     public static async Task Main(string[] args)
     {
-        Ip4RangeSet result = new();
+        Ip4RangeArray result = new();
         RangeSetPrintFormat printFormat = RangeSetPrintFormat.Subnet;
         string printPattern = "%subnet/%cidr";
 
@@ -94,7 +89,7 @@ internal static class Program
                     break;
 
                 case "file":
-                    result = await fileAsync(enumerator);
+                    result = file(enumerator);
                     break;
 
                 case "-":
@@ -110,24 +105,14 @@ internal static class Program
                     {
                         throw new ArgumentException("missing except argument, should use except [raw ips> | file <path> | - | local]");
                     }
-                    switch (enumerator.Current)
+                    result = enumerator.Current switch
                     {
-                        case "raw":
-                            result.Except(raw(enumerator));
-                            break;
-                        case "file":
-                            result.Except(await fileAsync(enumerator));
-                            break;
-                        case "-":
-                            result.Except(stdin());
-                            break;
-                        case "bogon":
-                            result.Except(bogon());
-                            break;
-                        default:
-                            throw new ArgumentException($"unknown argument '{enumerator.Current}'");
-                    }
-
+                        "raw" => result.Except(raw(enumerator)),
+                        "file" => result.Except(file(enumerator)),
+                        "-" => result.Except(stdin()),
+                        "bogon" => result.Except(bogon()),
+                        _ => throw new ArgumentException($"unknown argument '{enumerator.Current}'"),
+                    };
                     break;
 
                 case "union":
@@ -135,24 +120,14 @@ internal static class Program
                     {
                         throw new ArgumentException("missing union argument, should use union [raw <ips> | file <path> | - | local]");
                     }
-                    switch (enumerator.Current)
+                    result = enumerator.Current switch
                     {
-                        case "raw":
-                            result.Union(raw(enumerator));
-                            break;
-                        case "file":
-                            result.Union(await fileAsync(enumerator));
-                            break;
-                        case "-":
-                            result.Union(stdin());
-                            break;
-                        case "bogon":
-                            result.Union(bogon());
-                            break;
-                        default:
-                            throw new ArgumentException($"unknown argument '{enumerator.Current}'");
-                    }
-
+                        "raw" => result.Union(raw(enumerator)),
+                        "file" => result.Union(file(enumerator)),
+                        "-" => result.Union(stdin()),
+                        "bogon" => result.Union(bogon()),
+                        _ => throw new ArgumentException($"unknown argument '{enumerator.Current}'"),
+                    };
                     break;
 
                 case "simplify":
@@ -225,7 +200,7 @@ internal static class Program
 
             case RangeSetPrintFormat.AmneziaJson:
                 {
-                    string resultString = Ip4RangeSetSerializers.SerializeToAmneziaJson(result);
+                    string resultString = Ip4RangeArraySerializers.SerializeToAmneziaJson(result);
                     Console.WriteLine(resultString);
                 }
 
@@ -235,11 +210,4 @@ internal static class Program
                 throw new NotImplementedException($"switch printFormat = '{printFormat}'");
         }
     }
-}
-
-internal enum RangeSetPrintFormat
-{
-    Subnet,
-    Range,
-    AmneziaJson,
 }

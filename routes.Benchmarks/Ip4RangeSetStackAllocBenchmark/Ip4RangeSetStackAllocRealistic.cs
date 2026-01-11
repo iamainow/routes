@@ -56,50 +56,14 @@ public class Ip4RangeSetStackAllocRealistic
     }
 
     [Benchmark]
-    public int Ip4RangeSetStackAlloc_Realistic_WithParser()
+    public int Ip4RangeArray_Realistic_WithParser()
     {
         var all = Ip4SubnetParser.GetRanges("0.0.0.0/0");
         var ip = Ip4SubnetParser.GetRanges("1.2.3.4");
 
         var subnets = Ip4SubnetParser.GetRanges(_subnetsText);
 
-        var result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[all.Length + ip.Length + _bogon.Length + subnets.Length], all);
-        result.Except(ip);
-        result.Except(_bogon);
-        result.Except(subnets);
-
-        return result.RangesCount;
-    }
-
-    [Benchmark]
-    public int Ip4RangeSetStackAlloc_Realistic_WithoutParser()
-    {
-        var all = Ip4Range.All;
-        var ip = new Ip4Address(1, 2, 3, 4).ToIp4Range();
-
-        ListStackAlloc<Ip4Range> subnetList = new(stackalloc Ip4Range[_subnets.Length]);
-        foreach (var subnet in _subnets)
-        {
-            subnetList.Add(subnet.ToIp4Range());
-        }
-
-        var result = new Ip4RangeSetStackAlloc(stackalloc Ip4Range[1 + 1 + _bogon.Length + subnetList.Count], MemoryMarshal.CreateSpan(ref all, 1));
-        result.Except(MemoryMarshal.CreateSpan(ref ip, 1));
-        result.Except(_bogon);
-        result.Except(subnetList.AsSpan());
-
-        return result.RangesCount;
-    }
-
-    [Benchmark]
-    public int Ip4RangeSetStackAlloc2_Realistic_WithParser()
-    {
-        var all = Ip4SubnetParser.GetRanges("0.0.0.0/0");
-        var ip = Ip4SubnetParser.GetRanges("1.2.3.4");
-
-        var subnets = Ip4SubnetParser.GetRanges(_subnetsText);
-
-        var result = Ip4RangeSetStackAlloc2.Create(all)
+        var result = Ip4RangeArray.Create(all)
             .Except(ip)
             .Except(_bogon)
             .Except(subnets);
@@ -108,7 +72,7 @@ public class Ip4RangeSetStackAllocRealistic
     }
 
     [Benchmark]
-    public int Ip4RangeSetStackAlloc2_Realistic_WithoutParser()
+    public int Ip4RangeArray_Realistic_WithoutParser()
     {
         var all = Ip4Range.All;
         var ip = new Ip4Address(1, 2, 3, 4).ToIp4Range();
@@ -119,7 +83,7 @@ public class Ip4RangeSetStackAllocRealistic
             subnetList.Add(subnet.ToIp4Range());
         }
 
-        var result = Ip4RangeSetStackAlloc2.Create(MemoryMarshal.CreateSpan(ref all, 1))
+        var result = Ip4RangeArray.Create(MemoryMarshal.CreateSpan(ref all, 1))
             .Except(MemoryMarshal.CreateSpan(ref ip, 1))
             .Except(_bogon)
             .Except(subnetList.AsSpan());

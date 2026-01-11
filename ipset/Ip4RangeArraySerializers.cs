@@ -4,9 +4,9 @@ using System.Text.Json.Serialization;
 
 namespace ipops;
 
-internal static class Ip4RangeSetSerializers
+internal static class Ip4RangeArraySerializers
 {
-    public static string SerializeToAmneziaJson(Ip4RangeSet set)
+    public static string SerializeToAmneziaJson(Ip4RangeArray set)
     {
         AmneziaItem[] objectToSerialize = set.ToIp4Subnets()
             .ToArray()
