@@ -57,13 +57,13 @@ public static class SpanHelper
         if (sorted1.Length == 0)
         {
             sorted2.CopyTo(result);
-            return sorted2.Length;
+            return MakeNormalizedFromSorted(result);
         }
 
         if (sorted2.Length == 0)
         {
             sorted1.CopyTo(result);
-            return sorted1.Length;
+            return MakeNormalizedFromSorted(result);
         }
 
         ListStackAlloc<Ip4Range> resultList = new ListStackAlloc<Ip4Range>(result);
@@ -72,32 +72,18 @@ public static class SpanHelper
 
         // first pass
         {
-            Ip4Range curr;
-            if (i >= sorted1.Length)
+            var left = sorted1[0];
+            var right = sorted2[0];
+            if (left.FirstAddress <= right.FirstAddress)
             {
-                curr = sorted2[j++];
-            }
-            else if (j >= sorted2.Length)
-            {
-                curr = sorted1[i++];
+                resultList.Add(left);
+                i++;
             }
             else
             {
-                var left = sorted1[i];
-                var right = sorted2[j];
-                if (left.FirstAddress <= right.FirstAddress)
-                {
-                    curr = left;
-                    i++;
-                }
-                else
-                {
-                    curr = right;
-                    j++;
-                }
+                resultList.Add(right);
+                j++;
             }
-
-            resultList.Add(curr);
         }
 
         while (i < sorted1.Length || j < sorted2.Length)
