@@ -134,7 +134,107 @@ public static class SpanHelper
 
     public static int UnionNormalizedNormalized(ReadOnlySpan<Ip4Range> normalized1, ReadOnlySpan<Ip4Range> normalized2, Span<Ip4Range> result)
     {
-        return UnionSortedSorted(normalized1, normalized2, result);
+        if (result.Overlaps(normalized1))
+        {
+            throw new ArgumentException($"result can't overlap with sorted1", nameof(result));
+        }
+
+        if (result.Overlaps(normalized2))
+        {
+            throw new ArgumentException("result can't overlap with sorted2", nameof(result));
+        }
+
+        if (normalized1.Length == 0)
+        {
+            normalized2.CopyTo(result);
+            return normalized2.Length;
+        }
+
+        if (normalized2.Length == 0)
+        {
+            normalized1.CopyTo(result);
+            return normalized1.Length;
+        }
+
+        ListStackAlloc<Ip4Range> resultList = new ListStackAlloc<Ip4Range>(result);
+        int i = 0;
+        int j = 0;
+
+        // first pass
+        {
+            var left = normalized1[0];
+            var right = normalized2[0];
+            if (left.FirstAddress <= right.FirstAddress)
+            {
+                resultList.Add(left);
+                i++;
+            }
+            else
+            {
+                resultList.Add(right);
+                j++;
+            }
+        }
+
+        while (i < normalized1.Length || j < normalized2.Length)
+        {
+            Ip4Range curr;
+            if (i >= normalized1.Length)
+            {
+                curr = normalized2[j++];
+            }
+            else if (j >= normalized2.Length)
+            {
+                curr = normalized1[i++];
+            }
+            else
+            {
+                var left = normalized1[i];
+                var right = normalized2[j];
+                if (left.FirstAddress <= right.FirstAddress)
+                {
+                    curr = left;
+                    i++;
+                }
+                else
+                {
+                    curr = right;
+                    j++;
+                }
+            }
+
+            ref var last = ref resultList.Last();
+            if (last.LastAddress == Ip4Address.MaxValue)
+            {
+                last = new Ip4Range(last.FirstAddress, Ip4Address.MaxValue);
+                return resultList.Count;
+            }
+            else
+            {
+                if (last.LastAddress.ToUInt32() + 1U >= curr.FirstAddress.ToUInt32())
+                {
+                    last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, curr.LastAddress));
+                }
+                else
+                {
+                    resultList.Add(curr);
+                }
+
+                if (i >= normalized1.Length)
+                {
+                    resultList.AddRange(normalized2.Slice(j));
+                    return resultList.Count;
+                }
+
+                if (j >= normalized2.Length)
+                {
+                    resultList.AddRange(normalized1.Slice(i));
+                    return resultList.Count;
+                }
+            }
+        }
+
+        return resultList.Count;
     }
 
     public static int UnionNormalizedSorted(ReadOnlySpan<Ip4Range> normalized, ReadOnlySpan<Ip4Range> sorted, Span<Ip4Range> result)
@@ -146,8 +246,8 @@ public static class SpanHelper
     {
         Span<Ip4Range> temp = stackalloc Ip4Range[unsorted.Length];
         unsorted.CopyTo(temp);
-        temp.Sort(Ip4RangeComparer.Instance);
-        return UnionNormalizedSorted(normalized, temp, result);
+        int length = MakeNormalizedFromUnsorted(temp);
+        return UnionNormalizedNormalized(normalized, temp[..length], result);
     }
 
     public static int UnionNormalizedUnsorted(ReadOnlySpan<Ip4Range> normalized, Span<Ip4Range> unsorted, Span<Ip4Range> result)
@@ -241,10 +341,7 @@ public static class SpanHelper
                 // No more exclusion ranges, add current and remaining ranges
                 resultList.Add(currentRange);
                 i++;
-                while (i < normalized.Length)
-                {
-                    resultList.Add(normalized[i++]);
-                }
+                resultList.AddRange(normalized[i..]);
                 break;
             }
 
@@ -305,8 +402,8 @@ public static class SpanHelper
     {
         Span<Ip4Range> temp = stackalloc Ip4Range[unsorted.Length];
         unsorted.CopyTo(temp);
-        temp.Sort(Ip4RangeComparer.Instance);
-        return ExceptNormalizedSorted(normalized, temp, result);
+        int length = MakeNormalizedFromUnsorted(temp);
+        return ExceptNormalizedNormalized(normalized, temp[..length], result);
     }
 
     public static int ExceptNormalizedUnsorted(ReadOnlySpan<Ip4Range> normalized, Span<Ip4Range> unsorted, Span<Ip4Range> result)
