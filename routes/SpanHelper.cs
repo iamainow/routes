@@ -280,39 +280,21 @@ public static class SpanHelper
             else
             {
                 // Ranges overlap - compute the difference
-                (bool hasLeftPart, bool hasRightPart) = currentRange.IntersectableExcept(otherCurr, out var leftPart, out var rightPart);
+                (var leftPart, var rightPart) = currentRange.IntersectableExcept(otherCurr);
 
-                if (hasLeftPart)
+                if (leftPart.HasValue)
                 {
-                    if (hasRightPart)
-                    {
-                        // Two parts: left part is finalized, right part needs further processing
-                        resultList.Add(leftPart);
-                        curr = rightPart;
-                        j++;
-                    }
-                    else
-                    {
-                        // Left part only - it ends before the exclusion starts, so it's finalized
-                        resultList.Add(leftPart);
-                        i++;
-                        curr = i < normalized.Length ? normalized[i] : null;
-                    }
+                    resultList.Add(leftPart.Value);
+                }
+                if (rightPart.HasValue)
+                {
+                    curr = rightPart.Value;
+                    j++;
                 }
                 else
                 {
-                    if (hasRightPart)
-                    {
-                        // Right part only - it starts after exclusion ends, may overlap with next exclusions
-                        curr = rightPart;
-                        j++;
-                    }
-                    else
-                    {
-                        // Current range completely covered by exclusion - move to next normalized range
-                        i++;
-                        curr = i < normalized.Length ? normalized[i] : null;
-                    }
+                    i++;
+                    curr = i < normalized.Length ? normalized[i] : null;
                 }
             }
         }

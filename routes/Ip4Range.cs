@@ -43,7 +43,8 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         return new Ip4Range(start, end);
     }
 
-    public Ip4Range[] IntersectableExcept(Ip4Range other)
+    /// <returns>left and right parts</returns>
+    public ValueTuple<Ip4Range?, Ip4Range?> IntersectableExcept(Ip4Range other)
     {
         bool hasLeftPart = other.FirstAddress > FirstAddress && other.FirstAddress > Ip4Address.MinValue;
         bool hasRightPart = other.LastAddress < LastAddress && other.LastAddress < Ip4Address.MaxValue;
@@ -52,59 +53,22 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         {
             if (hasRightPart)
             {
-                return [CreateLeftPart(other.FirstAddress), CreateRightPart(other.LastAddress)];
+                return ValueTuple.Create<Ip4Range?, Ip4Range?>(CreateLeftPart(other.FirstAddress), CreateRightPart(other.LastAddress));
             }
             else
             {
-                return [CreateLeftPart(other.FirstAddress)];
+                return ValueTuple.Create<Ip4Range?, Ip4Range?>(CreateLeftPart(other.FirstAddress), null);
             }
         }
         else
         {
             if (hasRightPart)
             {
-                return [CreateRightPart(other.LastAddress)];
+                return ValueTuple.Create<Ip4Range?, Ip4Range?>(null, CreateRightPart(other.LastAddress));
             }
             else
             {
-                return [];
-            }
-        }
-    }
-
-    public (bool hasLeft, bool hasRight) IntersectableExcept(Ip4Range other, out Ip4Range leftResult, out Ip4Range rightResult)
-    {
-        bool hasLeftPart = other.FirstAddress > FirstAddress && other.FirstAddress > Ip4Address.MinValue;
-        bool hasRightPart = other.LastAddress < LastAddress && other.LastAddress < Ip4Address.MaxValue;
-
-        if (hasLeftPart)
-        {
-            if (hasRightPart)
-            {
-                leftResult = CreateLeftPart(other.FirstAddress);
-                rightResult = CreateRightPart(other.LastAddress);
-                return (true, true);
-            }
-            else
-            {
-                leftResult = CreateLeftPart(other.FirstAddress);
-                rightResult = default;
-                return (true, false);
-            }
-        }
-        else
-        {
-            if (hasRightPart)
-            {
-                leftResult = default;
-                rightResult = CreateRightPart(other.LastAddress);
-                return (false, true);
-            }
-            else
-            {
-                leftResult = default;
-                rightResult = default;
-                return (false, false);
+                return ValueTuple.Create<Ip4Range?, Ip4Range?>(null, null);
             }
         }
     }
