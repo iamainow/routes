@@ -21,26 +21,8 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         LastAddress = end;
     }
 
-    public static int GeneralComparison(Ip4Range first, Ip4Range second)
-    {
-        if (first.LastAddress < second.FirstAddress)
-            return -1;
-        if (first.FirstAddress > second.LastAddress)
-            return 1;
-        return 0;
-    }
-
-    public static (int, int) OverlappingComparison(Ip4Range first, Ip4Range second)
-    {
-        return (first.FirstAddress.CompareTo(second.FirstAddress), first.LastAddress.CompareTo(second.LastAddress));
-    }
-
     public static bool operator ==(Ip4Range left, Ip4Range right) => left.Equals(right);
     public static bool operator !=(Ip4Range left, Ip4Range right) => !left.Equals(right);
-
-    public int GeneralComparison(Ip4Range second) => GeneralComparison(this, second);
-
-    public (int, int) OverlappingComparison(Ip4Range second) => OverlappingComparison(this, second);
 
     public bool IsIntersects(Ip4Range other)
     {
@@ -141,7 +123,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
     {
         List<Ip4Subnet> result = [];
         FindSubnetsInRange(this, result, 32);
-        return [.. result];
+        return result.ToArray();
     }
 
     private static void FindSubnetsInRange(Ip4Range range, List<Ip4Subnet> result, int bitPosition)
