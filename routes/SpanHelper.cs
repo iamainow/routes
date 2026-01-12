@@ -67,50 +67,39 @@ public static class SpanHelper
         }
 
         ListStackAlloc<Ip4Range> resultList = new ListStackAlloc<Ip4Range>(result);
-        int i = 0;
-        int j = 0;
+        int index1 = 0;
+        int index2 = 0;
 
         // first pass
         {
-            var left = sorted1[0];
-            var right = sorted2[0];
-            if (left.FirstAddress <= right.FirstAddress)
+            var item1 = sorted1[0];
+            var item2 = sorted2[0];
+            if (item1.FirstAddress <= item2.FirstAddress)
             {
-                resultList.Add(left);
-                i++;
+                resultList.Add(item1);
+                index1++;
             }
             else
             {
-                resultList.Add(right);
-                j++;
+                resultList.Add(item2);
+                index2++;
             }
         }
 
-        while (i < sorted1.Length || j < sorted2.Length)
+        while (index1 < sorted1.Length && index2 < sorted2.Length)
         {
-            Ip4Range curr;
-            if (i >= sorted1.Length)
+            Ip4Range current;
+            var item1 = sorted1[index1];
+            var item2 = sorted2[index2];
+            if (item1.FirstAddress <= item2.FirstAddress)
             {
-                curr = sorted2[j++];
-            }
-            else if (j >= sorted2.Length)
-            {
-                curr = sorted1[i++];
+                current = item1;
+                index1++;
             }
             else
             {
-                var left = sorted1[i];
-                var right = sorted2[j];
-                if (left.FirstAddress <= right.FirstAddress)
-                {
-                    curr = left;
-                    i++;
-                }
-                else
-                {
-                    curr = right;
-                    j++;
-                }
+                current = item2;
+                index2++;
             }
 
             ref var last = ref resultList.Last();
@@ -119,13 +108,61 @@ public static class SpanHelper
                 last = new Ip4Range(last.FirstAddress, Ip4Address.MaxValue);
                 return resultList.Count;
             }
-            else if (last.LastAddress.ToUInt32() + 1U >= curr.FirstAddress.ToUInt32())
+            else if (last.LastAddress.ToUInt32() + 1U >= current.FirstAddress.ToUInt32())
             {
-                last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, curr.LastAddress));
+                last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, current.LastAddress));
             }
             else
             {
-                resultList.Add(curr);
+                resultList.Add(current);
+            }
+        }
+
+        while (index2 < sorted2.Length)
+        {
+            Ip4Range current = sorted2[index2];
+            index2++;
+
+            ref var last = ref resultList.Last();
+            if (last.LastAddress == Ip4Address.MaxValue)
+            {
+                last = new Ip4Range(last.FirstAddress, Ip4Address.MaxValue);
+                return resultList.Count;
+            }
+            else
+            {
+                if (last.LastAddress.ToUInt32() + 1U >= current.FirstAddress.ToUInt32())
+                {
+                    last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, current.LastAddress));
+                }
+                else
+                {
+                    resultList.Add(current);
+                }
+            }
+        }
+
+        while (index1 < sorted1.Length)
+        {
+            Ip4Range current = sorted1[index1];
+            index1++;
+
+            ref var last = ref resultList.Last();
+            if (last.LastAddress == Ip4Address.MaxValue)
+            {
+                last = new Ip4Range(last.FirstAddress, Ip4Address.MaxValue);
+                return resultList.Count;
+            }
+            else
+            {
+                if (last.LastAddress.ToUInt32() + 1U >= current.FirstAddress.ToUInt32())
+                {
+                    last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, current.LastAddress));
+                }
+                else
+                {
+                    resultList.Add(current);
+                }
             }
         }
 
@@ -157,50 +194,39 @@ public static class SpanHelper
         }
 
         ListStackAlloc<Ip4Range> resultList = new ListStackAlloc<Ip4Range>(result);
-        int i = 0;
-        int j = 0;
+        int index1 = 0;
+        int index2 = 0;
 
         // first pass
         {
-            var left = normalized1[0];
-            var right = normalized2[0];
-            if (left.FirstAddress <= right.FirstAddress)
+            var item1 = normalized1[0];
+            var item2 = normalized2[0];
+            if (item1.FirstAddress <= item2.FirstAddress)
             {
-                resultList.Add(left);
-                i++;
+                resultList.Add(item1);
+                index1++;
             }
             else
             {
-                resultList.Add(right);
-                j++;
+                resultList.Add(item2);
+                index2++;
             }
         }
 
-        while (i < normalized1.Length || j < normalized2.Length)
+        while (index1 < normalized1.Length && index2 < normalized2.Length)
         {
-            Ip4Range curr;
-            if (i >= normalized1.Length)
+            Ip4Range current;
+            var item1 = normalized1[index1];
+            var item2 = normalized2[index2];
+            if (item1.FirstAddress <= item2.FirstAddress)
             {
-                curr = normalized2[j++];
-            }
-            else if (j >= normalized2.Length)
-            {
-                curr = normalized1[i++];
+                current = item1;
+                index1++;
             }
             else
             {
-                var left = normalized1[i];
-                var right = normalized2[j];
-                if (left.FirstAddress <= right.FirstAddress)
-                {
-                    curr = left;
-                    i++;
-                }
-                else
-                {
-                    curr = right;
-                    j++;
-                }
+                current = item2;
+                index2++;
             }
 
             ref var last = ref resultList.Last();
@@ -211,24 +237,64 @@ public static class SpanHelper
             }
             else
             {
-                if (last.LastAddress.ToUInt32() + 1U >= curr.FirstAddress.ToUInt32())
+                if (last.LastAddress.ToUInt32() + 1U >= current.FirstAddress.ToUInt32())
                 {
-                    last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, curr.LastAddress));
+                    last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, current.LastAddress));
                 }
                 else
                 {
-                    resultList.Add(curr);
+                    resultList.Add(current);
                 }
+            }
+        }
 
-                if (i >= normalized1.Length)
+        while (index2 < normalized2.Length)
+        {
+            Ip4Range current = normalized2[index2];
+            index2++;
+
+            ref var last = ref resultList.Last();
+            if (last.LastAddress == Ip4Address.MaxValue)
+            {
+                last = new Ip4Range(last.FirstAddress, Ip4Address.MaxValue);
+                return resultList.Count;
+            }
+            else
+            {
+                if (last.LastAddress.ToUInt32() + 1U >= current.FirstAddress.ToUInt32())
                 {
-                    resultList.AddRange(normalized2.Slice(j));
+                    last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, current.LastAddress));
+                }
+                else
+                {
+                    resultList.Add(current);
+                    resultList.AddRange(normalized2[index2..]);
                     return resultList.Count;
                 }
+            }
+        }
 
-                if (j >= normalized2.Length)
+        while (index1 < normalized1.Length)
+        {
+            Ip4Range current = normalized1[index1];
+            index1++;
+
+            ref var last = ref resultList.Last();
+            if (last.LastAddress == Ip4Address.MaxValue)
+            {
+                last = new Ip4Range(last.FirstAddress, Ip4Address.MaxValue);
+                return resultList.Count;
+            }
+            else
+            {
+                if (last.LastAddress.ToUInt32() + 1U >= current.FirstAddress.ToUInt32())
                 {
-                    resultList.AddRange(normalized1.Slice(i));
+                    last = new Ip4Range(last.FirstAddress, Ip4Address.Max(last.LastAddress, current.LastAddress));
+                }
+                else
+                {
+                    resultList.Add(current);
+                    resultList.AddRange(normalized1[index1..]);
                     return resultList.Count;
                 }
             }
@@ -237,7 +303,15 @@ public static class SpanHelper
         return resultList.Count;
     }
 
-    public static int UnionNormalizedSorted(ReadOnlySpan<Ip4Range> normalized, ReadOnlySpan<Ip4Range> sorted, Span<Ip4Range> result)
+    public static int UnionNormalizedSortedViaNormalizedNormalized(ReadOnlySpan<Ip4Range> normalized, ReadOnlySpan<Ip4Range> sorted, Span<Ip4Range> result)
+    {
+        Span<Ip4Range> temp = stackalloc Ip4Range[sorted.Length];
+        sorted.CopyTo(temp);
+        int length = MakeNormalizedFromSorted(temp);
+        return UnionNormalizedNormalized(normalized, temp[..length], result);
+    }
+
+    public static int UnionNormalizedSortedViaSortedSorted(ReadOnlySpan<Ip4Range> normalized, ReadOnlySpan<Ip4Range> sorted, Span<Ip4Range> result)
     {
         return UnionSortedSorted(normalized, sorted, result);
     }
@@ -250,12 +324,6 @@ public static class SpanHelper
         return UnionNormalizedNormalized(normalized, temp[..length], result);
     }
 
-    public static int UnionNormalizedUnsorted(ReadOnlySpan<Ip4Range> normalized, Span<Ip4Range> unsorted, Span<Ip4Range> result)
-    {
-        unsorted.Sort(Ip4RangeComparer.Instance);
-        return UnionNormalizedSorted(normalized, unsorted, result);
-    }
-
     public static int UnionSortedUnsorted(ReadOnlySpan<Ip4Range> sorted, ReadOnlySpan<Ip4Range> unsorted, Span<Ip4Range> result)
     {
         Span<Ip4Range> temp = stackalloc Ip4Range[unsorted.Length];
@@ -264,13 +332,7 @@ public static class SpanHelper
         return UnionSortedSorted(sorted, temp, result);
     }
 
-    public static int UnionSortedUnsorted(ReadOnlySpan<Ip4Range> sorted, Span<Ip4Range> unsorted, Span<Ip4Range> result)
-    {
-        unsorted.Sort(Ip4RangeComparer.Instance);
-        return UnionSortedSorted(sorted, unsorted, result);
-    }
-
-    public static int UnionUnsortedUnsorted(ReadOnlySpan<Ip4Range> unsorted1, ReadOnlySpan<Ip4Range> unsorted2, Span<Ip4Range> result)
+    public static int UnionUnsortedUnsortedViaSortedSorted(ReadOnlySpan<Ip4Range> unsorted1, ReadOnlySpan<Ip4Range> unsorted2, Span<Ip4Range> result)
     {
         Span<Ip4Range> temp1 = stackalloc Ip4Range[unsorted1.Length];
         unsorted1.CopyTo(temp1);
@@ -283,24 +345,17 @@ public static class SpanHelper
         return UnionSortedSorted(temp1, temp2, result);
     }
 
-    public static int UnionUnsortedUnsorted(ReadOnlySpan<Ip4Range> unsorted1, Span<Ip4Range> unsorted2, Span<Ip4Range> result)
+    public static int UnionUnsortedUnsortedViaNormalizedNormalized(ReadOnlySpan<Ip4Range> unsorted1, ReadOnlySpan<Ip4Range> unsorted2, Span<Ip4Range> result)
     {
         Span<Ip4Range> temp1 = stackalloc Ip4Range[unsorted1.Length];
         unsorted1.CopyTo(temp1);
-        temp1.Sort(Ip4RangeComparer.Instance);
+        int length1 = MakeNormalizedFromUnsorted(temp1);
 
-        unsorted2.Sort(Ip4RangeComparer.Instance);
+        Span<Ip4Range> temp2 = stackalloc Ip4Range[unsorted2.Length];
+        unsorted2.CopyTo(temp2);
+        int length2 = MakeNormalizedFromUnsorted(temp2);
 
-        return UnionSortedSorted(temp1, unsorted2, result);
-    }
-
-    public static int UnionUnsortedUnsorted(Span<Ip4Range> unsorted1, Span<Ip4Range> unsorted2, Span<Ip4Range> result)
-    {
-        unsorted1.Sort(Ip4RangeComparer.Instance);
-
-        unsorted2.Sort(Ip4RangeComparer.Instance);
-
-        return UnionSortedSorted(unsorted1, unsorted2, result);
+        return UnionSortedSorted(temp1[..length1], temp2[..length2], result);
     }
 
 
