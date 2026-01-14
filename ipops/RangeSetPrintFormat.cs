@@ -1,4 +1,4 @@
-namespace ipops;
+namespace nipset;
 
 internal enum RangeSetPrintFormat
 {

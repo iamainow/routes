@@ -1,12 +1,12 @@
 using AnsiColoredWriters;
 using Ip4Parsers;
-using Ip4RangeSetDifferenceCalculator;
 using NativeMethods.Windows;
 using routes;
+using RoutesCalculator;
 using System.Net;
 using System.Net.NetworkInformation;
 
-namespace ifroute;
+namespace nifroute;
 
 internal static class Program
 {

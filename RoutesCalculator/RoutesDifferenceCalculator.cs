@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Ip4RangeSetDifferenceCalculator;
+namespace RoutesCalculator;
 
 public static class RoutesDifferenceCalculator
 {

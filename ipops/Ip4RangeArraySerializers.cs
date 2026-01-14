@@ -2,7 +2,7 @@ using routes;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace ipops;
+namespace nipset;
 
 internal static class Ip4RangeArraySerializers
 {

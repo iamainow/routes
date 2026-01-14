@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using routes.Extensions;
 
-namespace routes.Benchmarks.Ip4RangeSetStackAllocBenchmark;
+namespace routes.Benchmarks.SpanHelper;
 
 [Config(typeof(BenchmarkManualConfig))]
 public class SpanHelperUnionExcept
@@ -30,7 +30,7 @@ public class SpanHelperUnionExcept
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
-            result += SpanHelper.UnionUnsortedUnsortedViaNormalizedNormalized(
+            result += routes.SpanHelper.UnionUnsortedUnsortedViaNormalizedNormalized(
                 rangesArray_1[index],
                 rangesArray_2[index],
                 buffer);
@@ -46,7 +46,7 @@ public class SpanHelperUnionExcept
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
-            result += SpanHelper.UnionUnsortedUnsortedViaSortedSorted(
+            result += routes.SpanHelper.UnionUnsortedUnsortedViaSortedSorted(
                 rangesArray_1[index],
                 rangesArray_2[index],
                 buffer);

@@ -1,7 +1,7 @@
 using Ip4Parsers;
 using routes;
 
-namespace ipops;
+namespace nipset;
 
 internal static class Program
 {
