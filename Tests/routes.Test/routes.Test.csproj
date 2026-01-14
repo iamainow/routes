@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\routes\routes.csproj" />
+    <ProjectReference Include="..\..\routes\routes.csproj" />
   </ItemGroup>
 
   <ItemGroup>

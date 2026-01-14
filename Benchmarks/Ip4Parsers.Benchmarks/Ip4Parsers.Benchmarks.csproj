@@ -9,9 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ip4Parsers\Ip4Parsers.csproj" />
-    <ProjectReference Include="..\routes.Extensions\routes.Extensions.csproj" />
-    <ProjectReference Include="..\routes\routes.csproj" />
+    <ProjectReference Include="..\..\Ip4Parsers\Ip4Parsers.csproj" />
+    <ProjectReference Include="..\..\Tests\routes.Extensions\routes.Extensions.csproj" />
   </ItemGroup>
 
 </Project>
