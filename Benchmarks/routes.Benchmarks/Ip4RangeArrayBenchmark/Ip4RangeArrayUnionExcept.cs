@@ -1,10 +1,10 @@
 using BenchmarkDotNet.Attributes;
 using routes.Extensions;
 
-namespace routes.Benchmarks.SpanHelper;
+namespace routes.Benchmarks.Ip4RangeArrayBenchmark;
 
 [Config(typeof(BenchmarkManualConfig))]
-public class SpanHelperUnionExcept
+public class Ip4RangeArrayUnionExcept
 {
     [Params(1_000)]
     public int Count { get; set; }
@@ -24,32 +24,28 @@ public class SpanHelperUnionExcept
     }
 
     [Benchmark]
-    public int SpanHelper_Union_UnsortedUnsorted_Via_NormalizedNormalized()
+    public int Ip4RangeArray_Create_Union_span()
     {
-        var buffer = new Ip4Range[SetSize * 2];
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
-            result += routes.SpanHelper.UnionUnsortedUnsortedViaNormalizedNormalized(
-                rangesArray_1[index],
-                rangesArray_2[index],
-                buffer);
+            result += Ip4RangeArray.Create(rangesArray_1[index])
+                .Union(rangesArray_2[index])
+                .RangesCount;
         }
 
         return result;
     }
 
     [Benchmark]
-    public int SpanHelper_Union_UnsortedUnsorted_Via_SortedSorted()
+    public int Ip4RangeArray_Create_Except_span()
     {
-        var buffer = new Ip4Range[SetSize * 2];
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
-            result += routes.SpanHelper.UnionUnsortedUnsortedViaSortedSorted(
-                rangesArray_1[index],
-                rangesArray_2[index],
-                buffer);
+            result += Ip4RangeArray.Create(rangesArray_1[index])
+                .Except(rangesArray_2[index])
+                .RangesCount;
         }
 
         return result;

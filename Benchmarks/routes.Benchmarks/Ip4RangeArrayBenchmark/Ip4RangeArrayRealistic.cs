@@ -2,10 +2,10 @@ using BenchmarkDotNet.Attributes;
 using Ip4Parsers;
 using System.Runtime.InteropServices;
 
-namespace routes.Benchmarks.Ip4RangeSetStackAllocBenchmark;
+namespace routes.Benchmarks.Ip4RangeArrayBenchmark;
 
 [Config(typeof(BenchmarkManualConfig))]
-public class Ip4RangeSetStackAllocRealistic
+public class Ip4RangeArrayRealistic
 {
     private string _subnetsText = "";
     private Ip4Subnet[] _subnets = [];

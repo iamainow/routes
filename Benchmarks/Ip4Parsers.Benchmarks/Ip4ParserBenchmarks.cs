@@ -4,7 +4,7 @@ using routes;
 namespace Ip4Parsers.Benchmarks;
 
 [Config(typeof(BenchmarkManualConfig))]
-public class Ip4ParsersBenchmarks
+public class Ip4ParserBenchmarks
 {
     [Params(1_000_000)]
     public int Count { get; set; }
