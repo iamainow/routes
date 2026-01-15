@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AnsiColoredWriter\AnsiColoredWriters.csproj" />
+    <ProjectReference Include="..\Ip4Parsers\Ip4Parsers.csproj" />
+    <ProjectReference Include="..\RoutesCalculator\RoutesCalculator.csproj" />
+    <ProjectReference Include="..\routes\routes.csproj" />
+    <ProjectReference Include="..\NativeMethods.Windows\NativeMethods.Windows.csproj" />
+  </ItemGroup>
+
+</Project>
