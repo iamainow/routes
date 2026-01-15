@@ -3,20 +3,23 @@ namespace routes;
 public readonly struct CustomRange<T> : IEquatable<CustomRange<T>>
     where T : struct, IEquatable<T>, IComparable<T>
 {
-    public T FirstAddress { get; init; }
-    public T LastAddress { get; init; }
+    private readonly T firstAddress;
+    private readonly T lastAddress;
+
+    public T FirstAddress => this.firstAddress;
+    public T LastAddress => this.lastAddress;
     public CustomRange(T firstAddress, T lastAddress)
     {
         if (firstAddress.CompareTo(lastAddress) > 0)
         {
-            throw new ArgumentException("FirstAddress must be less than or equal to LastAddress");
+            throw new ArgumentException("firstAddress must be less than or equal to lastAddress");
         }
-        this.FirstAddress = firstAddress;
-        this.LastAddress = lastAddress;
+        this.firstAddress = firstAddress;
+        this.lastAddress = lastAddress;
     }
     public override string ToString()
     {
-        return $"{this.FirstAddress} - {this.LastAddress}";
+        return $"{this.firstAddress} - {this.lastAddress}";
     }
 
     public override bool Equals(object? obj)
@@ -25,12 +28,12 @@ public readonly struct CustomRange<T> : IEquatable<CustomRange<T>>
         {
             return false;
         }
-        return this.FirstAddress.Equals(other.FirstAddress) && this.LastAddress.Equals(other.LastAddress);
+        return this.firstAddress.Equals(other.firstAddress) && this.lastAddress.Equals(other.lastAddress);
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(this.FirstAddress, this.LastAddress);
+        return HashCode.Combine(this.firstAddress, this.lastAddress);
     }
 
     public static bool operator ==(CustomRange<T> left, CustomRange<T> right)
@@ -45,6 +48,6 @@ public readonly struct CustomRange<T> : IEquatable<CustomRange<T>>
 
     public bool Equals(CustomRange<T> other)
     {
-        return this.FirstAddress.Equals(other.FirstAddress) && this.LastAddress.Equals(other.LastAddress);
+        return this.firstAddress.Equals(other.firstAddress) && this.lastAddress.Equals(other.lastAddress);
     }
 }

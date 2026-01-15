@@ -7,8 +7,8 @@ namespace routes;
 // normalized - sorted, not overlapped, non-adjacent
 public static class SpanHelperGeneric
 {
-    public static int MakeNormalizedFromSorted<T>(Span<CustomRange<T>> result)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>
+    public static int MakeNormalizedFromSorted<T>(Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         if (result.Length <= 1)
         {
@@ -27,7 +27,7 @@ public static class SpanHelperGeneric
                 last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
                 return resultList.Count;
             }
-            else if ((last.LastAddress + 1).CompareTo(current.FirstAddress) >= 0)
+            else if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
             {
                 T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
                 last = new CustomRange<T>(last.FirstAddress, max);
@@ -41,17 +41,17 @@ public static class SpanHelperGeneric
         return resultList.Count;
     }
 
-    public static int MakeNormalizedFromUnsorted<T>(Span<CustomRange<T>> result)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>
+    public static int MakeNormalizedFromUnsorted<T>(Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         result.Sort(CustomRangeComparer<T>.Instance);
-        return MakeNormalizedFromSorted(result);
+        return MakeNormalizedFromSorted(result, one);
     }
 
 
 
-    public static int UnionSortedSorted<T>(ReadOnlySpan<CustomRange<T>> sorted1, ReadOnlySpan<CustomRange<T>> sorted2, Span<CustomRange<T>> result)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>
+    public static int UnionSortedSorted<T>(ReadOnlySpan<CustomRange<T>> sorted1, ReadOnlySpan<CustomRange<T>> sorted2, Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         if (result.Overlaps(sorted1))
         {
@@ -66,13 +66,13 @@ public static class SpanHelperGeneric
         if (sorted1.Length == 0)
         {
             sorted2.CopyTo(result);
-            return MakeNormalizedFromSorted(result);
+            return MakeNormalizedFromSorted(result, one);
         }
 
         if (sorted2.Length == 0)
         {
             sorted1.CopyTo(result);
-            return MakeNormalizedFromSorted(result);
+            return MakeNormalizedFromSorted(result, one);
         }
 
         ListStackAlloc<CustomRange<T>> resultList = new ListStackAlloc<CustomRange<T>>(result);
@@ -117,7 +117,7 @@ public static class SpanHelperGeneric
                 last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
                 return resultList.Count;
             }
-            else if ((last.LastAddress + 1).CompareTo(current.FirstAddress) >= 0)
+            else if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
             {
                 T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
                 last = new CustomRange<T>(last.FirstAddress, max);
@@ -141,7 +141,7 @@ public static class SpanHelperGeneric
             }
             else
             {
-                if ((last.LastAddress + 1).CompareTo(current.FirstAddress) >= 0)
+                if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
                 {
                     T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
                     last = new CustomRange<T>(last.FirstAddress, max);
@@ -166,7 +166,7 @@ public static class SpanHelperGeneric
             }
             else
             {
-                if ((last.LastAddress + 1).CompareTo(current.FirstAddress) >= 0)
+                if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
                 {
                     T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
                     last = new CustomRange<T>(last.FirstAddress, max);
@@ -181,8 +181,8 @@ public static class SpanHelperGeneric
         return resultList.Count;
     }
 
-    public static int UnionNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized1, ReadOnlySpan<CustomRange<T>> normalized2, Span<CustomRange<T>> result)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>
+    public static int UnionNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized1, ReadOnlySpan<CustomRange<T>> normalized2, Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         if (result.Overlaps(normalized1))
         {
@@ -250,7 +250,7 @@ public static class SpanHelperGeneric
             }
             else
             {
-                if ((last.LastAddress + 1).CompareTo(current.FirstAddress) >= 0)
+                if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
                 {
                     T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
                     last = new CustomRange<T>(last.FirstAddress, max);
@@ -268,14 +268,14 @@ public static class SpanHelperGeneric
             index2++;
 
             ref var last = ref resultList.Last();
-            if (Ip4Address.MaxValue.Equals(last.LastAddress))
+            if (T.MaxValue.Equals(last.LastAddress))
             {
                 last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
                 return resultList.Count;
             }
             else
             {
-                if ((last.LastAddress + 1).CompareTo(current.FirstAddress) >= 0)
+                if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
                 {
                     T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
                     last = new CustomRange<T>(last.FirstAddress, max);
@@ -295,14 +295,14 @@ public static class SpanHelperGeneric
             index1++;
 
             ref var last = ref resultList.Last();
-            if (Ip4Address.MaxValue.Equals(last.LastAddress))
+            if (T.MaxValue.Equals(last.LastAddress))
             {
                 last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
                 return resultList.Count;
             }
             else
             {
-                if ((last.LastAddress + 1).CompareTo(current.FirstAddress) >= 0)
+                if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
                 {
                     T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
                     last = new CustomRange<T>(last.FirstAddress, max);
@@ -319,41 +319,41 @@ public static class SpanHelperGeneric
         return resultList.Count;
     }
 
-    public static int UnionNormalizedSortedViaNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result)
-         where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>
+    public static int UnionNormalizedSortedViaNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result, T one)
+         where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         Span<CustomRange<T>> temp = stackalloc CustomRange<T>[sorted.Length];
         sorted.CopyTo(temp);
-        int length = MakeNormalizedFromSorted(temp);
-        return UnionNormalizedNormalized(normalized, temp[..length], result);
+        int length = MakeNormalizedFromSorted(temp, one);
+        return UnionNormalizedNormalized(normalized, temp[..length], result, one);
     }
 
-    public static int UnionNormalizedSortedViaSortedSorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>
+    public static int UnionNormalizedSortedViaSortedSorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
-        return UnionSortedSorted(normalized, sorted, result);
+        return UnionSortedSorted(normalized, sorted, result, one);
     }
 
-    public static int UnionNormalizedUnsorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> unsorted, Span<CustomRange<T>> result)
-        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>
+    public static int UnionNormalizedUnsorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> unsorted, Span<CustomRange<T>> result, T one)
+        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         Span<CustomRange<T>> temp = stackalloc CustomRange<T>[unsorted.Length];
         unsorted.CopyTo(temp);
-        int length = MakeNormalizedFromUnsorted(temp);
-        return UnionNormalizedNormalized(normalized, temp[..length], result);
+        int length = MakeNormalizedFromUnsorted(temp, one);
+        return UnionNormalizedNormalized(normalized, temp[..length], result, one);
     }
 
-    public static int UnionSortedUnsorted<T>(ReadOnlySpan<CustomRange<T>> sorted, ReadOnlySpan<CustomRange<T>> unsorted, Span<CustomRange<T>> result)
-        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>
+    public static int UnionSortedUnsorted<T>(ReadOnlySpan<CustomRange<T>> sorted, ReadOnlySpan<CustomRange<T>> unsorted, Span<CustomRange<T>> result, T one)
+        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         Span<CustomRange<T>> temp = stackalloc CustomRange<T>[unsorted.Length];
         unsorted.CopyTo(temp);
         temp.Sort(CustomRangeComparer<T>.Instance);
-        return UnionSortedSorted(sorted, temp, result);
+        return UnionSortedSorted(sorted, temp, result, one);
     }
 
-    public static int UnionUnsortedUnsortedViaSortedSorted<T>(ReadOnlySpan<CustomRange<T>> unsorted1, ReadOnlySpan<CustomRange<T>> unsorted2, Span<CustomRange<T>> result)
-        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>
+    public static int UnionUnsortedUnsortedViaSortedSorted<T>(ReadOnlySpan<CustomRange<T>> unsorted1, ReadOnlySpan<CustomRange<T>> unsorted2, Span<CustomRange<T>> result, T one)
+        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         Span<CustomRange<T>> temp1 = stackalloc CustomRange<T>[unsorted1.Length];
         unsorted1.CopyTo(temp1);
@@ -363,40 +363,40 @@ public static class SpanHelperGeneric
         unsorted2.CopyTo(temp2);
         temp2.Sort(CustomRangeComparer<T>.Instance);
 
-        return UnionSortedSorted(temp1, temp2, result);
+        return UnionSortedSorted(temp1, temp2, result, one);
     }
 
-    public static int UnionUnsortedUnsortedViaNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> unsorted1, ReadOnlySpan<CustomRange<T>> unsorted2, Span<CustomRange<T>> result)
-        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>
+    public static int UnionUnsortedUnsortedViaNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> unsorted1, ReadOnlySpan<CustomRange<T>> unsorted2, Span<CustomRange<T>> result, T one)
+        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         Span<CustomRange<T>> temp1 = stackalloc CustomRange<T>[unsorted1.Length];
         unsorted1.CopyTo(temp1);
-        int length1 = MakeNormalizedFromUnsorted(temp1);
+        int length1 = MakeNormalizedFromUnsorted(temp1, one);
 
         Span<CustomRange<T>> temp2 = stackalloc CustomRange<T>[unsorted2.Length];
         unsorted2.CopyTo(temp2);
-        int length2 = MakeNormalizedFromUnsorted(temp2);
+        int length2 = MakeNormalizedFromUnsorted(temp2, one);
 
-        return UnionSortedSorted(temp1[..length1], temp2[..length2], result);
+        return UnionSortedSorted(temp1[..length1], temp2[..length2], result, one);
     }
 
 
 
-    private static CustomRange<T> CreateLeftPart<T>(CustomRange<T> range, T otherStart)
-        where T : struct, IEquatable<T>, IComparable<T>, ISubtractionOperators<T, int, T>
+    private static CustomRange<T> CreateLeftPart<T>(CustomRange<T> range, T otherStart, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, ISubtractionOperators<T, T, T>
     {
-        return new CustomRange<T>(range.FirstAddress, otherStart - 1);
+        return new CustomRange<T>(range.FirstAddress, otherStart - one);
     }
 
-    private static CustomRange<T> CreateRightPart<T>(CustomRange<T> range, T otherEnd)
-        where T : struct, IEquatable<T>, IComparable<T>, IAdditionOperators<T, int, T>
+    private static CustomRange<T> CreateRightPart<T>(CustomRange<T> range, T otherEnd, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IAdditionOperators<T, T, T>
     {
-        return new CustomRange<T>(otherEnd + 1, range.LastAddress);
+        return new CustomRange<T>(otherEnd + one, range.LastAddress);
     }
 
     /// <returns>left and right parts</returns>
-    private static ValueTuple<CustomRange<T>?, CustomRange<T>?> IntersectableExcept<T>(CustomRange<T> range, CustomRange<T> other)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>, ISubtractionOperators<T, int, T>
+    private static ValueTuple<CustomRange<T>?, CustomRange<T>?> IntersectableExcept<T>(CustomRange<T> range, CustomRange<T> other, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
     {
         bool hasLeftPart = other.FirstAddress.CompareTo(range.FirstAddress) > 0 && !T.MinValue.Equals(other.FirstAddress);
         bool hasRightPart = other.LastAddress.CompareTo(range.LastAddress) < 0 && !T.MaxValue.Equals(other.LastAddress);
@@ -405,18 +405,18 @@ public static class SpanHelperGeneric
         {
             if (hasRightPart)
             {
-                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(CreateLeftPart(range, other.FirstAddress), CreateRightPart(range, other.LastAddress));
+                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(CreateLeftPart(range, other.FirstAddress, one), CreateRightPart(range, other.LastAddress, one));
             }
             else
             {
-                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(CreateLeftPart(range, other.FirstAddress), null);
+                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(CreateLeftPart(range, other.FirstAddress, one), null);
             }
         }
         else
         {
             if (hasRightPart)
             {
-                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(null, CreateRightPart(range, other.LastAddress));
+                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(null, CreateRightPart(range, other.LastAddress, one));
             }
             else
             {
@@ -427,8 +427,8 @@ public static class SpanHelperGeneric
 
 
 
-    public static int ExceptNormalizedSorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>, ISubtractionOperators<T, int, T>
+    public static int ExceptNormalizedSorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
     {
         if (result.Overlaps(normalized))
         {
@@ -489,7 +489,7 @@ public static class SpanHelperGeneric
             else
             {
                 // Ranges overlap - compute the difference
-                (var leftPart, var rightPart) = IntersectableExcept(currentRange, otherCurr);
+                (var leftPart, var rightPart) = IntersectableExcept(currentRange, otherCurr, one);
 
                 if (leftPart.HasValue)
                 {
@@ -516,25 +516,25 @@ public static class SpanHelperGeneric
         return resultList.Count;
     }
 
-    public static int ExceptNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized1, ReadOnlySpan<CustomRange<T>> normalized2, Span<CustomRange<T>> result)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>, ISubtractionOperators<T, int, T>
+    public static int ExceptNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized1, ReadOnlySpan<CustomRange<T>> normalized2, Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
     {
-        return ExceptNormalizedSorted(normalized1, normalized2, result);
+        return ExceptNormalizedSorted(normalized1, normalized2, result, one);
     }
 
-    public static int ExceptNormalizedUnsorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> unsorted, Span<CustomRange<T>> result)
-        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>, ISubtractionOperators<T, int, T>
+    public static int ExceptNormalizedUnsorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> unsorted, Span<CustomRange<T>> result, T one)
+        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
     {
         Span<CustomRange<T>> temp = stackalloc CustomRange<T>[unsorted.Length];
         unsorted.CopyTo(temp);
-        int length = MakeNormalizedFromUnsorted(temp);
-        return ExceptNormalizedNormalized(normalized, temp[..length], result);
+        int length = MakeNormalizedFromUnsorted(temp, one);
+        return ExceptNormalizedNormalized(normalized, temp[..length], result, one);
     }
 
-    public static int ExceptNormalizedUnsorted<T>(ReadOnlySpan<CustomRange<T>> normalized, Span<CustomRange<T>> unsorted, Span<CustomRange<T>> result)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, int, T>, ISubtractionOperators<T, int, T>
+    public static int ExceptNormalizedUnsorted<T>(ReadOnlySpan<CustomRange<T>> normalized, Span<CustomRange<T>> unsorted, Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
     {
         unsorted.Sort(CustomRangeComparer<T>.Instance);
-        return ExceptNormalizedSorted(normalized, unsorted, result);
+        return ExceptNormalizedSorted(normalized, unsorted, result, one);
     }
 }
