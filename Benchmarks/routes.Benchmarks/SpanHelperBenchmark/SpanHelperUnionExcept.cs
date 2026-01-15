@@ -30,7 +30,7 @@ public class SpanHelperUnionExcept
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
-            result += routes.SpanHelper.UnionUnsortedUnsortedViaNormalizedNormalized(
+            result += SpanHelper.UnionUnsortedUnsortedViaNormalizedNormalized(
                 rangesArray_1[index],
                 rangesArray_2[index],
                 buffer);
@@ -46,7 +46,7 @@ public class SpanHelperUnionExcept
         int result = 0;
         for (int index = 0; index < Count; ++index)
         {
-            result += routes.SpanHelper.UnionUnsortedUnsortedViaSortedSorted(
+            result += SpanHelper.UnionUnsortedUnsortedViaSortedSorted(
                 rangesArray_1[index],
                 rangesArray_2[index],
                 buffer);
