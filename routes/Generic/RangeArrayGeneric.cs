@@ -1,3 +1,4 @@
+using CommunityToolkit.HighPerformance.Buffers;
 using System.Numerics;
 using System.Text;
 
@@ -38,6 +39,9 @@ public readonly ref struct RangeArrayGeneric<T>
 
     public readonly RangeArrayGeneric<T> Union(scoped RangeArrayGeneric<T> other, T one)
     {
+        using SpanOwner<byte> largeOwner = SpanOwner<byte>.Allocate(megabyteSize);
+        Span<byte> largeData = largeOwner.Span;
+
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[this._items.Length + other._items.Length];
         int length = SpanHelperGeneric.UnionNormalizedNormalized(this._items, other._items, resultBuffer, one);
         return new RangeArrayGeneric<T>(resultBuffer[..length]);
