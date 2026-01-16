@@ -8,6 +8,7 @@ public readonly struct CustomRange<T> : IEquatable<CustomRange<T>>
 
     public T FirstAddress => this.firstAddress;
     public T LastAddress => this.lastAddress;
+
     public CustomRange(T firstAddress, T lastAddress)
     {
         if (firstAddress.CompareTo(lastAddress) > 0)
@@ -28,6 +29,11 @@ public readonly struct CustomRange<T> : IEquatable<CustomRange<T>>
         {
             return false;
         }
+        return Equals(other);
+    }
+
+    public bool Equals(CustomRange<T> other)
+    {
         return this.firstAddress.Equals(other.firstAddress) && this.lastAddress.Equals(other.lastAddress);
     }
 
@@ -43,11 +49,6 @@ public readonly struct CustomRange<T> : IEquatable<CustomRange<T>>
 
     public static bool operator !=(CustomRange<T> left, CustomRange<T> right)
     {
-        return !(left == right);
-    }
-
-    public bool Equals(CustomRange<T> other)
-    {
-        return this.firstAddress.Equals(other.firstAddress) && this.lastAddress.Equals(other.lastAddress);
+        return !left.Equals(right);
     }
 }
