@@ -1,10 +1,11 @@
 using BenchmarkDotNet.Attributes;
 using routes.Extensions;
+using System.Text.RegularExpressions;
 
 namespace routes.Benchmarks.SpanHelperBenchmark;
 
 [Config(typeof(BenchmarkManualConfig))]
-public class SpanHelperGenericDateTimeUnionExcept
+public partial class SpanHelperGenericDateTimeUnionExcept
 {
     [Params(1_000)]
     public int Count { get; set; }
@@ -12,43 +13,54 @@ public class SpanHelperGenericDateTimeUnionExcept
     [Params(10, 100, 1_000)]
     public int SetSize { get; set; }
 
+    [Params("normalized", "sorted (overlap=0.25)", "sorted (overlap=0.5)", "sorted (overlap=0.75)", "unsorted (overlap=0.25)", "unsorted (overlap=0.5)", "unsorted (overlap=0.75)")]
+    public required string Input { get; set; }
+
     private CustomRange<DateTimeWrapper>[][] rangesArray_1 = [];
     private CustomRange<DateTimeWrapper>[][] rangesArray_2 = [];
 
-    private static T Clamp<T>(T value, T minValue, T maxValue)
-        where T : IComparable<T>
+    [GeneratedRegex(@"overlap=([\d\.]+)")]
+    private static partial Regex ParseOverlapPercent();
+
+    private static CustomRange<DateTimeWrapper>[][] Generate(int count, int size, string input, Random random)
     {
-        if (value.CompareTo(minValue) < 0)
+        long minValue = DateTime.MinValue.Ticks;
+        long maxValue = DateTime.MaxValue.Ticks;
+        Func<ReadOnlySpan<byte>, DateTimeWrapper> convert = span => new DateTimeWrapper(DateTime.FromBinary(Math.Clamp(BitConverter.ToInt64(span), minValue, maxValue)));
+
+        Func<CustomRange<DateTimeWrapper>[]> generator = input switch
         {
-            return minValue;
-        }
-        if (value.CompareTo(maxValue) > 0)
-        {
-            return maxValue;
-        }
-        return value;
+            "normalized" => () => CustomArrayExtensions.GenerateNormalized(size, convert, random),
+            _ when input.StartsWith("sorted") => () =>
+            {
+                double overlappingPercent = ParseOverlapPercent().Match(input) is { Success: true } match
+                    ? double.Parse(match.Groups[1].Value)
+                    : throw new InvalidOperationException($"can't parse overlappingPercent in '{input}'");
+                return CustomArrayExtensions.GenerateSorted(size, convert, overlappingPercent, random);
+            }
+            ,
+            _ when input.StartsWith("unsorted") => () =>
+            {
+                double overlappingPercent = ParseOverlapPercent().Match(input) is { Success: true } match
+                    ? double.Parse(match.Groups[1].Value)
+                    : throw new InvalidOperationException($"can't parse overlappingPercent in '{input}'");
+                return CustomArrayExtensions.GenerateSorted(size, convert, overlappingPercent, random);
+            }
+            ,
+            _ => throw new NotImplementedException($"Input='{input}' is not implemented"),
+        };
+
+        return Enumerable.Range(0, count)
+            .Select(_ => generator().ToArray())
+            .ToArray();
     }
 
     [GlobalSetup]
     public async Task GlobalSetup()
     {
         Random random = new();
-        long minValue = DateTime.MinValue.Ticks;
-        long maxValue = DateTime.MaxValue.Ticks;
-        this.rangesArray_1 = Enumerable.Range(0, this.Count)
-            .Select(_ => CustomArrayExtensions.GenerateNormalized(
-                this.SetSize,
-                span => new DateTimeWrapper(DateTime.FromBinary(Clamp(BitConverter.ToInt64(span), minValue, maxValue))),
-                random
-            ).ToArray())
-        .ToArray();
-        this.rangesArray_2 = Enumerable.Range(0, this.Count)
-            .Select(_ => CustomArrayExtensions.GenerateNormalized(
-                this.SetSize,
-                span => new DateTimeWrapper(DateTime.FromBinary(Clamp(BitConverter.ToInt64(span), minValue, maxValue))),
-                random
-            ).ToArray())
-        .ToArray();
+        this.rangesArray_1 = Generate(Count, SetSize, Input, random);
+        this.rangesArray_2 = Generate(Count, SetSize, Input, random);
     }
 
     [Benchmark]
@@ -86,4 +98,6 @@ public class SpanHelperGenericDateTimeUnionExcept
 
         return result;
     }
+
+
 }

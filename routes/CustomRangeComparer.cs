@@ -1,6 +1,6 @@
 namespace routes;
 
-internal sealed class CustomRangeComparer<T> : IComparer<CustomRange<T>>
+public sealed class CustomRangeComparer<T> : IComparer<CustomRange<T>>
     where T : struct, IEquatable<T>, IComparable<T>
 {
     public static readonly CustomRangeComparer<T> Instance = new();
