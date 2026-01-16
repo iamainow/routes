@@ -319,81 +319,6 @@ public static class SpanHelperGeneric
         return resultList.Count;
     }
 
-    public static int UnionNormalizedSortedViaNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result, T one)
-         where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
-    {
-        Span<CustomRange<T>> temp = stackalloc CustomRange<T>[sorted.Length];
-        sorted.CopyTo(temp);
-        int length = MakeNormalizedFromSorted(temp, one);
-        return UnionNormalizedNormalized(normalized, temp[..length], result, one);
-    }
-
-    public static int UnionNormalizedSortedViaSortedSorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result, T one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
-    {
-        return UnionSortedSorted(normalized, sorted, result, one);
-    }
-
-    public static int UnionNormalizedUnsorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> unsorted, Span<CustomRange<T>> result, T one)
-        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
-    {
-        Span<CustomRange<T>> temp = stackalloc CustomRange<T>[unsorted.Length];
-        unsorted.CopyTo(temp);
-        int length = MakeNormalizedFromUnsorted(temp, one);
-        return UnionNormalizedNormalized(normalized, temp[..length], result, one);
-    }
-
-    public static int UnionSortedUnsorted<T>(ReadOnlySpan<CustomRange<T>> sorted, ReadOnlySpan<CustomRange<T>> unsorted, Span<CustomRange<T>> result, T one)
-        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
-    {
-        Span<CustomRange<T>> temp = stackalloc CustomRange<T>[unsorted.Length];
-        unsorted.CopyTo(temp);
-        temp.Sort(CustomRangeComparer<T>.Instance);
-        return UnionSortedSorted(sorted, temp, result, one);
-    }
-
-    public static int UnionUnsortedUnsortedViaSortedSorted<T>(ReadOnlySpan<CustomRange<T>> unsorted1, ReadOnlySpan<CustomRange<T>> unsorted2, Span<CustomRange<T>> result, T one)
-        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
-    {
-        Span<CustomRange<T>> temp1 = stackalloc CustomRange<T>[unsorted1.Length];
-        unsorted1.CopyTo(temp1);
-        temp1.Sort(CustomRangeComparer<T>.Instance);
-
-        Span<CustomRange<T>> temp2 = stackalloc CustomRange<T>[unsorted2.Length];
-        unsorted2.CopyTo(temp2);
-        temp2.Sort(CustomRangeComparer<T>.Instance);
-
-        return UnionSortedSorted(temp1, temp2, result, one);
-    }
-
-    public static int UnionUnsortedUnsortedViaNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> unsorted1, ReadOnlySpan<CustomRange<T>> unsorted2, Span<CustomRange<T>> result, T one)
-        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
-    {
-        Span<CustomRange<T>> temp1 = stackalloc CustomRange<T>[unsorted1.Length];
-        unsorted1.CopyTo(temp1);
-        int length1 = MakeNormalizedFromUnsorted(temp1, one);
-
-        Span<CustomRange<T>> temp2 = stackalloc CustomRange<T>[unsorted2.Length];
-        unsorted2.CopyTo(temp2);
-        int length2 = MakeNormalizedFromUnsorted(temp2, one);
-
-        return UnionSortedSorted(temp1[..length1], temp2[..length2], result, one);
-    }
-
-
-
-    private static CustomRange<T> CreateLeftPart<T>(CustomRange<T> range, T otherStart, T one)
-        where T : struct, IEquatable<T>, IComparable<T>, ISubtractionOperators<T, T, T>
-    {
-        return new CustomRange<T>(range.FirstAddress, otherStart - one);
-    }
-
-    private static CustomRange<T> CreateRightPart<T>(CustomRange<T> range, T otherEnd, T one)
-        where T : struct, IEquatable<T>, IComparable<T>, IAdditionOperators<T, T, T>
-    {
-        return new CustomRange<T>(otherEnd + one, range.LastAddress);
-    }
-
     /// <returns>left and right parts</returns>
     private static ValueTuple<CustomRange<T>?, CustomRange<T>?> IntersectableExcept<T>(CustomRange<T> range, CustomRange<T> other, T one)
         where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
@@ -405,18 +330,18 @@ public static class SpanHelperGeneric
         {
             if (hasRightPart)
             {
-                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(CreateLeftPart(range, other.FirstAddress, one), CreateRightPart(range, other.LastAddress, one));
+                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(new CustomRange<T>(range.FirstAddress, other.FirstAddress - one), new CustomRange<T>(other.LastAddress + one, range.LastAddress));
             }
             else
             {
-                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(CreateLeftPart(range, other.FirstAddress, one), null);
+                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(new CustomRange<T>(range.FirstAddress, other.FirstAddress - one), null);
             }
         }
         else
         {
             if (hasRightPart)
             {
-                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(null, CreateRightPart(range, other.LastAddress, one));
+                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(null, new CustomRange<T>(other.LastAddress + one, range.LastAddress));
             }
             else
             {
