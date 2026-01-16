@@ -6,21 +6,19 @@ namespace routes.Generic;
 public readonly ref struct RangeArrayGeneric<T>
     where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
 {
-#pragma warning disable CA1000 // Do not declare static members on generic types
-    public static RangeArrayGeneric<T> Create(scoped RangeArrayGeneric<T> other)
+    public RangeArrayGeneric(scoped RangeArrayGeneric<T> other)
     {
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[other._items.Length];
         other._items.CopyTo(resultBuffer);
-        return new RangeArrayGeneric<T>(resultBuffer);
+        this._items = resultBuffer;
     }
 
-    public static RangeArrayGeneric<T> Create(scoped ReadOnlySpan<T> other, T one)
+    public RangeArrayGeneric(scoped ReadOnlySpan<T> other, T one)
     {
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[other.Length];
         int length = SpanHelperGeneric.MakeNormalizedFromUnsorted(resultBuffer, one);
-        return new RangeArrayGeneric<T>(resultBuffer[..length]);
+        this._items = resultBuffer[..length];
     }
-#pragma warning restore CA1000 // Do not declare static members on generic types
 
     private readonly ReadOnlySpan<CustomRange<T>> _items; // sorted by FirstAddress, elements not overlapping, elements non-adjacent/disjoint
 

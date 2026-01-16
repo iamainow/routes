@@ -66,13 +66,13 @@ public static class SpanHelperGeneric
         if (sorted1.Length == 0)
         {
             sorted2.CopyTo(result);
-            return MakeNormalizedFromSorted(result, one);
+            return MakeNormalizedFromSorted(result[..sorted2.Length], one);
         }
 
         if (sorted2.Length == 0)
         {
             sorted1.CopyTo(result);
-            return MakeNormalizedFromSorted(result, one);
+            return MakeNormalizedFromSorted(result[..sorted1.Length], one);
         }
 
         ListStackAlloc<CustomRange<T>> resultList = new ListStackAlloc<CustomRange<T>>(result);
@@ -514,27 +514,5 @@ public static class SpanHelperGeneric
         }
 
         return resultList.Count;
-    }
-
-    public static int ExceptNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized1, ReadOnlySpan<CustomRange<T>> normalized2, Span<CustomRange<T>> result, T one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
-    {
-        return ExceptNormalizedSorted(normalized1, normalized2, result, one);
-    }
-
-    public static int ExceptNormalizedUnsorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> unsorted, Span<CustomRange<T>> result, T one)
-        where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
-    {
-        Span<CustomRange<T>> temp = stackalloc CustomRange<T>[unsorted.Length];
-        unsorted.CopyTo(temp);
-        int length = MakeNormalizedFromUnsorted(temp, one);
-        return ExceptNormalizedNormalized(normalized, temp[..length], result, one);
-    }
-
-    public static int ExceptNormalizedUnsorted<T>(ReadOnlySpan<CustomRange<T>> normalized, Span<CustomRange<T>> unsorted, Span<CustomRange<T>> result, T one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
-    {
-        unsorted.Sort(CustomRangeComparer<T>.Instance);
-        return ExceptNormalizedSorted(normalized, unsorted, result, one);
     }
 }
