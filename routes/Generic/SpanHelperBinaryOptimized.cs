@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace routes;
+namespace routes.Generic;
 
 public static class SpanHelperBinaryOptimized
 {

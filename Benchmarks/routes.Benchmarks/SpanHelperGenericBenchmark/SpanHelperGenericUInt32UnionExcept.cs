@@ -1,5 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using routes.Extensions;
+using routes.Generic;
 
 namespace routes.Benchmarks.SpanHelperBenchmark;
 

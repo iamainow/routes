@@ -1,4 +1,6 @@
-﻿namespace routes.Extensions;
+﻿using routes.Generic;
+
+namespace routes.Extensions;
 
 public static class CustomArrayExtensions
 {

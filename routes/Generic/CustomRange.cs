@@ -1,4 +1,4 @@
-namespace routes;
+namespace routes.Generic;
 
 public readonly struct CustomRange<T> : IEquatable<CustomRange<T>>
     where T : struct, IEquatable<T>, IComparable<T>

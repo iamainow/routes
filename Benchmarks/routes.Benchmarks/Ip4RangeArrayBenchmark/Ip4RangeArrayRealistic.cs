@@ -1,5 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using Ip4Parsers;
+using routes.Generic;
 using System.Runtime.InteropServices;
 
 namespace routes.Benchmarks.Ip4RangeArrayBenchmark;

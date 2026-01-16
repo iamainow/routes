@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Text;
 
-namespace routes;
+namespace routes.Generic;
 
 public readonly ref struct RangeArrayGeneric<T>
     where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>

@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace routes;
+namespace routes.Generic;
 
 // unsorted - unsorted, overlapping/adjacent
 // sorted - sorted but overlapping/adjacent

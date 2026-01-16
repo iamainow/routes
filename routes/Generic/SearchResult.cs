@@ -1,4 +1,4 @@
-namespace routes;
+namespace routes.Generic;
 
 public enum SearchResult
 {

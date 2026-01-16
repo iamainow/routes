@@ -1,4 +1,4 @@
-namespace routes;
+namespace routes.Generic;
 
 public ref struct ListStackAlloc<T>
 {

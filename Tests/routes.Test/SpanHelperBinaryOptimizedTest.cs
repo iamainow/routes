@@ -1,3 +1,5 @@
+using routes.Generic;
+
 namespace routes.Test;
 
 /// <summary>
