@@ -1,3 +1,4 @@
+using CommunityToolkit.HighPerformance.Buffers;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -44,22 +45,34 @@ public readonly ref struct Ip4RangeArray
 
     public readonly Ip4RangeArray Union(scoped ReadOnlySpan<Ip4Range> other)
     {
+        using SpanOwner<Ip4Range> otherSpanOwner = SpanOwner<Ip4Range>.Allocate(other.Length);
+        Span<Ip4Range> otherSpan = otherSpanOwner.Span;
+
+        other.CopyTo(otherSpan);
+        int otherSpanLength = SpanHelper.MakeNormalizedFromUnsorted(otherSpan);
+
         Span<Ip4Range> resultBuffer = new Ip4Range[this._items.Length + other.Length];
-        int length = SpanHelper.UnionNormalizedUnsorted(_items, other, resultBuffer);
+        int length = SpanHelper.UnionNormalizedNormalized(_items, otherSpan[..otherSpanLength], resultBuffer);
         return new Ip4RangeArray(resultBuffer[..length]);
     }
 
     public Ip4RangeArray Except(scoped Ip4RangeArray other)
     {
         Span<Ip4Range> resultBuffer = new Ip4Range[_items.Length + other._items.Length];
-        int length = SpanHelper.ExceptNormalizedNormalized(_items, other._items, resultBuffer);
+        int length = SpanHelper.ExceptNormalizedSorted(_items, other._items, resultBuffer);
         return new Ip4RangeArray(resultBuffer[..length]);
     }
 
     public Ip4RangeArray Except(scoped ReadOnlySpan<Ip4Range> other)
     {
+        using SpanOwner<Ip4Range> otherSpanOwner = SpanOwner<Ip4Range>.Allocate(other.Length);
+        Span<Ip4Range> otherSpan = otherSpanOwner.Span;
+
+        other.CopyTo(otherSpan);
+        otherSpan.Sort(Ip4RangeComparer.Instance);
+
         Span<Ip4Range> resultBuffer = new Ip4Range[_items.Length + other.Length];
-        int length = SpanHelper.ExceptNormalizedUnsorted(_items, other, resultBuffer);
+        int length = SpanHelper.ExceptNormalizedSorted(_items, other, resultBuffer);
         return new Ip4RangeArray(resultBuffer[..length]);
     }
 

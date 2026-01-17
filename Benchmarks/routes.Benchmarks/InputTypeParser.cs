@@ -1,7 +1,7 @@
 using routes.Generic;
 using System.Numerics;
 
-namespace routes.Benchmarks.SpanHelperBenchmark;
+namespace routes.Benchmarks;
 
 public static class InputTypeParser
 {

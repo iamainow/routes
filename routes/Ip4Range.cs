@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Numerics;
 
 namespace routes;
 
@@ -11,7 +10,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
     public Ip4Address FirstAddress { get; }
     public Ip4Address LastAddress { get; }
 
-    public BigInteger Count => BigInteger.One + new BigInteger(LastAddress.ToUInt32()) - new BigInteger(FirstAddress.ToUInt32());
+    public ulong Count => 1UL + LastAddress.ToUInt32() - FirstAddress.ToUInt32();
 
     public Ip4Range(Ip4Address start, Ip4Address end)
     {

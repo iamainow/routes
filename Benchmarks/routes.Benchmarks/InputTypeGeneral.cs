@@ -1,4 +1,4 @@
-namespace routes.Benchmarks.SpanHelperBenchmark;
+namespace routes.Benchmarks;
 
 public enum InputTypeGeneral
 {
