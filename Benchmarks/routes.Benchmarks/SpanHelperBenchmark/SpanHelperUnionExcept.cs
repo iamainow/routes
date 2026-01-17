@@ -111,4 +111,26 @@ public class SpanHelperUnionExcept
 
         return result;
     }
+
+    [Benchmark]
+    public int SpanHelper_Ip4Range_ExceptNormalizedNormalized()
+    {
+        using var bufferSpanOwner = SpanOwner<Ip4Range>.Allocate(this.SetSize * 2);
+        var buffer = bufferSpanOwner.Span;
+        int result = 0;
+        var fromType = InputGeneral;
+        for (int index = 0; index < this.Count; ++index)
+        {
+            Span<Ip4Range> span1 = this.rangesArray_1[index];
+            Span<Ip4Range> span2 = this.rangesArray_2[index];
+            int length1 = Convert(span1, fromType, InputTypeGeneral.Normalized);
+            int length2 = Convert(span2, fromType, InputTypeGeneral.Normalized);
+            result += SpanHelper.ExceptNormalizedSorted(
+                span1[..length1],
+                span2[..length2],
+                buffer);
+        }
+
+        return result;
+    }
 }

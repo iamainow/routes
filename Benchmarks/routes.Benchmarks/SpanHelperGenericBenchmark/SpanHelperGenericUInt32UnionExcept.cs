@@ -55,14 +55,61 @@ public class SpanHelperGenericUInt32UnionExcept
         int result = 0;
         uint one = 1u;
         var fromType = InputGeneral;
-        var toType = InputTypeGeneral.Normalized;
         for (int index = 0; index < this.Count; ++index)
         {
             Span<CustomRange<uint>> span1 = this.rangesArray_1[index];
             Span<CustomRange<uint>> span2 = this.rangesArray_2[index];
-            int length1 = InputTypeParser.Convert(span1, one, fromType, toType);
-            int length2 = InputTypeParser.Convert(span2, one, fromType, toType);
+            int length1 = InputTypeParser.Convert(span1, one, fromType, InputTypeGeneral.Normalized);
+            int length2 = InputTypeParser.Convert(span2, one, fromType, InputTypeGeneral.Normalized);
             result += SpanHelperGeneric.UnionNormalizedNormalized(
+                span1[..length1],
+                span2[..length2],
+                buffer,
+                one);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int SpanHelperGeneric_UInt32_ExceptNormalizedSorted()
+    {
+        using var bufferSpanOwner = SpanOwner<CustomRange<uint>>.Allocate(this.SetSize * 2);
+        var buffer = bufferSpanOwner.Span;
+        int result = 0;
+        uint one = 1u;
+        var fromType = InputGeneral;
+        for (int index = 0; index < this.Count; ++index)
+        {
+            Span<CustomRange<uint>> span1 = this.rangesArray_1[index];
+            Span<CustomRange<uint>> span2 = this.rangesArray_2[index];
+            int length1 = InputTypeParser.Convert(span1, one, fromType, InputTypeGeneral.Normalized);
+            int length2 = InputTypeParser.Convert(span2, one, fromType, InputTypeGeneral.Sorted);
+            result += SpanHelperGeneric.ExceptNormalizedSorted(
+                span1[..length1],
+                span2[..length2],
+                buffer,
+                one);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int SpanHelperGeneric_UInt32_ExceptNormalizedNormalized()
+    {
+        using var bufferSpanOwner = SpanOwner<CustomRange<uint>>.Allocate(this.SetSize * 2);
+        var buffer = bufferSpanOwner.Span;
+        int result = 0;
+        uint one = 1u;
+        var fromType = InputGeneral;
+        for (int index = 0; index < this.Count; ++index)
+        {
+            Span<CustomRange<uint>> span1 = this.rangesArray_1[index];
+            Span<CustomRange<uint>> span2 = this.rangesArray_2[index];
+            int length1 = InputTypeParser.Convert(span1, one, fromType, InputTypeGeneral.Normalized);
+            int length2 = InputTypeParser.Convert(span2, one, fromType, InputTypeGeneral.Normalized);
+            result += SpanHelperGeneric.ExceptNormalizedSorted(
                 span1[..length1],
                 span2[..length2],
                 buffer,
