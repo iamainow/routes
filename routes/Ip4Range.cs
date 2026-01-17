@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Numerics;
 
 namespace routes;
 
@@ -10,7 +11,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
     public Ip4Address FirstAddress { get; }
     public Ip4Address LastAddress { get; }
 
-    public ulong Count => 1UL + LastAddress.ToUInt32() - FirstAddress.ToUInt32();
+    public BigInteger Count => BigInteger.One + new BigInteger(LastAddress.ToUInt32()) - new BigInteger(FirstAddress.ToUInt32());
 
     public Ip4Range(Ip4Address start, Ip4Address end)
     {
@@ -53,22 +54,22 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
         {
             if (hasRightPart)
             {
-                return ValueTuple.Create<Ip4Range?, Ip4Range?>(CreateLeftPart(other.FirstAddress), CreateRightPart(other.LastAddress));
+                return (CreateLeftPart(other.FirstAddress), CreateRightPart(other.LastAddress));
             }
             else
             {
-                return ValueTuple.Create<Ip4Range?, Ip4Range?>(CreateLeftPart(other.FirstAddress), null);
+                return (CreateLeftPart(other.FirstAddress), null);
             }
         }
         else
         {
             if (hasRightPart)
             {
-                return ValueTuple.Create<Ip4Range?, Ip4Range?>(null, CreateRightPart(other.LastAddress));
+                return (null, CreateRightPart(other.LastAddress));
             }
             else
             {
-                return ValueTuple.Create<Ip4Range?, Ip4Range?>(null, null);
+                return (null, null);
             }
         }
     }
@@ -85,7 +86,7 @@ public readonly struct Ip4Range : IEquatable<Ip4Range>
 
     public Ip4Subnet[] ToSubnets()
     {
-        List<Ip4Subnet> result = [];
+        List<Ip4Subnet> result = new();
         FindSubnetsInRange(this, result, 32);
         return result.ToArray();
     }

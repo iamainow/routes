@@ -50,7 +50,7 @@ public class SpanHelperGenericInt64UnionExcept
     }
 
     [Benchmark]
-    public int SpanHelperGeneric_DateTime_UnionNormalizedNormalized()
+    public int SpanHelperGeneric_Int64_UnionNormalizedNormalized()
     {
         using var bufferSpanOwner = SpanOwner<CustomRange<long>>.Allocate(this.SetSize * 2);
         var buffer = bufferSpanOwner.Span;

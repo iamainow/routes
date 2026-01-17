@@ -1,15 +1,27 @@
 using System.Diagnostics;
 using System.Net;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace routes;
 
 [DebuggerDisplay("{ToString(),nq}")]
 [StructLayout(LayoutKind.Explicit)]
-public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Address>
+public readonly struct Ip4Address : IEquatable<Ip4Address>,
+    IComparable<Ip4Address>,
+    IMinMaxValue<Ip4Address>,
+    IAdditionOperators<Ip4Address, Ip4Address, Ip4Address>,
+    IAdditionOperators<Ip4Address, uint, Ip4Address>,
+    ISubtractionOperators<Ip4Address, Ip4Address, Ip4Address>,
+    ISubtractionOperators<Ip4Address, uint, Ip4Address>,
+    IEqualityOperators<Ip4Address, Ip4Address, bool>,
+    IComparisonOperators<Ip4Address, Ip4Address, bool>
 {
-    public static readonly Ip4Address MinValue = new(0x00000000);
-    public static readonly Ip4Address MaxValue = new(0xFFFFFFFF);
+    private static readonly Ip4Address minValue = new(0x00000000);
+    private static readonly Ip4Address maxValue = new(0xFFFFFFFF);
+
+    public static Ip4Address MinValue => minValue;
+    public static Ip4Address MaxValue => maxValue;
 
     [FieldOffset(0)]
     private readonly uint _address;
@@ -105,6 +117,31 @@ public readonly struct Ip4Address : IComparable<Ip4Address>, IEquatable<Ip4Addre
     public static implicit operator Ip4Subnet(Ip4Address address) => address.ToIp4Subnet();
     public static implicit operator IPAddress(Ip4Address address) => address.ToIPAddress();
     public static implicit operator Ip4Address(IPAddress address) => FromIPAddress(address);
+
+    public static Ip4Address Add(Ip4Address left, Ip4Address right)
+    {
+        return new Ip4Address(left._address + right._address);
+    }
+
+    public static Ip4Address Add(Ip4Address left, uint right)
+    {
+        return new Ip4Address(left._address + right);
+    }
+
+    public static Ip4Address Subtract(Ip4Address left, Ip4Address right)
+    {
+        return new Ip4Address(left._address - right._address);
+    }
+
+    public static Ip4Address Subtract(Ip4Address left, uint right)
+    {
+        return new Ip4Address(left._address - right);
+    }
+
+    public static Ip4Address operator +(Ip4Address left, Ip4Address right) => Add(left, right);
+    public static Ip4Address operator +(Ip4Address left, uint right) => Add(left, right);
+    public static Ip4Address operator -(Ip4Address left, Ip4Address right) => Subtract(left, right);
+    public static Ip4Address operator -(Ip4Address left, uint right) => Subtract(left, right);
 
     public uint ToUInt32() => _address;
 
