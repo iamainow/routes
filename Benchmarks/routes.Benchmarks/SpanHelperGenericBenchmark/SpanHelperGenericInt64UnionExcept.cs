@@ -73,29 +73,4 @@ public class SpanHelperGenericInt64UnionExcept
 
         return result;
     }
-
-    [Benchmark]
-    public int SpanHelperGeneric_DateTime_UnionSortedSorted()
-    {
-        using var bufferSpanOwner = SpanOwner<CustomRange<long>>.Allocate(this.SetSize * 2);
-        var buffer = bufferSpanOwner.Span;
-        int result = 0;
-        long one = 1;
-        var fromType = InputGeneral;
-        var toType = InputTypeGeneral.Sorted;
-        for (int index = 0; index < this.Count; ++index)
-        {
-            Span<CustomRange<long>> span1 = this.rangesArray_1[index];
-            Span<CustomRange<long>> span2 = this.rangesArray_2[index];
-            int length1 = InputTypeParser.Convert(span1, one, fromType, toType);
-            int length2 = InputTypeParser.Convert(span2, one, fromType, toType);
-            result += SpanHelperGeneric.UnionSortedSorted(
-                span1[..length1],
-                span2[..length2],
-                buffer,
-                one);
-        }
-
-        return result;
-    }
 }

@@ -71,29 +71,4 @@ public class SpanHelperGenericUInt32UnionExcept
 
         return result;
     }
-
-    [Benchmark]
-    public int SpanHelperGeneric_UInt32_UnionSortedSorted()
-    {
-        using var bufferSpanOwner = SpanOwner<CustomRange<uint>>.Allocate(this.SetSize * 2);
-        var buffer = bufferSpanOwner.Span;
-        int result = 0;
-        uint one = 1u;
-        var fromType = InputGeneral;
-        var toType = InputTypeGeneral.Sorted;
-        for (int index = 0; index < this.Count; ++index)
-        {
-            Span<CustomRange<uint>> span1 = this.rangesArray_1[index];
-            Span<CustomRange<uint>> span2 = this.rangesArray_2[index];
-            int length1 = InputTypeParser.Convert(span1, one, fromType, toType);
-            int length2 = InputTypeParser.Convert(span2, one, fromType, toType);
-            result += SpanHelperGeneric.UnionSortedSorted(
-                span1[..length1],
-                span2[..length2],
-                buffer,
-                one);
-        }
-
-        return result;
-    }
 }
