@@ -11,7 +11,7 @@ public static class CustomArrayExtensions
         ArgumentNullException.ThrowIfNull(random);
 
         SortedSet<T> addresses = new();
-        Span<byte> buffer = stackalloc byte[sizeof(T)];
+        Span<byte> buffer = new byte[sizeof(T)];
 
         while (addresses.Count < size * 2)
         {
