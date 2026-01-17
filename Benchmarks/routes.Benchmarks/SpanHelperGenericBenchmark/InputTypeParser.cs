@@ -25,16 +25,22 @@ public static class InputTypeParser
     public static int Convert<T, TOne>(Span<CustomRange<T>> span, TOne one, InputTypeGeneral fromType, InputTypeGeneral toType)
         where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>, ISubtractionOperators<T, TOne, T>
     {
-        if (fromType == toType) return span.Length;
-        if (toType == InputTypeGeneral.Unsorted) return span.Length;
-        if (fromType == InputTypeGeneral.Normalized && toType == InputTypeGeneral.Sorted) return span.Length;
-        if (fromType == InputTypeGeneral.Unsorted && toType == InputTypeGeneral.Sorted)
+        switch (fromType, toType)
         {
-            span.Sort(CustomRangeComparer<T>.Instance);
-            return span.Length;
+            case (InputTypeGeneral.Unsorted, InputTypeGeneral.Sorted):
+                {
+                    span.Sort(CustomRangeComparer<T>.Instance);
+                    return span.Length;
+                }
+            case (InputTypeGeneral.Unsorted, InputTypeGeneral.Normalized):
+                {
+                    return SpanHelperGeneric.MakeNormalizedFromUnsorted(span, one);
+                }
+            case (InputTypeGeneral.Sorted, InputTypeGeneral.Normalized):
+                {
+                    return SpanHelperGeneric.MakeNormalizedFromSorted(span, one);
+                }
+            default: return span.Length;
         }
-        if (fromType == InputTypeGeneral.Unsorted && toType == InputTypeGeneral.Normalized) return SpanHelperGeneric.MakeNormalizedFromUnsorted(span, one);
-        if (fromType == InputTypeGeneral.Sorted && toType == InputTypeGeneral.Normalized) return SpanHelperGeneric.MakeNormalizedFromSorted(span, one);
-        throw new NotImplementedException();
     }
 }

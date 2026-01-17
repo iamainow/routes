@@ -265,7 +265,6 @@ public static class SpanHelperGeneric
         while (index2 < normalized2.Length)
         {
             CustomRange<T> current = normalized2[index2];
-            index2++;
 
             ref var last = ref resultList.Last();
             if (T.MaxValue.Equals(last.LastAddress))
@@ -279,10 +278,10 @@ public static class SpanHelperGeneric
                 {
                     T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
                     last = new CustomRange<T>(last.FirstAddress, max);
+                    ++index2;
                 }
                 else
                 {
-                    resultList.Add(current);
                     resultList.AddRange(normalized2[index2..]);
                     return resultList.Count;
                 }
@@ -292,7 +291,6 @@ public static class SpanHelperGeneric
         while (index1 < normalized1.Length)
         {
             CustomRange<T> current = normalized1[index1];
-            index1++;
 
             ref var last = ref resultList.Last();
             if (T.MaxValue.Equals(last.LastAddress))
@@ -306,10 +304,10 @@ public static class SpanHelperGeneric
                 {
                     T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
                     last = new CustomRange<T>(last.FirstAddress, max);
+                    ++index1;
                 }
                 else
                 {
-                    resultList.Add(current);
                     resultList.AddRange(normalized1[index1..]);
                     return resultList.Count;
                 }
@@ -330,22 +328,22 @@ public static class SpanHelperGeneric
         {
             if (hasRightPart)
             {
-                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(new CustomRange<T>(range.FirstAddress, other.FirstAddress - one), new CustomRange<T>(other.LastAddress + one, range.LastAddress));
+                return (new CustomRange<T>(range.FirstAddress, other.FirstAddress - one), new CustomRange<T>(other.LastAddress + one, range.LastAddress));
             }
             else
             {
-                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(new CustomRange<T>(range.FirstAddress, other.FirstAddress - one), null);
+                return (new CustomRange<T>(range.FirstAddress, other.FirstAddress - one), null);
             }
         }
         else
         {
             if (hasRightPart)
             {
-                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(null, new CustomRange<T>(other.LastAddress + one, range.LastAddress));
+                return (null, new CustomRange<T>(other.LastAddress + one, range.LastAddress));
             }
             else
             {
-                return ValueTuple.Create<CustomRange<T>?, CustomRange<T>?>(null, null);
+                return (null, null);
             }
         }
     }

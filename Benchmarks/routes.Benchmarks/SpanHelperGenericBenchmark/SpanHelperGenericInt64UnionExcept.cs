@@ -6,7 +6,7 @@ using routes.Generic;
 namespace routes.Benchmarks.SpanHelperBenchmark;
 
 [Config(typeof(BenchmarkManualConfig))]
-public class SpanHelperGenericDateTimeUnionExcept
+public class SpanHelperGenericInt64UnionExcept
 {
     [Params(1_000)]
     public int Count { get; set; }
@@ -19,16 +19,16 @@ public class SpanHelperGenericDateTimeUnionExcept
 
     public InputTypeGeneral InputGeneral => InputTypeParser.Parse(Input).Item1;
 
-    private CustomRange<DateTimeWrapper>[][] rangesArray_1 = [];
-    private CustomRange<DateTimeWrapper>[][] rangesArray_2 = [];
+    private CustomRange<long>[][] rangesArray_1 = [];
+    private CustomRange<long>[][] rangesArray_2 = [];
 
-    private static CustomRange<DateTimeWrapper>[][] Generate(int count, int size, InputType input, Random random)
+    private static CustomRange<long>[][] Generate(int count, int size, InputType input, Random random)
     {
         long minValue = DateTime.MinValue.Ticks;
         long maxValue = DateTime.MaxValue.Ticks;
-        Func<ReadOnlySpan<byte>, DateTimeWrapper> convert = span => new DateTimeWrapper(DateTime.FromBinary(Math.Clamp(BitConverter.ToInt64(span), minValue, maxValue)));
+        Func<ReadOnlySpan<byte>, long> convert = span => Math.Clamp(BitConverter.ToInt64(span), minValue, maxValue);
 
-        Func<CustomRange<DateTimeWrapper>[]> generator = InputTypeParser.Parse(input) switch
+        Func<CustomRange<long>[]> generator = InputTypeParser.Parse(input) switch
         {
             (InputTypeGeneral.Normalized, _) => () => CustomArrayExtensions.GenerateNormalized(size, convert, random),
             (InputTypeGeneral.Sorted, double overlappingPercent) => () => CustomArrayExtensions.GenerateSorted(size, convert, overlappingPercent, random),
@@ -52,16 +52,16 @@ public class SpanHelperGenericDateTimeUnionExcept
     [Benchmark]
     public int SpanHelperGeneric_DateTime_UnionNormalizedNormalized()
     {
-        using var bufferSpanOwner = SpanOwner<CustomRange<DateTimeWrapper>>.Allocate(this.SetSize * 2);
+        using var bufferSpanOwner = SpanOwner<CustomRange<long>>.Allocate(this.SetSize * 2);
         var buffer = bufferSpanOwner.Span;
         int result = 0;
-        DateTimeWrapper one = new DateTimeWrapper(DateTime.FromBinary(1));
+        long one = 1;
         var fromType = InputGeneral;
         var toType = InputTypeGeneral.Normalized;
         for (int index = 0; index < this.Count; ++index)
         {
-            Span<CustomRange<DateTimeWrapper>> span1 = this.rangesArray_1[index];
-            Span<CustomRange<DateTimeWrapper>> span2 = this.rangesArray_2[index];
+            Span<CustomRange<long>> span1 = this.rangesArray_1[index];
+            Span<CustomRange<long>> span2 = this.rangesArray_2[index];
             int length1 = InputTypeParser.Convert(span1, one, fromType, toType);
             int length2 = InputTypeParser.Convert(span2, one, fromType, toType);
             result += SpanHelperGeneric.UnionNormalizedNormalized(
@@ -77,16 +77,16 @@ public class SpanHelperGenericDateTimeUnionExcept
     [Benchmark]
     public int SpanHelperGeneric_DateTime_UnionSortedSorted()
     {
-        using var bufferSpanOwner = SpanOwner<CustomRange<DateTimeWrapper>>.Allocate(this.SetSize * 2);
+        using var bufferSpanOwner = SpanOwner<CustomRange<long>>.Allocate(this.SetSize * 2);
         var buffer = bufferSpanOwner.Span;
         int result = 0;
-        DateTimeWrapper one = new DateTimeWrapper(DateTime.FromBinary(1));
+        long one = 1;
         var fromType = InputGeneral;
         var toType = InputTypeGeneral.Sorted;
         for (int index = 0; index < this.Count; ++index)
         {
-            Span<CustomRange<DateTimeWrapper>> span1 = this.rangesArray_1[index];
-            Span<CustomRange<DateTimeWrapper>> span2 = this.rangesArray_2[index];
+            Span<CustomRange<long>> span1 = this.rangesArray_1[index];
+            Span<CustomRange<long>> span2 = this.rangesArray_2[index];
             int length1 = InputTypeParser.Convert(span1, one, fromType, toType);
             int length2 = InputTypeParser.Convert(span2, one, fromType, toType);
             result += SpanHelperGeneric.UnionSortedSorted(
