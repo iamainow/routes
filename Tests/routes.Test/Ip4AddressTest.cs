@@ -1,4 +1,5 @@
 using System.Net;
+using System.Numerics;
 
 namespace routes.Test;
 
@@ -318,5 +319,152 @@ public class Ip4AddressTest
     public void FromIPAddress_NullIPAddress_ThrowsArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() => Ip4Address.FromIPAddress(null!));
+    }
+
+    [Fact]
+    public void IsSortedAscendingSIMD_EmptyArray_ReturnsTrue()
+    {
+        // Arrange
+        Ip4Address[] addresses = Array.Empty<Ip4Address>();
+
+        // Act
+        bool result = Ip4Address.IsSortedAscendingSIMD(addresses);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void IsSortedAscendingSIMD_SingleElement_ReturnsTrue()
+    {
+        // Arrange
+        Ip4Address[] addresses = [new Ip4Address(192, 168, 1, 1)];
+
+        // Act
+        bool result = Ip4Address.IsSortedAscendingSIMD(addresses);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Theory]
+    [InlineData(new uint[] { 1, 2, 3, 4, 5 })]
+    [InlineData(new uint[] { 100, 200, 300 })]
+    [InlineData(new uint[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 })] // Larger than typical vector size
+    public void IsSortedAscendingSIMD_SortedArray_ReturnsTrue(uint[] addressValues)
+    {
+        // Arrange
+        Ip4Address[] addresses = addressValues.Select(v => new Ip4Address(v)).ToArray();
+
+        // Act
+        bool result = Ip4Address.IsSortedAscendingSIMD(addresses);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Theory]
+    [InlineData(new uint[] { 5, 4, 3, 2, 1 })]
+    [InlineData(new uint[] { 1, 3, 2, 4, 5 })]
+    [InlineData(new uint[] { 100, 200, 150 })]
+    public void IsSortedAscendingSIMD_UnsortedArray_ReturnsFalse(uint[] addressValues)
+    {
+        // Arrange
+        Ip4Address[] addresses = addressValues.Select(v => new Ip4Address(v)).ToArray();
+
+        // Act
+        bool result = Ip4Address.IsSortedAscendingSIMD(addresses);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Theory]
+    [InlineData(new uint[] { 1, 1, 2, 2, 3 })]
+    [InlineData(new uint[] { 100, 100, 100, 100 })]
+    [InlineData(new uint[] { 0, 0, 0 })]
+    public void IsSortedAscendingSIMD_ArrayWithDuplicates_ReturnsTrue(uint[] addressValues)
+    {
+        // Arrange
+        Ip4Address[] addresses = addressValues.Select(v => new Ip4Address(v)).ToArray();
+
+        // Act
+        bool result = Ip4Address.IsSortedAscendingSIMD(addresses);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Theory]
+    [InlineData(new uint[] { 1, 2, 2, 1 })] // Duplicate followed by smaller
+    [InlineData(new uint[] { 100, 100, 50 })] // Duplicate followed by smaller
+    public void IsSortedAscendingSIMD_ArrayWithDuplicatesUnsorted_ReturnsFalse(uint[] addressValues)
+    {
+        // Arrange
+        Ip4Address[] addresses = addressValues.Select(v => new Ip4Address(v)).ToArray();
+
+        // Act
+        bool result = Ip4Address.IsSortedAscendingSIMD(addresses);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void IsSortedAscendingSIMD_MatchesNonSIMDVersion()
+    {
+        // Test various array sizes and contents to ensure SIMD and non-SIMD versions agree
+        var testCases = new[]
+        {
+            Array.Empty<uint>(),
+            new uint[] { 42 },
+            new uint[] { 1, 2, 3 },
+            new uint[] { 3, 2, 1 },
+            new uint[] { 1, 1, 2, 2, 3, 3 },
+            new uint[] { 1, 2, 2, 1 },
+            // Large array to test vectorization
+            Enumerable.Range(0, 100).Select(i => (uint)i).ToArray(),
+            // Unsorted large array
+            new uint[] { 0, 10, 5, 15, 8, 20, 12, 25, 18, 30 }
+        };
+
+        foreach (var testCase in testCases)
+        {
+            // Arrange
+            Ip4Address[] addresses = testCase.Select(v => new Ip4Address(v)).ToArray();
+
+            // Act
+            bool simdResult = Ip4Address.IsSortedAscendingSIMD(addresses);
+            bool regularResult = Ip4Address.IsSortedAscending(addresses);
+
+            // Assert
+            Assert.Equal(regularResult, simdResult);
+        }
+    }
+
+    [Fact]
+    public void IsSortedAscendingSIMD_VectorBoundaryCases()
+    {
+        // Test cases around vector size boundaries (Vector<uint>.Count is typically 4 or 8)
+        int vectorSize = Vector<uint>.Count;
+
+        // Test array exactly at vector boundary
+        Ip4Address[] exactVectorSize = Enumerable.Range(0, vectorSize)
+            .Select(i => new Ip4Address((uint)i)).ToArray();
+        Assert.True(Ip4Address.IsSortedAscendingSIMD(exactVectorSize));
+
+        // Test array one larger than vector size
+        Ip4Address[] oneLarger = Enumerable.Range(0, vectorSize + 1)
+            .Select(i => new Ip4Address((uint)i)).ToArray();
+        Assert.True(Ip4Address.IsSortedAscendingSIMD(oneLarger));
+
+        // Test array one smaller than vector size
+        Ip4Address[] oneSmaller = Enumerable.Range(0, vectorSize - 1)
+            .Select(i => new Ip4Address((uint)i)).ToArray();
+        Assert.True(Ip4Address.IsSortedAscendingSIMD(oneSmaller));
+
+        // Test unsorted at vector boundary
+        Ip4Address[] unsortedAtBoundary = exactVectorSize.Reverse().ToArray();
+        Assert.False(Ip4Address.IsSortedAscendingSIMD(unsortedAtBoundary));
     }
 }
