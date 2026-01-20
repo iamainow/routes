@@ -9,7 +9,10 @@ public static class SpanHelper
 {
     public static int MakeNormalizedFromSorted(Span<Ip4Range> result)
     {
-        if (result.Length <= 1) return result.Length;
+        if (result.Length <= 1)
+        {
+            return result.Length;
+        }
 
         var resultList = new ListStackAlloc<Ip4Range>(result, 1);
 
