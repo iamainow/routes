@@ -410,6 +410,27 @@ public class Ip4AddressTest
         Assert.False(result);
     }
 
+    [Theory]
+    [InlineData(new uint[] { 10, 2, 3, 4, 5, 6, 7, 8 })]
+    [InlineData(new uint[] { 1, 20, 3, 4, 5, 6, 7, 8 })]
+    [InlineData(new uint[] { 1, 2, 30, 4, 5, 6, 7, 8 })]
+    [InlineData(new uint[] { 1, 2, 3, 40, 5, 6, 7, 8 })]
+    [InlineData(new uint[] { 1, 2, 3, 4, 50, 6, 7, 8 })]
+    [InlineData(new uint[] { 1, 2, 3, 4, 5, 60, 7, 8 })]
+    [InlineData(new uint[] { 1, 2, 3, 4, 5, 6, 70, 8 })]
+    [InlineData(new uint[] { 1, 2, 3, 4, 5, 6, 7, 0 })]
+    public void IsSortedAscendingSIMD_ArrayWithOneUnsortedElement_ReturnsFalse(uint[] addressValues)
+    {
+        // Arrange
+        Ip4Address[] addresses = addressValues.Select(v => new Ip4Address(v)).ToArray();
+
+        // Act
+        bool result = Ip4Address.IsSortedAscendingSIMD(addresses);
+
+        // Assert
+        Assert.False(result);
+    }
+
     [Fact]
     public void IsSortedAscendingSIMD_MatchesNonSIMDVersion()
     {

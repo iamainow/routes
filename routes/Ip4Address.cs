@@ -163,60 +163,30 @@ public readonly struct Ip4Address : IEquatable<Ip4Address>,
 
     public override string ToString() => $"{_byte1}.{_byte2}.{_byte3}.{_byte4}";
 
-    // Simple example method for comparing several Ip4Addresses using SIMD (not production-ready)
-    // Checks if all addresses in the span are equal using vectorized operations
-    public static bool AreAllEqual(ReadOnlySpan<Ip4Address> addresses)
-    {
-        if (addresses.IsEmpty) return true;
-
-        var first = addresses[0]._address;
-        var firstVector = new Vector<uint>(first); // Broadcast first address to vector
-
-        int i = 0;
-        for (; i <= addresses.Length - Vector<uint>.Count; i += Vector<uint>.Count)
-        {
-            var uintSlice = MemoryMarshal.Cast<Ip4Address, uint>(addresses.Slice(i, Vector<uint>.Count));
-            var currentVector = new Vector<uint>(uintSlice);
-            var equalVector = Vector.Equals(currentVector, firstVector);
-            if (!Vector.EqualsAll(equalVector, Vector<uint>.One)) // If any is not equal
-                return false;
-        }
-
-        // Handle remaining elements scalarly
-        for (; i < addresses.Length; i++)
-        {
-            if (addresses[i]._address != first)
-                return false;
-        }
-
-        return true;
-    }
-
-    // More complex example: Verify if all Ip4Addresses in the span are sorted ascending using SIMD
-    // Checks if addresses[i] <= addresses[i+1] for all i, vectorized for performance
     public static bool IsSortedAscendingSIMD(ReadOnlySpan<Ip4Address> addresses)
     {
         if (addresses.Length <= 1) return true;
 
         int vectorSize = Vector<uint>.Count;
 
+        var uints = MemoryMarshal.Cast<Ip4Address, uint>(addresses);
+
         // Process in vector-sized chunks, comparing current vector with next shifted
-        for (int i = 0; i <= addresses.Length - vectorSize - 1; i += vectorSize)
+        int i = 0;
+        for (; i < addresses.Length - vectorSize; i += vectorSize)
         {
             // Load current and next vectors
-            var currentSlice = MemoryMarshal.Cast<Ip4Address, uint>(addresses.Slice(i, vectorSize));
-            var nextSlice = MemoryMarshal.Cast<Ip4Address, uint>(addresses.Slice(i + 1, vectorSize));
-            var current = new Vector<uint>(currentSlice);
-            var next = new Vector<uint>(nextSlice);
+            var current = new Vector<uint>(uints.Slice(i, vectorSize));
+            var next = new Vector<uint>(uints.Slice(i + 1, vectorSize));
 
-            // Check if current <= next element-wise
-            var lessOrEqual = Vector.LessThanOrEqual(current, next);
-            if (Vector.EqualsAny(lessOrEqual, Vector<uint>.Zero))
+            if (!Vector.LessThanAll(current, next))
+            {
                 return false;
+        }
         }
 
         // Handle remaining elements scalarly
-        for (int i = Math.Max(0, addresses.Length - vectorSize); i < addresses.Length - 1; i++)
+        for (; i < addresses.Length - 1; i++)
         {
             if (addresses[i]._address > addresses[i + 1]._address)
                 return false;
