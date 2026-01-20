@@ -31,7 +31,9 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     public Ip4Mask(int cidr)
     {
         if (cidr < 0 || cidr > 32)
+        {
             throw new ArgumentOutOfRangeException(nameof(cidr), cidr, "CIDR must be between 0 and 32");
+        }
 
         _mask = cidr == 0 ? 0U : ~0U << (32 - cidr);
     }
@@ -54,7 +56,9 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     public Ip4Mask(scoped ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length != 4)
+        {
             throw new ArgumentException("Byte array must contain exactly 4 bytes", nameof(bytes));
+        }
 
         _byte1 = bytes[0];
         _byte2 = bytes[1];
@@ -66,7 +70,9 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     public static Ip4Mask Parse(scoped ReadOnlySpan<char> text)
     {
         if (TryParse(text, out var result))
+        {
             return result;
+        }
 
         throw new FormatException();
     }
@@ -79,7 +85,9 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     public static Ip4Mask ParseCidrString(scoped ReadOnlySpan<char> text)
     {
         if (TryParseCidrString(text, out var result))
+        {
             return result;
+        }
 
         throw new FormatException();
     }
@@ -87,7 +95,9 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     public static bool TryParseCidrString(scoped ReadOnlySpan<char> text, out Ip4Mask result)
     {
         if (text.StartsWith('/'))
+        {
             text = text[1..];
+        }
 
         if (!int.TryParse(text, out int cidr) || cidr < 0 || cidr > 32)
         {
@@ -102,7 +112,9 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     public static Ip4Mask ParseFullString(scoped ReadOnlySpan<char> text)
     {
         if (TryParseFullString(text, out var result))
+        {
             return result;
+        }
 
         throw new FormatException();
     }
@@ -128,7 +140,10 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
         foreach (Range range in enumerator)
         {
             if (i >= 4 || !byte.TryParse(text[range], out bytes[i]))
+            {
                 return false;
+            }
+
             i++;
         }
 
@@ -143,7 +158,9 @@ public readonly struct Ip4Mask : IEquatable<Ip4Mask>
     private static void ValidateMask(uint mask)
     {
         if (!IsValidMask(mask))
+        {
             throw new ArgumentException($"Invalid mask value: 0x{mask:X8}", nameof(mask));
+        }
     }
 
     public static Ip4Mask FromIPAddress(IPAddress address)

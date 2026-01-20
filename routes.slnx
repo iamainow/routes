@@ -1,7 +1,7 @@
 <Solution>
   <Folder Name="/Apps/">
-    <Project Path="nifroute/nifroute.csproj" Id="229ff53c-2749-4c09-8580-c0d7f49b973c" />
-    <Project Path="nipset/nipset.csproj" Id="9da63b15-10ef-4cdc-b8c0-d27a359dd664" />
+    <Project Path="Apps/nifroute/nifroute.csproj" Id="229ff53c-2749-4c09-8580-c0d7f49b973c" />
+    <Project Path="Apps/nipset/nipset.csproj" Id="9da63b15-10ef-4cdc-b8c0-d27a359dd664" />
   </Folder>
   <Folder Name="/Benchmarks/">
     <Project Path="Benchmarks/Ip4Parsers.Benchmarks/Ip4Parsers.Benchmarks.csproj" Id="c91736a9-a36b-49bb-a178-e95e8bf6c988" />

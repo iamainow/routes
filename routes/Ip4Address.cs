@@ -51,7 +51,9 @@ public readonly struct Ip4Address : IEquatable<Ip4Address>,
     public Ip4Address(scoped ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length != 4)
+        {
             throw new ArgumentException("Byte array must contain exactly 4 bytes", nameof(bytes));
+        }
 
         _byte1 = bytes[0];
         _byte2 = bytes[1];
@@ -62,7 +64,9 @@ public readonly struct Ip4Address : IEquatable<Ip4Address>,
     public static Ip4Address Parse(scoped ReadOnlySpan<char> text)
     {
         if (TryParse(text, out var result))
+        {
             return result;
+        }
 
         throw new FormatException();
     }
@@ -88,7 +92,10 @@ public readonly struct Ip4Address : IEquatable<Ip4Address>,
         foreach (var range in enumerator)
         {
             if (i >= 4 || !byte.TryParse(text[range], out bytes[i]))
+            {
                 return false;
+            }
+
             i++;
         }
 
@@ -165,7 +172,10 @@ public readonly struct Ip4Address : IEquatable<Ip4Address>,
 
     public static bool IsSortedAscendingSIMD(ReadOnlySpan<Ip4Address> addresses)
     {
-        if (addresses.Length <= 1) return true;
+        if (addresses.Length <= 1)
+        {
+            return true;
+        }
 
         int vectorSize = Vector<uint>.Count;
 
@@ -182,14 +192,16 @@ public readonly struct Ip4Address : IEquatable<Ip4Address>,
             if (!Vector.LessThanAll(current, next))
             {
                 return false;
-        }
+            }
         }
 
         // Handle remaining elements scalarly
         for (; i < addresses.Length - 1; i++)
         {
             if (addresses[i]._address > addresses[i + 1]._address)
+            {
                 return false;
+            }
         }
 
         return true;
@@ -200,7 +212,9 @@ public readonly struct Ip4Address : IEquatable<Ip4Address>,
         for (int i = 0; i < addresses.Length - 1; i++)
         {
             if (addresses[i]._address > addresses[i + 1]._address)
+            {
                 return false;
+            }
         }
 
         return true;

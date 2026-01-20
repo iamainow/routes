@@ -23,7 +23,9 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     public static Ip4Subnet Parse(scoped ReadOnlySpan<char> text)
     {
         if (TryParse(text, out var result))
+        {
             return result;
+        }
 
         throw new FormatException();
     }
@@ -63,7 +65,9 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     public static void Validate(Ip4Mask mask, Ip4Address firstAddress)
     {
         if (!IsValid(mask, firstAddress))
+        {
             throw new ArgumentException($"Address {firstAddress} is not valid for mask {mask}.", nameof(firstAddress));
+        }
     }
 
     public static implicit operator Ip4Range(Ip4Subnet subnet) => subnet.ToIp4Range();
@@ -78,7 +82,9 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     public Ip4Subnet GetSupernet()
     {
         if (!HasSupernet())
+        {
             throw new InvalidOperationException("The subnet is the all-encompassing subnet and has no supernet.");
+        }
 
         var supernetMask = new Ip4Mask(Mask.Cidr - 1);
         var supernetAddress = new Ip4Address(FirstAddress.ToUInt32() & supernetMask.ToUInt32());
@@ -90,7 +96,9 @@ public readonly struct Ip4Subnet : IEquatable<Ip4Subnet>
     public Ip4Subnet[] GetSubnets()
     {
         if (!HasSubnets())
+        {
             throw new InvalidOperationException("The subnet is a single address and has no subnets.");
+        }
 
         var subnetMask = new Ip4Mask(Mask.Cidr + 1);
         var firstSubnet = new Ip4Subnet(FirstAddress, subnetMask);
