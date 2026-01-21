@@ -11,7 +11,7 @@ public class SpanHelper_UnaryOperations
     [Params(1_000)]
     public int Count { get; set; }
 
-    [Params(10, 100, 1_000, 10_000, 100_000)]
+    [Params(10, 100, 1_000, 10_000)]
     public int SetSize { get; set; }
 
     [Params(InputType.Normalized,
