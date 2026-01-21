@@ -70,7 +70,7 @@ public class SpanHelper_BinaryOperations
         {
             case (InputTypeGeneral.Unsorted, InputTypeGeneral.Sorted):
                 {
-                    span.Sort(Ip4RangeComparer.Instance);
+                    SpanHelper.Sort(span);
                     return span.Length;
                 }
             case (InputTypeGeneral.Unsorted, InputTypeGeneral.Normalized):

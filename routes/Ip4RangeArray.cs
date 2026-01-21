@@ -36,6 +36,11 @@ public readonly ref struct Ip4RangeArray
         _items = normalizedItems;
     }
 
+    public Ip4RangeArray(Ip4Range range)
+    {
+        _items = new Ip4Range[] { range };
+    }
+
     public readonly Ip4RangeArray Union(scoped Ip4RangeArray other)
     {
         Span<Ip4Range> resultBuffer = new Ip4Range[this._items.Length + other._items.Length];
@@ -78,7 +83,7 @@ public readonly ref struct Ip4RangeArray
 
     public Ip4RangeArray MinimizeSubnets(uint delta)
     {
-        List<Ip4Range> result = new();
+        List<Ip4Range> result = new(_items.Length);
         foreach (Ip4Range range in _items)
         {
             if (range.Count >= delta)
@@ -91,7 +96,7 @@ public readonly ref struct Ip4RangeArray
 
     public Ip4Subnet[] ToIp4Subnets()
     {
-        List<Ip4Subnet> result = new();
+        List<Ip4Subnet> result = new(_items.Length);
         foreach (var item in _items)
         {
             result.AddRange(item.ToSubnets());

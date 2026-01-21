@@ -1,6 +1,6 @@
 ﻿namespace routes;
 
-public sealed class Ip4RangeComparer : IComparer<Ip4Range>
+internal sealed class Ip4RangeComparer : IComparer<Ip4Range>
 {
     public static readonly Ip4RangeComparer Instance = new();
 
