@@ -10,11 +10,21 @@ public class SpanHelper_BinaryOperations
     [Params(1_000)]
     public int Count { get; set; }
 
-    [Params(1, 100, 10_000)]
-    public int SetSize1 { get; set; }
+    [ParamsSource(nameof(SizesSource))]
+    public required (int Size1, int Size2) Sizes { get; set; }
 
-    [Params(1, 100, 10_000)]
-    public int SetSize2 { get; set; }
+    public static IEnumerable<(int Size1, int Size2)> SizesSource
+    {
+        get
+        {
+            yield return (1, 1);
+            yield return (100, 1);
+            yield return (100, 100);
+            yield return (10_000, 1);
+            yield return (10_000, 100);
+            yield return (10_000, 10_000);
+        }
+    }
 
     [Params(InputType.Normalized,
         InputType.Sorted_Overlapping_10,
@@ -50,8 +60,8 @@ public class SpanHelper_BinaryOperations
     public async Task GlobalSetup()
     {
         Random random = new();
-        this.rangesArray_1 = Generate(Count, SetSize1, Input, random);
-        this.rangesArray_2 = Generate(Count, SetSize2, Input, random);
+        this.rangesArray_1 = Generate(Count, Sizes.Size1, Input, random);
+        this.rangesArray_2 = Generate(Count, Sizes.Size2, Input, random);
     }
 
     public static int Convert(Span<Ip4Range> span, InputTypeGeneral fromType, InputTypeGeneral toType)
