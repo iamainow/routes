@@ -438,4 +438,40 @@ public static class SpanHelperGeneric
 
         return resultList.Count;
     }
+
+    public static bool IsSortedAscendingSIMD<T>(ReadOnlySpan<T> addresses)
+        where T : IComparisonOperators<T, T, bool>
+    {
+        if (addresses.Length <= 1)
+        {
+            return true;
+        }
+
+        int vectorSize = Vector<T>.Count;
+
+        // Process in vector-sized chunks, comparing current vector with next shifted
+        int i = 0;
+        for (; i < addresses.Length - vectorSize; i += vectorSize)
+        {
+            // Load current and next vectors
+            var current = new Vector<T>(addresses.Slice(i, vectorSize));
+            var next = new Vector<T>(addresses.Slice(i + 1, vectorSize));
+
+            if (!Vector.LessThanAll(current, next))
+            {
+                return false;
+            }
+        }
+
+        // Handle remaining elements scalarly
+        for (; i < addresses.Length - 1; i++)
+        {
+            if (addresses[i] > addresses[i + 1])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
