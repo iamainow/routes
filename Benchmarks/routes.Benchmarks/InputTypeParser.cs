@@ -27,7 +27,7 @@ public static class InputTypeParser
         {
             case (InputTypeGeneral.Unsorted, InputTypeGeneral.Sorted):
                 {
-                    span.Sort(CustomRangeComparer<T>.Instance);
+                    SpanHelperGeneric.Sort(span);
                     return span.Length;
                 }
             case (InputTypeGeneral.Unsorted, InputTypeGeneral.Normalized):

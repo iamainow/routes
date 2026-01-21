@@ -70,7 +70,7 @@ public readonly ref struct RangeArrayGeneric<T, TOne>
         Span<CustomRange<T>> otherSpan = otherSpanOwner.Span;
 
         other.CopyTo(otherSpan);
-        otherSpan.Sort(CustomRangeComparer<T>.Instance);
+        SpanHelperGeneric.Sort(otherSpan);
 
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[this._items.Length + otherSpan.Length];
         int length = SpanHelperGeneric.ExceptNormalizedSorted(this._items, otherSpan, resultBuffer, one);
