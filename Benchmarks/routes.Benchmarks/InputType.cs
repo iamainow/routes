@@ -3,10 +3,9 @@ namespace routes.Benchmarks;
 public enum InputType
 {
     Normalized,
-    Sorted_Overlapping_25,
-    Sorted_Overlapping_50,
-    Sorted_Overlapping_75,
-    Usorted_Overlapping_25,
-    Usorted_Overlapping_50,
-    Usorted_Overlapping_75,
+    Sorted_Overlapping_10,
+    Sorted_Overlapping_20,
+    Usorted_Overlapping_0,
+    Usorted_Overlapping_10,
+    Usorted_Overlapping_20,
 }

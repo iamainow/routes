@@ -1,15 +1,17 @@
+
 using BenchmarkDotNet.Attributes;
+using CommunityToolkit.HighPerformance.Buffers;
 using routes.Extensions;
 
-namespace routes.Benchmarks.Ip4RangeArrayBenchmark;
+namespace routes.Benchmarks.SpanHelperBenchmark;
 
 [Config(typeof(BenchmarkManualConfig))]
-public class Ip4RangeArrayUnionExcept
+public class SpanHelper_UnaryOperations
 {
     [Params(1_000)]
     public int Count { get; set; }
 
-    [Params(10, 100, 1_000)]
+    [Params(10, 100, 1_000, 10_000, 100_000)]
     public int SetSize { get; set; }
 
     [Params(InputType.Normalized,
@@ -22,8 +24,7 @@ public class Ip4RangeArrayUnionExcept
 
     public InputTypeGeneral InputGeneral => InputTypeParser.Parse(Input).Item1;
 
-    private Ip4Range[][] rangesArray_1 = [];
-    private Ip4Range[][] rangesArray_2 = [];
+    private Ip4Range[][] rangesArray = [];
 
     private static Ip4Range[][] Generate(int count, int size, InputType input, Random random)
     {
@@ -46,33 +47,37 @@ public class Ip4RangeArrayUnionExcept
     public async Task GlobalSetup()
     {
         Random random = new();
-        this.rangesArray_1 = Generate(Count, SetSize, Input, random);
-        this.rangesArray_2 = Generate(Count, SetSize, Input, random);
+        this.rangesArray = Generate(Count, SetSize, Input, random);
     }
 
-    [Benchmark]
-    public int Ip4RangeArray_Create_Union()
+    public static int Convert(Span<Ip4Range> span, InputTypeGeneral fromType, InputTypeGeneral toType)
     {
-        int result = 0;
-        for (int index = 0; index < Count; ++index)
+        switch (fromType, toType)
         {
-            result += Ip4RangeArray.Create(rangesArray_1[index])
-                .Union(rangesArray_2[index])
-                .RangesCount;
+            case (InputTypeGeneral.Unsorted, InputTypeGeneral.Sorted):
+                {
+                    span.Sort(Ip4RangeComparer.Instance);
+                    return span.Length;
+                }
+            case (InputTypeGeneral.Unsorted, InputTypeGeneral.Normalized):
+                {
+                    return SpanHelper.MakeNormalizedFromUnsorted(span);
+                }
+            case (InputTypeGeneral.Sorted, InputTypeGeneral.Normalized):
+                {
+                    return SpanHelper.MakeNormalizedFromSorted(span);
+                }
+            default: return span.Length;
         }
-
-        return result;
     }
 
     [Benchmark]
-    public int Ip4RangeArray_Create_Except()
+    public int SpanHelper_Ip4Range_MakeNormalizedFromUnsorted()
     {
         int result = 0;
-        for (int index = 0; index < Count; ++index)
+        for (int index = 0; index < this.Count; ++index)
         {
-            result += Ip4RangeArray.Create(rangesArray_1[index])
-                .Except(rangesArray_2[index])
-                .RangesCount;
+            result += SpanHelper.MakeNormalizedFromUnsorted(this.rangesArray[index]);
         }
 
         return result;
