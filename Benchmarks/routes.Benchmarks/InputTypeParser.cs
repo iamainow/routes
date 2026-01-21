@@ -10,14 +10,12 @@ public static class InputTypeParser
         return inputType switch
         {
             InputType.Normalized => (InputTypeGeneral.Normalized, default),
+            InputType.Sorted_Overlapping_10 => (InputTypeGeneral.Sorted, 0.1),
+            InputType.Sorted_Overlapping_20 => (InputTypeGeneral.Sorted, 0.2),
 
-            InputType.Sorted_Overlapping_25 => (InputTypeGeneral.Sorted, 0.25),
-            InputType.Sorted_Overlapping_50 => (InputTypeGeneral.Sorted, 0.5),
-            InputType.Sorted_Overlapping_75 => (InputTypeGeneral.Sorted, 0.75),
-
-            InputType.Usorted_Overlapping_25 => (InputTypeGeneral.Unsorted, 0.25),
-            InputType.Usorted_Overlapping_50 => (InputTypeGeneral.Unsorted, 0.5),
-            InputType.Usorted_Overlapping_75 => (InputTypeGeneral.Unsorted, 0.75),
+            InputType.Usorted_Overlapping_0 => (InputTypeGeneral.Unsorted, 0),
+            InputType.Usorted_Overlapping_10 => (InputTypeGeneral.Unsorted, 0.1),
+            InputType.Usorted_Overlapping_20 => (InputTypeGeneral.Unsorted, 0.2),
             _ => throw new NotImplementedException(),
         };
     }

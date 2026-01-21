@@ -5,15 +5,33 @@ using routes.Extensions;
 namespace routes.Benchmarks.SpanHelperBenchmark;
 
 [Config(typeof(BenchmarkManualConfig))]
-public class SpanHelperUnionExcept
+public class SpanHelper_BinaryOperations
 {
     [Params(1_000)]
     public int Count { get; set; }
 
-    [Params(10, 100, 1_000)]
-    public int SetSize { get; set; }
+    [ParamsSource(nameof(SizesSource))]
+    public required (int Size1, int Size2) Sizes { get; set; }
 
-    [Params(InputType.Normalized, InputType.Sorted_Overlapping_25, InputType.Sorted_Overlapping_50, InputType.Sorted_Overlapping_75, InputType.Usorted_Overlapping_25, InputType.Usorted_Overlapping_50, InputType.Usorted_Overlapping_75)]
+    public static IEnumerable<(int Size1, int Size2)> SizesSource
+    {
+        get
+        {
+            yield return (1, 1);
+            yield return (100, 1);
+            yield return (100, 100);
+            yield return (10_000, 1);
+            yield return (10_000, 100);
+            yield return (10_000, 10_000);
+        }
+    }
+
+    [Params(InputType.Normalized,
+        InputType.Sorted_Overlapping_10,
+        InputType.Sorted_Overlapping_20,
+        InputType.Usorted_Overlapping_0,
+        InputType.Usorted_Overlapping_10,
+        InputType.Usorted_Overlapping_20)]
     public required InputType Input { get; set; }
 
     public InputTypeGeneral InputGeneral => InputTypeParser.Parse(Input).Item1;
@@ -42,8 +60,8 @@ public class SpanHelperUnionExcept
     public async Task GlobalSetup()
     {
         Random random = new();
-        this.rangesArray_1 = Generate(Count, SetSize, Input, random);
-        this.rangesArray_2 = Generate(Count, SetSize, Input, random);
+        this.rangesArray_1 = Generate(Count, Sizes.Size1, Input, random);
+        this.rangesArray_2 = Generate(Count, Sizes.Size2, Input, random);
     }
 
     public static int Convert(Span<Ip4Range> span, InputTypeGeneral fromType, InputTypeGeneral toType)
@@ -52,7 +70,7 @@ public class SpanHelperUnionExcept
         {
             case (InputTypeGeneral.Unsorted, InputTypeGeneral.Sorted):
                 {
-                    span.Sort(Ip4RangeComparer.Instance);
+                    SpanHelper.Sort(span);
                     return span.Length;
                 }
             case (InputTypeGeneral.Unsorted, InputTypeGeneral.Normalized):
@@ -71,16 +89,15 @@ public class SpanHelperUnionExcept
     [Benchmark]
     public int SpanHelper_Ip4Range_UnionNormalizedNormalized()
     {
-        using var bufferSpanOwner = SpanOwner<Ip4Range>.Allocate(this.SetSize * 2);
-        var buffer = bufferSpanOwner.Span;
         int result = 0;
-        var fromType = InputGeneral;
         for (int index = 0; index < this.Count; ++index)
         {
             Span<Ip4Range> span1 = this.rangesArray_1[index];
             Span<Ip4Range> span2 = this.rangesArray_2[index];
-            int length1 = Convert(span1, fromType, InputTypeGeneral.Normalized);
-            int length2 = Convert(span2, fromType, InputTypeGeneral.Normalized);
+            int length1 = SpanHelper.MakeNormalizedFromUnsorted(span1);
+            int length2 = SpanHelper.MakeNormalizedFromUnsorted(span2);
+            using var bufferSpanOwner = SpanOwner<Ip4Range>.Allocate(length1 + length2);
+            var buffer = bufferSpanOwner.Span;
             result += SpanHelper.UnionNormalizedNormalized(
                 span1[..length1],
                 span2[..length2],
@@ -93,19 +110,18 @@ public class SpanHelperUnionExcept
     [Benchmark]
     public int SpanHelper_Ip4Range_UnionSortedSorted()
     {
-        using var bufferSpanOwner = SpanOwner<Ip4Range>.Allocate(this.SetSize * 2);
-        var buffer = bufferSpanOwner.Span;
         int result = 0;
-        var fromType = InputGeneral;
         for (int index = 0; index < this.Count; ++index)
         {
             Span<Ip4Range> span1 = this.rangesArray_1[index];
             Span<Ip4Range> span2 = this.rangesArray_2[index];
-            int length1 = Convert(span1, fromType, InputTypeGeneral.Sorted);
-            int length2 = Convert(span2, fromType, InputTypeGeneral.Sorted);
+            SpanHelper.Sort(span1);
+            SpanHelper.Sort(span2);
+            using var bufferSpanOwner = SpanOwner<Ip4Range>.Allocate(span1.Length + span2.Length);
+            var buffer = bufferSpanOwner.Span;
             result += SpanHelper.UnionSortedSorted(
-                span1[..length1],
-                span2[..length2],
+                span1,
+                span2,
                 buffer);
         }
 
@@ -115,19 +131,18 @@ public class SpanHelperUnionExcept
     [Benchmark]
     public int SpanHelper_Ip4Range_ExceptNormalizedSorted()
     {
-        using var bufferSpanOwner = SpanOwner<Ip4Range>.Allocate(this.SetSize * 2);
-        var buffer = bufferSpanOwner.Span;
         int result = 0;
-        var fromType = InputGeneral;
         for (int index = 0; index < this.Count; ++index)
         {
             Span<Ip4Range> span1 = this.rangesArray_1[index];
             Span<Ip4Range> span2 = this.rangesArray_2[index];
-            int length1 = Convert(span1, fromType, InputTypeGeneral.Normalized);
-            int length2 = Convert(span2, fromType, InputTypeGeneral.Sorted);
+            int length1 = SpanHelper.MakeNormalizedFromUnsorted(span1);
+            SpanHelper.Sort(span2);
+            using var bufferSpanOwner = SpanOwner<Ip4Range>.Allocate(length1 + span2.Length);
+            var buffer = bufferSpanOwner.Span;
             result += SpanHelper.ExceptNormalizedSorted(
                 span1[..length1],
-                span2[..length2],
+                span2,
                 buffer);
         }
 
@@ -137,16 +152,15 @@ public class SpanHelperUnionExcept
     [Benchmark]
     public int SpanHelper_Ip4Range_ExceptNormalizedNormalized()
     {
-        using var bufferSpanOwner = SpanOwner<Ip4Range>.Allocate(this.SetSize * 2);
-        var buffer = bufferSpanOwner.Span;
         int result = 0;
-        var fromType = InputGeneral;
         for (int index = 0; index < this.Count; ++index)
         {
             Span<Ip4Range> span1 = this.rangesArray_1[index];
             Span<Ip4Range> span2 = this.rangesArray_2[index];
-            int length1 = Convert(span1, fromType, InputTypeGeneral.Normalized);
-            int length2 = Convert(span2, fromType, InputTypeGeneral.Normalized);
+            int length1 = SpanHelper.MakeNormalizedFromUnsorted(span1);
+            int length2 = SpanHelper.MakeNormalizedFromUnsorted(span2);
+            using var bufferSpanOwner = SpanOwner<Ip4Range>.Allocate(length1 + length2);
+            var buffer = bufferSpanOwner.Span;
             result += SpanHelper.ExceptNormalizedSorted(
                 span1[..length1],
                 span2[..length2],

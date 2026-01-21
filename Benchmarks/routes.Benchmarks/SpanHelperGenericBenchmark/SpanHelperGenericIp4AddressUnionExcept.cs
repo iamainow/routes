@@ -14,7 +14,12 @@ public class SpanHelperGenericIp4AddressUnionExcept
     [Params(10, 100, 1_000)]
     public int SetSize { get; set; }
 
-    [Params(InputType.Normalized, InputType.Sorted_Overlapping_25, InputType.Sorted_Overlapping_50, InputType.Sorted_Overlapping_75, InputType.Usorted_Overlapping_25, InputType.Usorted_Overlapping_50, InputType.Usorted_Overlapping_75)]
+    [Params(InputType.Normalized,
+        InputType.Sorted_Overlapping_10,
+        InputType.Sorted_Overlapping_20,
+        InputType.Usorted_Overlapping_0,
+        InputType.Usorted_Overlapping_10,
+        InputType.Usorted_Overlapping_20)]
     public required InputType Input { get; set; }
 
     public InputTypeGeneral InputGeneral => InputTypeParser.Parse(Input).Item1;

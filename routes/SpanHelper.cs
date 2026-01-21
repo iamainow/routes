@@ -45,6 +45,11 @@ public static class SpanHelper
         return MakeNormalizedFromSorted(result);
     }
 
+    public static void Sort(Span<Ip4Range> result)
+    {
+        result.Sort(Ip4RangeComparer.Instance);
+    }
+
 
 
     public static int UnionSortedSorted(ReadOnlySpan<Ip4Range> sorted1, ReadOnlySpan<Ip4Range> sorted2, Span<Ip4Range> result)
