@@ -24,54 +24,6 @@
 | SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 1        | Usort(...)ng_20 [22] |      15.08 us |     0.175 us |     0.146 us |      15.06 us |       - |         - |
 | SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 1        | Usort(...)ng_20 [22] |      20.46 us |     0.405 us |     0.567 us |      20.32 us |       - |         - |
 | SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 1        | Usort(...)ng_20 [22] |      22.11 us |     0.341 us |     0.266 us |      22.10 us |       - |         - |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 100      | Normalized           |     713.24 us |     1.404 us |     1.313 us |     712.96 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 100      | Normalized           |     572.90 us |     2.375 us |     1.983 us |     573.33 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 100      | Normalized           |     497.48 us |     0.731 us |     0.648 us |     497.31 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 100      | Normalized           |     641.49 us |     8.081 us |     7.559 us |     635.74 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 100      | Sorte(...)ng_10 [21] |     750.10 us |     5.527 us |     5.170 us |     749.99 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 100      | Sorte(...)ng_10 [21] |     611.47 us |     5.318 us |     4.974 us |     609.13 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 100      | Sorte(...)ng_10 [21] |     504.80 us |     4.182 us |     3.912 us |     504.00 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 100      | Sorte(...)ng_10 [21] |     679.14 us |     2.451 us |     2.293 us |     680.34 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 100      | Sorte(...)ng_20 [21] |     764.35 us |     1.792 us |     1.588 us |     764.52 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 100      | Sorte(...)ng_20 [21] |     626.77 us |     2.327 us |     2.063 us |     627.03 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 100      | Sorte(...)ng_20 [21] |     529.24 us |     4.200 us |     3.723 us |     529.14 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 100      | Sorte(...)ng_20 [21] |     702.98 us |    10.375 us |     9.705 us |     699.05 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 100      | Usort(...)ing_0 [21] |     767.13 us |     8.812 us |     8.242 us |     764.77 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 100      | Usort(...)ing_0 [21] |     577.35 us |     0.963 us |     0.854 us |     577.01 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 100      | Usort(...)ing_0 [21] |     492.47 us |     5.264 us |     4.924 us |     489.97 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 100      | Usort(...)ing_0 [21] |     656.90 us |     7.615 us |     7.123 us |     657.40 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 100      | Usort(...)ng_10 [22] |     781.40 us |     1.075 us |     0.898 us |     781.32 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 100      | Usort(...)ng_10 [22] |     607.93 us |     1.143 us |     0.955 us |     607.64 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 100      | Usort(...)ng_10 [22] |     524.89 us |     3.156 us |     2.952 us |     526.42 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 100      | Usort(...)ng_10 [22] |     688.12 us |     2.762 us |     2.583 us |     688.90 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 100      | Usort(...)ng_20 [22] |     767.91 us |     1.339 us |     1.187 us |     767.72 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 100      | Usort(...)ng_20 [22] |     624.72 us |    11.044 us |    10.331 us |     626.00 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 100      | Usort(...)ng_20 [22] |     540.13 us |     4.330 us |     4.051 us |     538.25 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 100      | Usort(...)ng_20 [22] |     702.32 us |     2.160 us |     1.914 us |     701.96 us |  6.8359 |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 10000    | Normalized           | 130,463.72 us |   766.944 us |   717.400 us | 130,203.92 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 10000    | Normalized           | 115,538.56 us | 1,320.698 us | 1,031.114 us | 115,243.57 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 10000    | Normalized           | 120,799.17 us |   185.957 us |   145.183 us | 120,783.08 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 10000    | Normalized           | 124,528.32 us |   210.365 us |   164.239 us | 124,517.65 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 10000    | Sorte(...)ng_10 [21] | 135,959.26 us | 1,718.737 us | 1,607.708 us | 135,155.60 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 10000    | Sorte(...)ng_10 [21] | 126,068.16 us | 2,443.090 us | 2,399.441 us | 127,776.71 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 10000    | Sorte(...)ng_10 [21] | 126,089.88 us |   503.415 us |   446.265 us | 125,970.07 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 10000    | Sorte(...)ng_10 [21] | 131,709.44 us |   876.503 us |   776.997 us | 131,538.80 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 10000    | Sorte(...)ng_20 [21] | 145,156.60 us | 1,114.046 us | 1,042.080 us | 144,843.32 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 10000    | Sorte(...)ng_20 [21] | 132,754.69 us | 1,439.120 us | 1,346.154 us | 132,026.38 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 10000    | Sorte(...)ng_20 [21] | 118,395.85 us | 1,118.503 us |   873.254 us | 118,689.79 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 10000    | Sorte(...)ng_20 [21] | 137,352.16 us | 1,122.746 us |   995.285 us | 136,949.35 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 10000    | Usort(...)ing_0 [21] | 132,790.07 us |   267.990 us |   237.566 us | 132,708.31 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 10000    | Usort(...)ing_0 [21] | 123,766.08 us | 1,676.998 us | 1,568.665 us | 122,954.88 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 10000    | Usort(...)ing_0 [21] | 157,547.94 us |   644.629 us |   602.987 us | 157,447.81 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 10000    | Usort(...)ing_0 [21] | 128,722.88 us |   593.710 us |   495.775 us | 128,850.10 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 10000    | Usort(...)ng_10 [22] | 178,251.59 us |   945.033 us |   883.985 us | 178,172.76 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 10000    | Usort(...)ng_10 [22] | 171,921.08 us |   781.704 us |   692.960 us | 171,907.44 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 10000    | Usort(...)ng_10 [22] | 119,097.50 us | 1,660.132 us | 1,552.888 us | 118,195.09 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 10000    | Usort(...)ng_10 [22] | 137,798.98 us | 1,496.102 us | 1,399.455 us | 138,225.19 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 1        | 10000    | Usort(...)ng_20 [22] | 182,104.47 us |   802.585 us |   750.738 us | 182,274.56 us |       - |   64000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 1        | 10000    | Usort(...)ng_20 [22] | 137,508.76 us | 1,442.932 us | 1,349.719 us | 136,939.00 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 1        | 10000    | Usort(...)ng_20 [22] | 121,583.35 us |   314.383 us |   262.524 us | 121,631.69 us |       - |   64000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 1        | 10000    | Usort(...)ng_20 [22] | 180,583.36 us | 1,066.292 us |   997.410 us | 180,516.03 us |       - |   64000 B |
 | SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 100      | 1        | Normalized           |     704.01 us |     2.101 us |     1.641 us |     703.70 us |  6.8359 |   64000 B |
 | SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 100      | 1        | Normalized           |     601.43 us |     0.530 us |     0.413 us |     601.46 us |  6.8359 |   64000 B |
 | SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 100      | 1        | Normalized           |     673.91 us |     0.464 us |     0.387 us |     673.87 us |  6.8359 |   64000 B |
@@ -120,30 +72,6 @@
 | SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 100      | 100      | Usort(...)ng_20 [22] |   2,403.99 us |    31.915 us |    29.853 us |   2,394.64 us | 11.7188 |  128000 B |
 | SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 100      | 100      | Usort(...)ng_20 [22] |   2,472.68 us |    11.817 us |    10.476 us |   2,472.05 us | 11.7188 |  128000 B |
 | SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 100      | 100      | Usort(...)ng_20 [22] |   2,619.69 us |    18.776 us |    17.563 us |   2,621.61 us | 11.7188 |  128000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 100      | 10000    | Normalized           | 137,766.54 us |    92.016 us |    76.837 us | 137,777.53 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 100      | 10000    | Normalized           | 122,252.73 us | 1,330.513 us | 1,179.465 us | 121,649.79 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 100      | 10000    | Normalized           | 130,095.80 us |   842.909 us |   788.458 us | 130,142.77 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 100      | 10000    | Normalized           | 130,180.29 us |    88.024 us |    73.504 us | 130,159.07 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 100      | 10000    | Sorte(...)ng_10 [21] | 155,464.03 us |   700.051 us |   584.574 us | 155,562.61 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 100      | 10000    | Sorte(...)ng_10 [21] | 124,187.81 us |   432.594 us |   361.235 us | 124,193.27 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 100      | 10000    | Sorte(...)ng_10 [21] | 130,273.44 us | 1,426.635 us | 1,334.476 us | 129,981.55 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 100      | 10000    | Sorte(...)ng_10 [21] | 153,845.94 us | 1,531.117 us | 1,357.295 us | 153,876.57 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 100      | 10000    | Sorte(...)ng_20 [21] | 155,265.08 us | 2,243.581 us | 2,098.647 us | 154,623.50 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 100      | 10000    | Sorte(...)ng_20 [21] | 133,271.61 us | 2,186.622 us | 2,045.367 us | 133,888.55 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 100      | 10000    | Sorte(...)ng_20 [21] | 128,353.68 us | 1,879.462 us | 1,758.050 us | 128,452.22 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 100      | 10000    | Sorte(...)ng_20 [21] | 150,516.33 us | 2,454.666 us | 2,296.096 us | 150,928.07 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 100      | 10000    | Usort(...)ing_0 [21] | 150,469.15 us |   297.085 us |   263.358 us | 150,484.73 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 100      | 10000    | Usort(...)ing_0 [21] | 167,506.58 us |   514.942 us |   481.677 us | 167,338.22 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 100      | 10000    | Usort(...)ing_0 [21] | 120,380.48 us | 1,961.421 us | 1,531.348 us | 119,804.90 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 100      | 10000    | Usort(...)ing_0 [21] | 180,409.22 us | 1,254.889 us | 1,173.824 us | 179,860.24 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 100      | 10000    | Usort(...)ng_10 [22] | 183,470.84 us |   377.298 us |   315.061 us | 183,542.51 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 100      | 10000    | Usort(...)ng_10 [22] | 174,524.33 us |   573.203 us |   536.175 us | 174,542.92 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 100      | 10000    | Usort(...)ng_10 [22] | 127,198.99 us | 1,542.237 us | 1,442.610 us | 127,157.39 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 100      | 10000    | Usort(...)ng_10 [22] | 140,571.56 us |   669.349 us |   558.937 us | 140,451.78 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 100      | 10000    | Usort(...)ng_20 [22] | 193,708.78 us | 1,576.146 us | 1,474.328 us | 193,301.47 us |       - |  128000 B |
-| SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 100      | 10000    | Usort(...)ng_20 [22] | 137,357.53 us | 1,611.807 us | 1,507.685 us | 138,226.54 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 100      | 10000    | Usort(...)ng_20 [22] | 181,519.82 us | 2,003.851 us | 1,874.404 us | 181,145.32 us |       - |  128000 B |
-| SpanHelper_Ip4Range_ExceptNormalizedNormalized | 1000  | 100      | 10000    | Usort(...)ng_20 [22] | 150,203.29 us | 2,535.169 us | 2,247.361 us | 149,383.67 us |       - |  128000 B |
 | SpanHelper_Ip4Range_UnionNormalizedNormalized  | 1000  | 10000    | 1        | Normalized           | 142,936.92 us | 1,323.804 us | 1,173.517 us | 142,696.12 us |       - |   64000 B |
 | SpanHelper_Ip4Range_UnionSortedSorted          | 1000  | 10000    | 1        | Normalized           | 118,106.05 us | 1,416.577 us | 1,255.759 us | 117,491.31 us |       - |   64000 B |
 | SpanHelper_Ip4Range_ExceptNormalizedSorted     | 1000  | 10000    | 1        | Normalized           | 127,766.52 us | 2,527.414 us | 3,008.707 us | 129,201.06 us |       - |   64000 B |
