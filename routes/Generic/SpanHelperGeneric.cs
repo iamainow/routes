@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace routes.Generic;
 
@@ -44,8 +46,15 @@ public static class SpanHelperGeneric
     public static int MakeNormalizedFromUnsorted<T, TOne>(Span<CustomRange<T>> result, TOne one)
         where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>
     {
-        result.Sort(CustomRangeComparer<T>.Instance);
+        Sort(result);
         return MakeNormalizedFromSorted(result, one);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Sort<T>(Span<CustomRange<T>> result)
+        where T : struct, IEquatable<T>, IComparable<T>
+    {
+        result.Sort(CustomRangeComparer<T>.Instance);
     }
 
 
