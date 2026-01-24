@@ -17,6 +17,7 @@ public ref struct ListStackAlloc<T>
     /// <summary>
     /// Initializes a new instance of the ListStackAlloc<T> class using the specified buffer as the underlying storage with specified first count of items
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public ListStackAlloc(Span<T> rewritableInternalBuffer, int count)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, rewritableInternalBuffer.Length);
@@ -28,6 +29,7 @@ public ref struct ListStackAlloc<T>
     /// <summary>
     /// Initializes a new instance of the ListStackAlloc<T> class using the specified buffer as the underlying storage and copies the elements into it.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public ListStackAlloc(Span<T> rewritableInternalBuffer, ReadOnlySpan<T> elements)
     {
         elements.CopyTo(rewritableInternalBuffer);
@@ -39,6 +41,7 @@ public ref struct ListStackAlloc<T>
 
     public readonly int Capacity => _items.Length;
 
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public readonly ref T this[int index]
     {
         get
@@ -50,11 +53,13 @@ public ref struct ListStackAlloc<T>
         }
     }
 
+    /// <exception cref="IndexOutOfRangeException">
     public ref T Last()
     {
         return ref this[_size - 1];
     }
 
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public readonly ReadOnlySpan<T> this[Range range]
     {
         get
@@ -63,6 +68,7 @@ public ref struct ListStackAlloc<T>
         }
     }
 
+    /// <exception cref="InvalidOperationException"></exception>
     public void Add(T item)
     {
         if (Count + 1 > Capacity)
@@ -72,6 +78,7 @@ public ref struct ListStackAlloc<T>
         _items[_size++] = item;
     }
 
+    /// <exception cref="InvalidOperationException"></exception>
     public void AddRange(scoped Span<T> items)
     {
         if (Count + items.Length > Capacity)
@@ -82,6 +89,7 @@ public ref struct ListStackAlloc<T>
         _size += items.Length;
     }
 
+    /// <exception cref="InvalidOperationException"></exception>
     public void AddRange(scoped ReadOnlySpan<T> items)
     {
         if (Count + items.Length > Capacity)
@@ -92,11 +100,13 @@ public ref struct ListStackAlloc<T>
         _size += items.Length;
     }
 
+    /// <exception cref="InvalidOperationException"></exception>
     public void AddRange(scoped ListStackAlloc<T> items)
     {
         AddRange(items.AsReadOnlySpan());
     }
 
+    /// <exception cref="InvalidOperationException"></exception>
     public void RemoveLast()
     {
         if (Count < 1)
@@ -106,6 +116,7 @@ public ref struct ListStackAlloc<T>
         --_size;
     }
 
+    /// <exception cref="InvalidOperationException"></exception>
     public void RemoveLast(int count)
     {
         if (Count < count)
@@ -115,6 +126,7 @@ public ref struct ListStackAlloc<T>
         _size -= count;
     }
 
+    /// <exception cref="ArgumentException"></exception>
     public void RemoveRegion(int start, int count)
     {
         AsReadOnlySpan()[(start + count)..].CopyTo(_items[start..]);
