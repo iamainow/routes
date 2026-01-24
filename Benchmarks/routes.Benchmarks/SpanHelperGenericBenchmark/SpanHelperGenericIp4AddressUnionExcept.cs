@@ -58,7 +58,7 @@ public class SpanHelperGenericIp4AddressUnionExcept
         using var bufferSpanOwner = SpanOwner<CustomRange<Ip4Address>>.Allocate(this.SetSize * 2);
         var buffer = bufferSpanOwner.Span;
         int result = 0;
-        uint one = 1u;
+        Ip4Address one = new(1U);
         var fromType = InputGeneral;
         for (int index = 0; index < this.Count; ++index)
         {
@@ -82,7 +82,7 @@ public class SpanHelperGenericIp4AddressUnionExcept
         using var bufferSpanOwner = SpanOwner<CustomRange<Ip4Address>>.Allocate(this.SetSize * 2);
         var buffer = bufferSpanOwner.Span;
         int result = 0;
-        uint one = 1u;
+        Ip4Address one = new(1U);
         var fromType = InputGeneral;
         for (int index = 0; index < this.Count; ++index)
         {
@@ -105,7 +105,7 @@ public class SpanHelperGenericIp4AddressUnionExcept
         using var bufferSpanOwner = SpanOwner<CustomRange<Ip4Address>>.Allocate(this.SetSize * 2);
         var buffer = bufferSpanOwner.Span;
         int result = 0;
-        uint one = 1u;
+        Ip4Address one = new(1U);
         var fromType = InputGeneral;
         for (int index = 0; index < this.Count; ++index)
         {

@@ -4,17 +4,17 @@ using System.Text;
 
 namespace routes.Generic;
 
-public readonly ref struct RangeArrayGeneric<T, TOne>
-    where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>, ISubtractionOperators<T, TOne, T>
+public readonly ref struct RangeArrayGeneric<T>
+    where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
 {
-    public RangeArrayGeneric(scoped RangeArrayGeneric<T, TOne> other)
+    public RangeArrayGeneric(scoped RangeArrayGeneric<T> other)
     {
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[other._items.Length];
         other._items.CopyTo(resultBuffer);
         this._items = resultBuffer;
     }
 
-    public RangeArrayGeneric(scoped ReadOnlySpan<T> other, TOne one)
+    public RangeArrayGeneric(scoped ReadOnlySpan<T> other, T one)
     {
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[other.Length];
         int length = SpanHelperGeneric.MakeNormalizedFromUnsorted(resultBuffer, one);
@@ -37,14 +37,14 @@ public readonly ref struct RangeArrayGeneric<T, TOne>
         this._items = normalizedItems;
     }
 
-    public readonly RangeArrayGeneric<T, TOne> Union(scoped RangeArrayGeneric<T, TOne> other, TOne one)
+    public readonly RangeArrayGeneric<T> Union(scoped RangeArrayGeneric<T> other, T one)
     {
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[this._items.Length + other._items.Length];
-        int length = SpanHelperGeneric.UnionNormalizedNormalized<T, TOne>(this._items, other._items, resultBuffer, one);
-        return new RangeArrayGeneric<T, TOne>(resultBuffer[..length]);
+        int length = SpanHelperGeneric.UnionNormalizedNormalized<T>(this._items, other._items, resultBuffer, one);
+        return new RangeArrayGeneric<T>(resultBuffer[..length]);
     }
 
-    public readonly RangeArrayGeneric<T, TOne> Union(scoped ReadOnlySpan<CustomRange<T>> other, TOne one)
+    public readonly RangeArrayGeneric<T> Union(scoped ReadOnlySpan<CustomRange<T>> other, T one)
     {
         using SpanOwner<CustomRange<T>> otherSpanOwner = SpanOwner<CustomRange<T>>.Allocate(other.Length);
         Span<CustomRange<T>> otherSpan = otherSpanOwner.Span;
@@ -54,17 +54,17 @@ public readonly ref struct RangeArrayGeneric<T, TOne>
 
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[this._items.Length + otherSpanLength];
         int length = SpanHelperGeneric.UnionNormalizedNormalized(this._items, otherSpan[..otherSpanLength], resultBuffer, one);
-        return new RangeArrayGeneric<T, TOne>(resultBuffer[..length]);
+        return new RangeArrayGeneric<T>(resultBuffer[..length]);
     }
 
-    public RangeArrayGeneric<T, TOne> Except(scoped RangeArrayGeneric<T, TOne> other, TOne one)
+    public RangeArrayGeneric<T> Except(scoped RangeArrayGeneric<T> other, T one)
     {
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[this._items.Length + other._items.Length];
         int length = SpanHelperGeneric.ExceptNormalizedSorted(this._items, other._items, resultBuffer, one);
-        return new RangeArrayGeneric<T, TOne>(resultBuffer[..length]);
+        return new RangeArrayGeneric<T>(resultBuffer[..length]);
     }
 
-    public RangeArrayGeneric<T, TOne> Except(scoped ReadOnlySpan<CustomRange<T>> other, TOne one)
+    public RangeArrayGeneric<T> Except(scoped ReadOnlySpan<CustomRange<T>> other, T one)
     {
         using SpanOwner<CustomRange<T>> otherSpanOwner = SpanOwner<CustomRange<T>>.Allocate(other.Length);
         Span<CustomRange<T>> otherSpan = otherSpanOwner.Span;
@@ -74,17 +74,17 @@ public readonly ref struct RangeArrayGeneric<T, TOne>
 
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[this._items.Length + otherSpan.Length];
         int length = SpanHelperGeneric.ExceptNormalizedSorted(this._items, otherSpan, resultBuffer, one);
-        return new RangeArrayGeneric<T, TOne>(resultBuffer[..length]);
+        return new RangeArrayGeneric<T>(resultBuffer[..length]);
     }
 
-    public RangeArrayGeneric<T, TOne> Intersect(scoped RangeArrayGeneric<T, TOne> other)
+    public RangeArrayGeneric<T> Intersect(scoped RangeArrayGeneric<T> other)
     {
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[this._items.Length + other._items.Length - 1];
         int length = SpanHelperGeneric.IntersectNormalizedNormalized(this._items, other._items, resultBuffer);
-        return new RangeArrayGeneric<T, TOne>(resultBuffer[..length]);
+        return new RangeArrayGeneric<T>(resultBuffer[..length]);
     }
 
-    public RangeArrayGeneric<T, TOne> Intersect(scoped ReadOnlySpan<CustomRange<T>> other)
+    public RangeArrayGeneric<T> Intersect(scoped ReadOnlySpan<CustomRange<T>> other)
     {
         using SpanOwner<CustomRange<T>> otherSpanOwner = SpanOwner<CustomRange<T>>.Allocate(other.Length);
         Span<CustomRange<T>> otherSpan = otherSpanOwner.Span;
@@ -94,7 +94,7 @@ public readonly ref struct RangeArrayGeneric<T, TOne>
 
         Span<CustomRange<T>> resultBuffer = new CustomRange<T>[this._items.Length + otherSpan.Length - 1];
         int length = SpanHelperGeneric.IntersectNormalizedNormalized(this._items, otherSpan, resultBuffer);
-        return new RangeArrayGeneric<T, TOne>(resultBuffer[..length]);
+        return new RangeArrayGeneric<T>(resultBuffer[..length]);
     }
 
     public CustomRange<T>[] ToArray()

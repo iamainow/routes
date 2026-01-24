@@ -20,8 +20,8 @@ public static class InputTypeParser
         };
     }
 
-    public static int Convert<T, TOne>(Span<CustomRange<T>> span, TOne one, InputTypeGeneral fromType, InputTypeGeneral toType)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>, ISubtractionOperators<T, TOne, T>
+    public static int Convert<T>(Span<CustomRange<T>> span, T one, InputTypeGeneral fromType, InputTypeGeneral toType)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
     {
         switch (fromType, toType)
         {

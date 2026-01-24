@@ -21,8 +21,8 @@ public static class SpanHelperGeneric
 
 
 
-    public static int MakeNormalizedFromSorted<T, TOne>(Span<CustomRange<T>> result, TOne one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>
+    public static int MakeNormalizedFromSorted<T>(Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         if (result.Length <= 1)
         {
@@ -54,8 +54,8 @@ public static class SpanHelperGeneric
         return resultList.Count;
     }
 
-    public static int MakeNormalizedFromUnsorted<T, TOne>(Span<CustomRange<T>> result, TOne one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>
+    public static int MakeNormalizedFromUnsorted<T>(Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         Sort(result);
         return MakeNormalizedFromSorted(result, one);
@@ -69,8 +69,8 @@ public static class SpanHelperGeneric
 
 
 
-    public static int UnionNormalizedNormalized<T, TOne>(ReadOnlySpan<CustomRange<T>> normalized1, ReadOnlySpan<CustomRange<T>> normalized2, Span<CustomRange<T>> result, TOne one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>
+    public static int UnionNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized1, ReadOnlySpan<CustomRange<T>> normalized2, Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         if (result.Overlaps(normalized1))
         {
@@ -205,8 +205,8 @@ public static class SpanHelperGeneric
 
 
     /// <returns>left and right parts</returns>
-    private static ValueTuple<CustomRange<T>?, CustomRange<T>?> IntersectableExcept<T, TOne>(CustomRange<T> range, CustomRange<T> other, TOne one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>, ISubtractionOperators<T, TOne, T>
+    private static ValueTuple<CustomRange<T>?, CustomRange<T>?> IntersectableExcept<T>(CustomRange<T> range, CustomRange<T> other, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
     {
         bool hasLeftPart = other.FirstAddress.CompareTo(range.FirstAddress) > 0 && !T.MinValue.Equals(other.FirstAddress);
         bool hasRightPart = other.LastAddress.CompareTo(range.LastAddress) < 0 && !T.MaxValue.Equals(other.LastAddress);
@@ -235,8 +235,8 @@ public static class SpanHelperGeneric
         }
     }
 
-    public static int ExceptNormalizedSorted<T, TOne>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result, TOne one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>, ISubtractionOperators<T, TOne, T>
+    public static int ExceptNormalizedSorted<T>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
     {
         if (result.Overlaps(normalized))
         {
