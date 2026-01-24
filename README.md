@@ -6,7 +6,7 @@ A high-performance .NET library for managing IPv4 addresses, ranges, and network
 
 ## Features
 
-- **Fast IP Range Operations**: Union, intersection, and difference operations on IP ranges with SIMD optimizations
+- **Fast IP Range Operations**: Union and difference operations on IP ranges with SIMD optimizations
 - **Normalized Range Sets**: Automatic normalization ensures ranges are sorted, non-overlapping, and non-adjacent
 - **Windows Routing Table Management**: Direct Windows API integration for reading and modifying routing tables
 - **AOT-Compiled Tools**: Native executables with minimal startup time and small binary sizes
@@ -35,10 +35,10 @@ dotnet run --project Benchmarks/routes.Benchmarks/routes.Benchmarks.csproj -c Re
 
 ### Installation
 
-Add the library to your project:
+Add a project reference (recommended for the source layout):
 
 ```bash
-dotnet add package routes
+dotnet add reference routes/routes.csproj
 ```
 
 ## Core Libraries
@@ -50,7 +50,7 @@ Core library for IPv4 address and range manipulation.
 **Key Types:**
 - `Ip4Address`: Low-level IPv4 address struct with SIMD optimizations
 - `Ip4Range`: Represents a continuous range of IP addresses
-- `Ip4RangeArray`: High-performance ref struct for range set operations (union, except, intersection)
+- `Ip4RangeArray`: High-performance ref struct for range set operations (union, except)
 - `Ip4Subnet`: CIDR subnet representation
 - `Ip4Mask`: Subnet mask utilities
 
@@ -63,9 +63,9 @@ var range1 = new Ip4Range(new Ip4Address(192, 168, 1, 0), new Ip4Address(192, 16
 var range2 = new Ip4Range(new Ip4Address(192, 168, 2, 0), new Ip4Address(192, 168, 2, 255));
 
 // Perform set operations
-Span<Ip4Range> buffer = stackalloc Ip4Range[10];
-var rangeArray = new Ip4RangeArray([range1, range2]);
-var union = rangeArray.Union(otherRanges, buffer);
+var rangeArray = Ip4RangeArray.Create([range1, range2]);
+var otherArray = new Ip4RangeArray(new Ip4Range(new Ip4Address(10, 0, 0, 0), new Ip4Address(10, 0, 0, 255)));
+var union = rangeArray.Union(otherArray);
 ```
 
 ### Ip4Parsers
@@ -77,8 +77,11 @@ Parsing library for IP address formats.
 using Ip4Parsers;
 
 // Parse CIDR notation
-Span<Ip4Range> ranges = stackalloc Ip4Range[10];
-int count = Ip4SubnetParser.GetRanges("192.168.1.0/24", ranges);
+var ranges = Ip4SubnetParser.GetRanges("192.168.1.0/24");
+foreach (var range in ranges)
+{
+    // Use range
+}
 ```
 
 ### RoutesCalculator
@@ -88,9 +91,12 @@ Calculates differences between route sets for efficient routing table updates.
 ```csharp
 using RoutesCalculator;
 
-var calculator = new RoutesDifferenceCalculator();
-var diff = calculator.CalculateDifference(oldRoutes, newRoutes);
-// Returns routes to add, remove, or modify
+RoutesDifferenceCalculator.CalculateDifference(
+    oldRoutes,
+    newRoutes,
+    toAdd: route => Console.WriteLine($"Add {route}"),
+    toRemove: route => Console.WriteLine($"Remove {route}"),
+    toChangeMetric: change => Console.WriteLine($"Metric {change}"));
 ```
 
 ### NativeMethods.Windows
@@ -217,7 +223,7 @@ This library is designed for performance-critical applications:
 
 - SIMD-accelerated IP address operations
 - Zero-allocation range set operations using stack allocation
-- Normalized ranges enable O(n) union/intersection/difference
+- Normalized ranges enable O(n) union/difference
 - AOT compilation eliminates JIT overhead
 - Benchmark-driven development ensures regression-free optimization
 
