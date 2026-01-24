@@ -1,6 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace routes.Generic;
 
@@ -9,6 +7,20 @@ namespace routes.Generic;
 // normalized - sorted, not overlapped, non-adjacent
 public static class SpanHelperGeneric
 {
+    private static T Min<T>(T item1, T item2)
+        where T : IComparable<T>
+    {
+        return item1.CompareTo(item2) <= 0 ? item1 : item2;
+    }
+
+    private static T Max<T>(T item1, T item2)
+        where T : IComparable<T>
+    {
+        return item1.CompareTo(item2) >= 0 ? item1 : item2;
+    }
+
+
+
     public static int MakeNormalizedFromSorted<T, TOne>(Span<CustomRange<T>> result, TOne one)
         where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>
     {
@@ -31,8 +43,7 @@ public static class SpanHelperGeneric
             }
             else if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
             {
-                T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
-                last = new CustomRange<T>(last.FirstAddress, max);
+                last = new CustomRange<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
             }
             else
             {
@@ -50,7 +61,6 @@ public static class SpanHelperGeneric
         return MakeNormalizedFromSorted(result, one);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Sort<T>(Span<CustomRange<T>> result)
         where T : struct, IEquatable<T>, IComparable<T>
     {
@@ -58,137 +68,6 @@ public static class SpanHelperGeneric
     }
 
 
-
-    public static int UnionSortedSorted<T, TOne>(ReadOnlySpan<CustomRange<T>> sorted1, ReadOnlySpan<CustomRange<T>> sorted2, Span<CustomRange<T>> result, TOne one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>
-    {
-        if (result.Overlaps(sorted1))
-        {
-            throw new ArgumentException($"result can't overlap with sorted1", nameof(result));
-        }
-
-        if (result.Overlaps(sorted2))
-        {
-            throw new ArgumentException("result can't overlap with sorted2", nameof(result));
-        }
-
-        if (sorted1.Length == 0)
-        {
-            sorted2.CopyTo(result);
-            return MakeNormalizedFromSorted(result[..sorted2.Length], one);
-        }
-
-        if (sorted2.Length == 0)
-        {
-            sorted1.CopyTo(result);
-            return MakeNormalizedFromSorted(result[..sorted1.Length], one);
-        }
-
-        ListStackAlloc<CustomRange<T>> resultList = new ListStackAlloc<CustomRange<T>>(result);
-        int index1 = 0;
-        int index2 = 0;
-
-        // first pass
-        {
-            var item1 = sorted1[0];
-            var item2 = sorted2[0];
-            if (item1.FirstAddress.CompareTo(item2.FirstAddress) <= 0)
-            {
-                resultList.Add(item1);
-                index1++;
-            }
-            else
-            {
-                resultList.Add(item2);
-                index2++;
-            }
-        }
-
-        while (index1 < sorted1.Length && index2 < sorted2.Length)
-        {
-            CustomRange<T> current;
-            var item1 = sorted1[index1];
-            var item2 = sorted2[index2];
-            if (item1.FirstAddress.CompareTo(item2.FirstAddress) <= 0)
-            {
-                current = item1;
-                index1++;
-            }
-            else
-            {
-                current = item2;
-                index2++;
-            }
-
-            ref var last = ref resultList.Last();
-            if (T.MaxValue.Equals(last.LastAddress))
-            {
-                last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
-                return resultList.Count;
-            }
-            else if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
-            {
-                T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
-                last = new CustomRange<T>(last.FirstAddress, max);
-            }
-            else
-            {
-                resultList.Add(current);
-            }
-        }
-
-        while (index2 < sorted2.Length)
-        {
-            CustomRange<T> current = sorted2[index2];
-            index2++;
-
-            ref var last = ref resultList.Last();
-            if (T.MaxValue.Equals(last.LastAddress))
-            {
-                last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
-                return resultList.Count;
-            }
-            else
-            {
-                if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
-                {
-                    T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
-                    last = new CustomRange<T>(last.FirstAddress, max);
-                }
-                else
-                {
-                    resultList.Add(current);
-                }
-            }
-        }
-
-        while (index1 < sorted1.Length)
-        {
-            CustomRange<T> current = sorted1[index1];
-            index1++;
-
-            ref var last = ref resultList.Last();
-            if (T.MaxValue.Equals(last.LastAddress))
-            {
-                last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
-                return resultList.Count;
-            }
-            else
-            {
-                if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
-                {
-                    T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
-                    last = new CustomRange<T>(last.FirstAddress, max);
-                }
-                else
-                {
-                    resultList.Add(current);
-                }
-            }
-        }
-
-        return resultList.Count;
-    }
 
     public static int UnionNormalizedNormalized<T, TOne>(ReadOnlySpan<CustomRange<T>> normalized1, ReadOnlySpan<CustomRange<T>> normalized2, Span<CustomRange<T>> result, TOne one)
         where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>
@@ -261,8 +140,7 @@ public static class SpanHelperGeneric
             {
                 if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
                 {
-                    T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
-                    last = new CustomRange<T>(last.FirstAddress, max);
+                    last = new CustomRange<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
                 }
                 else
                 {
@@ -285,8 +163,7 @@ public static class SpanHelperGeneric
             {
                 if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
                 {
-                    T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
-                    last = new CustomRange<T>(last.FirstAddress, max);
+                    last = new CustomRange<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
                     ++index2;
                 }
                 else
@@ -311,8 +188,7 @@ public static class SpanHelperGeneric
             {
                 if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
                 {
-                    T max = last.LastAddress.CompareTo(current.LastAddress) >= 0 ? last.LastAddress : current.LastAddress;
-                    last = new CustomRange<T>(last.FirstAddress, max);
+                    last = new CustomRange<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
                     ++index1;
                 }
                 else
@@ -325,6 +201,8 @@ public static class SpanHelperGeneric
 
         return resultList.Count;
     }
+
+
 
     /// <returns>left and right parts</returns>
     private static ValueTuple<CustomRange<T>?, CustomRange<T>?> IntersectableExcept<T, TOne>(CustomRange<T> range, CustomRange<T> other, TOne one)
@@ -356,8 +234,6 @@ public static class SpanHelperGeneric
             }
         }
     }
-
-
 
     public static int ExceptNormalizedSorted<T, TOne>(ReadOnlySpan<CustomRange<T>> normalized, ReadOnlySpan<CustomRange<T>> sorted, Span<CustomRange<T>> result, TOne one)
         where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, TOne, T>, ISubtractionOperators<T, TOne, T>
@@ -441,6 +317,72 @@ public static class SpanHelperGeneric
                         break;
                     }
                     currentRange = normalized[i];
+                }
+            }
+        }
+
+        return resultList.Count;
+    }
+
+
+
+    public static int IntersectNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized1, ReadOnlySpan<CustomRange<T>> normalized2, Span<CustomRange<T>> result)
+        where T : struct, IEquatable<T>, IComparable<T>
+    {
+        if (result.Overlaps(normalized1))
+        {
+            throw new ArgumentException($"result can't overlap with normalized1", nameof(result));
+        }
+
+        if (result.Overlaps(normalized2))
+        {
+            throw new ArgumentException("result can't overlap with normalized2", nameof(result));
+        }
+
+        if (normalized1.Length == 0)
+        {
+            return 0;
+        }
+
+        if (normalized2.Length == 0)
+        {
+            return 0;
+        }
+
+        int maxLength = normalized1.Length + normalized2.Length - 1;
+
+        ListStackAlloc<CustomRange<T>> resultList = new ListStackAlloc<CustomRange<T>>(result);
+        int index1 = 0;
+        int index2 = 0;
+        while (index1 < normalized1.Length && index2 < normalized2.Length)
+        {
+            var item1 = normalized1[index1];
+            var item2 = normalized2[index2];
+            if (item1.LastAddress.CompareTo(item2.FirstAddress) < 0)
+            {
+                // item1 is before item2
+                index1++;
+            }
+            else if (item2.LastAddress.CompareTo(item1.FirstAddress) < 0)
+            {
+                // item2 is before item1
+                index2++;
+            }
+            else
+            {
+                // Ranges overlap
+                T start = Max(item1.FirstAddress, item2.FirstAddress);
+                T end = Min(item1.LastAddress, item2.LastAddress);
+                resultList.Add(new CustomRange<T>(start, end));
+
+                var comparing = item1.LastAddress.CompareTo(item2.LastAddress);
+                if (comparing <= 0)
+                {
+                    index1++;
+                }
+                if (comparing >= 0)
+                {
+                    index2++;
                 }
             }
         }

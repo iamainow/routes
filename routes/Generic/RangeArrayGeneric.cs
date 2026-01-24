@@ -77,6 +77,26 @@ public readonly ref struct RangeArrayGeneric<T, TOne>
         return new RangeArrayGeneric<T, TOne>(resultBuffer[..length]);
     }
 
+    public RangeArrayGeneric<T, TOne> Intersect(scoped RangeArrayGeneric<T, TOne> other)
+    {
+        Span<CustomRange<T>> resultBuffer = new CustomRange<T>[this._items.Length + other._items.Length - 1];
+        int length = SpanHelperGeneric.IntersectNormalizedNormalized(this._items, other._items, resultBuffer);
+        return new RangeArrayGeneric<T, TOne>(resultBuffer[..length]);
+    }
+
+    public RangeArrayGeneric<T, TOne> Intersect(scoped ReadOnlySpan<CustomRange<T>> other)
+    {
+        using SpanOwner<CustomRange<T>> otherSpanOwner = SpanOwner<CustomRange<T>>.Allocate(other.Length);
+        Span<CustomRange<T>> otherSpan = otherSpanOwner.Span;
+
+        other.CopyTo(otherSpan);
+        SpanHelperGeneric.Sort(otherSpan);
+
+        Span<CustomRange<T>> resultBuffer = new CustomRange<T>[this._items.Length + otherSpan.Length - 1];
+        int length = SpanHelperGeneric.IntersectNormalizedNormalized(this._items, otherSpan, resultBuffer);
+        return new RangeArrayGeneric<T, TOne>(resultBuffer[..length]);
+    }
+
     public CustomRange<T>[] ToArray()
     {
         CustomRange<T>[] result = new CustomRange<T>[this._items.Length];
