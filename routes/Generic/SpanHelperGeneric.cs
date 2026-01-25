@@ -54,11 +54,61 @@ public static class SpanHelperGeneric
         return resultList.Count;
     }
 
+    public static int MakeNormalizedFromSorted2<T>(Span<CustomRange<T>> result)
+        where T : struct, IEquatable<T>, IComparable<T>, IIncrementOperators<T>
+    {
+        if (result.Length <= 1)
+        {
+            return result.Length;
+        }
+
+        var resultList = new ListStackAlloc<CustomRange<T>>(result, 1);
+
+        for (int i = 1; i < result.Length; i++)
+        {
+            var current = result[i];
+            ref var last = ref resultList.Last();
+
+            // current.FirstAddress >= last.FirstAddress due sorting
+
+            if (last.LastAddress.CompareTo(current.FirstAddress) >= 0)
+            {
+                // Overlapping - merge
+                last = new CustomRange<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
+            }
+            else
+            {
+                // Not overlapping, check adjacency
+                // Safe to increment: last.LastAddress < current.FirstAddress <= MaxValue
+                var nextAfterLast = last.LastAddress;
+                ++nextAfterLast;
+                if (nextAfterLast.Equals(current.FirstAddress))
+                {
+                    // Adjacent - merge (current.LastAddress > last.LastAddress since not overlapping)
+                    last = new CustomRange<T>(last.FirstAddress, current.LastAddress);
+                }
+                else
+                {
+                    resultList.Add(current);
+                }
+            }
+        }
+
+        return resultList.Count;
+    }
+
     public static int MakeNormalizedFromUnsorted<T>(Span<CustomRange<T>> result, T one)
         where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
         Sort(result);
         return MakeNormalizedFromSorted(result, one);
+    }
+
+    public static int MakeNormalizedFromUnsorted2<T>(Span<CustomRange<T>> result)
+        where T : struct, IEquatable<T>, IComparable<T>, IIncrementOperators<T>
+    {
+        Sort(result);
+        return MakeNormalizedFromSorted2(result);
     }
 
     public static void Sort<T>(Span<CustomRange<T>> result)

@@ -12,8 +12,10 @@ public readonly struct Ip4Address : IEquatable<Ip4Address>,
     IMinMaxValue<Ip4Address>,
     IAdditionOperators<Ip4Address, Ip4Address, Ip4Address>,
     IAdditionOperators<Ip4Address, uint, Ip4Address>,
+    IIncrementOperators<Ip4Address>,
     ISubtractionOperators<Ip4Address, Ip4Address, Ip4Address>,
     ISubtractionOperators<Ip4Address, uint, Ip4Address>,
+    IDecrementOperators<Ip4Address>,
     IEqualityOperators<Ip4Address, Ip4Address, bool>,
     IComparisonOperators<Ip4Address, Ip4Address, bool>
 {
@@ -150,6 +152,9 @@ public readonly struct Ip4Address : IEquatable<Ip4Address>,
     public static Ip4Address operator -(Ip4Address left, Ip4Address right) => Subtract(left, right);
     public static Ip4Address operator -(Ip4Address left, uint right) => Subtract(left, right);
 
+    public static Ip4Address operator ++(Ip4Address value) => Increment(value);
+    public static Ip4Address operator --(Ip4Address value) => Decrement(value);
+
     public uint ToUInt32() => _address;
 
     public byte[] ToByteArray() => [_byte1, _byte2, _byte3, _byte4];
@@ -169,4 +174,14 @@ public readonly struct Ip4Address : IEquatable<Ip4Address>,
     public IPAddress ToIPAddress() => new([_byte1, _byte2, _byte3, _byte4]);
 
     public override string ToString() => $"{_byte1}.{_byte2}.{_byte3}.{_byte4}";
+
+    public static Ip4Address Increment(Ip4Address item)
+    {
+        return new Ip4Address(item._address + 1);
+    }
+
+    public static Ip4Address Decrement(Ip4Address item)
+    {
+        return new Ip4Address(item._address - 1);
+    }
 }
