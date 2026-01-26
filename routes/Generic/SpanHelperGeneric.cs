@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace routes.Generic;
 
@@ -112,6 +113,13 @@ public static class SpanHelperGeneric
     }
 
     public static void Sort<T>(Span<CustomRange<T>> result)
+        where T : struct, IEquatable<T>, IComparable<T>
+    {
+        result.Sort(CustomRangeComparer<T>.Instance);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Sort2<T>(Span<CustomRange<T>> result)
         where T : struct, IEquatable<T>, IComparable<T>
     {
         result.Sort(CustomRangeComparer<T>.Instance);

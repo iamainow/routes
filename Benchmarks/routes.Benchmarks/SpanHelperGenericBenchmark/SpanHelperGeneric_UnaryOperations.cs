@@ -47,7 +47,7 @@ public class SpanHelperGeneric_UnaryOperations
     [GlobalSetup]
     public async Task GlobalSetup()
     {
-        Random random = new();
+        Random random = new(42);
         this.rangesArray = Generate(Count, SetSize, Input, random);
     }
 
@@ -93,6 +93,45 @@ public class SpanHelperGeneric_UnaryOperations
         for (int index = 0; index < this.Count; ++index)
         {
             result += SpanHelperGeneric.MakeNormalizedFromUnsorted2(this.rangesArray[index]);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int SpanHelperGeneric_Ip4Address_Sort()
+    {
+        int result = 0;
+        for (int index = 0; index < this.Count; ++index)
+        {
+            SpanHelperGeneric.Sort(this.rangesArray[index]);
+            result ^= this.rangesArray[index][0].GetHashCode(); // Prevent optimization
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int SpanHelperGeneric_Ip4Address_Sort2()
+    {
+        int result = 0;
+        for (int index = 0; index < this.Count; ++index)
+        {
+            SpanHelperGeneric.Sort2(this.rangesArray[index]);
+            result ^= this.rangesArray[index][0].GetHashCode(); // Prevent optimization
+        }
+
+        return result;
+    }
+
+    [Benchmark]
+    public int SpanHelperGeneric_Ip4Address_Sort3()
+    {
+        int result = 0;
+        for (int index = 0; index < this.Count; ++index)
+        {
+            this.rangesArray[index].Sort(CustomRangeComparer<Ip4Address>.Instance);
+            result ^= this.rangesArray[index][0].GetHashCode(); // Prevent optimization
         }
 
         return result;
