@@ -97,6 +97,39 @@ public static class SpanHelperGeneric
         return resultList.Count;
     }
 
+    public static int MakeNormalizedFromSorted3<T>(Span<CustomRange2<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
+    {
+        if (result.Length <= 1)
+        {
+            return result.Length;
+        }
+
+        var resultList = new ListStackAlloc<CustomRange2<T>>(result, 1);
+
+        for (int i = 1; i < result.Length; i++)
+        {
+            var current = result[i];
+            ref var last = ref resultList.Last();
+
+            if (T.MaxValue.Equals(last.LastAddress))
+            {
+                last = new CustomRange2<T>(last.FirstAddress, T.MaxValue);
+                return resultList.Count;
+            }
+            else if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
+            {
+                last = new CustomRange2<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
+            }
+            else
+            {
+                resultList.Add(current);
+            }
+        }
+
+        return resultList.Count;
+    }
+
     public static int MakeNormalizedFromUnsorted<T>(Span<CustomRange<T>> result, T one)
         where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
     {
@@ -111,6 +144,13 @@ public static class SpanHelperGeneric
         return MakeNormalizedFromSorted2(result);
     }
 
+    public static int MakeNormalizedFromUnsorted3<T>(Span<CustomRange2<T>> result, T one)
+        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
+    {
+        Sort3(result);
+        return MakeNormalizedFromSorted3(result, one);
+    }
+
     public static void Sort<T>(Span<CustomRange<T>> result)
         where T : struct, IEquatable<T>, IComparable<T>
     {
@@ -122,6 +162,12 @@ public static class SpanHelperGeneric
         where T : struct, IEquatable<T>, IComparable<T>
     {
         result.Sort(CustomRangeComparer<T>.Instance);
+    }
+
+    public static void Sort3<T>(Span<CustomRange2<T>> result)
+        where T : struct, IEquatable<T>, IComparable<T>
+    {
+        result.Sort(CustomRange2Comparer<T>.Instance);
     }
 
 

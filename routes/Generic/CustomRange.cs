@@ -1,6 +1,14 @@
 namespace routes.Generic;
 
-public readonly struct CustomRange<T> : IEquatable<CustomRange<T>>
+public interface ICustomRange<T>
+{
+    T FirstAddress { get; }
+    T LastAddress { get; }
+}
+
+public readonly record struct CustomRange2<T>(T FirstAddress, T LastAddress);
+
+public readonly struct CustomRange<T> : IEquatable<CustomRange<T>>, ICustomRange<T>
     where T : struct, IEquatable<T>, IComparable<T>
 {
     private readonly T firstAddress;
