@@ -71,7 +71,6 @@ public static class SpanHelperGeneric
             ref var last = ref resultList.Last();
 
             // current.FirstAddress >= last.FirstAddress due sorting
-
             if (last.LastAddress.CompareTo(current.FirstAddress) >= 0)
             {
                 // Overlapping - merge

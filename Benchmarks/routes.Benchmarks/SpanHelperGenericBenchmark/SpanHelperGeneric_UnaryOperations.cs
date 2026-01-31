@@ -15,7 +15,8 @@ public class SpanHelperGeneric_UnaryOperations
     [Params(10, 100, 1_000, 10_000)]
     public int SetSize { get; set; }
 
-    [Params(InputType.Normalized,
+    [Params(
+        InputType.Normalized,
         InputType.Sorted_Overlapping_10,
         InputType.Sorted_Overlapping_20,
         InputType.Usorted_Overlapping_0,
