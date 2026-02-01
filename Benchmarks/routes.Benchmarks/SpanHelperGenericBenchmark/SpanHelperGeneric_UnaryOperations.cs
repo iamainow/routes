@@ -15,7 +15,8 @@ public class SpanHelperGeneric_UnaryOperations
     [Params(10, 100, 1_000, 10_000)]
     public int SetSize { get; set; }
 
-    [Params(InputType.Normalized,
+    [Params(
+        InputType.Normalized,
         InputType.Sorted_Overlapping_10,
         InputType.Sorted_Overlapping_20,
         InputType.Usorted_Overlapping_0,
@@ -26,6 +27,7 @@ public class SpanHelperGeneric_UnaryOperations
     public InputTypeGeneral InputGeneral => InputTypeParser.Parse(Input).Item1;
 
     private CustomRange<Ip4Address>[][] rangesArray = [];
+    private CustomRange2<Ip4Address>[][] rangesArray2 = [];
 
     private static CustomRange<Ip4Address>[][] Generate(int count, int size, InputType input, Random random)
     {
@@ -44,11 +46,29 @@ public class SpanHelperGeneric_UnaryOperations
             .ToArray();
     }
 
+    private static CustomRange2<Ip4Address>[][] Generate2(int count, int size, InputType input, Random random)
+    {
+        Func<ReadOnlySpan<byte>, uint> convert = BitConverter.ToUInt32;
+
+        Func<CustomRange2<Ip4Address>[]> generator = InputTypeParser.Parse(input) switch
+        {
+            (InputTypeGeneral.Normalized, _) => () => CustomArrayExtensions.GenerateNormalized(size, convert, random).Select(x => new CustomRange2<Ip4Address>(new Ip4Address(x.FirstAddress), new Ip4Address(x.LastAddress))).ToArray(),
+            (InputTypeGeneral.Sorted, double overlappingPercent) => () => CustomArrayExtensions.GenerateSorted(size, convert, overlappingPercent, random).Select(x => new CustomRange2<Ip4Address>(new Ip4Address(x.FirstAddress), new Ip4Address(x.LastAddress))).ToArray(),
+            (InputTypeGeneral.Unsorted, double overlappingPercent) => () => CustomArrayExtensions.GenerateUnsorted(size, convert, overlappingPercent, random).Select(x => new CustomRange2<Ip4Address>(new Ip4Address(x.FirstAddress), new Ip4Address(x.LastAddress))).ToArray(),
+            _ => throw new NotImplementedException($"Input='{input}' is not implemented"),
+        };
+
+        return Enumerable.Range(0, count)
+            .Select(_ => generator().ToArray())
+            .ToArray();
+    }
+
     [GlobalSetup]
     public async Task GlobalSetup()
     {
         Random random = new(42);
         this.rangesArray = Generate(Count, SetSize, Input, random);
+        this.rangesArray2 = Generate2(Count, SetSize, Input, random);
     }
 
     public static int Convert<T>(Span<CustomRange<T>> span, T one, InputTypeGeneral fromType, InputTypeGeneral toType)
@@ -99,6 +119,19 @@ public class SpanHelperGeneric_UnaryOperations
     }
 
     [Benchmark]
+    public int SpanHelperGeneric_Ip4Address_MakeNormalizedFromUnsorted3()
+    {
+        Ip4Address one = new Ip4Address(1);
+        int result = 0;
+        for (int index = 0; index < this.Count; ++index)
+        {
+            result += SpanHelperGeneric.MakeNormalizedFromUnsorted3(this.rangesArray2[index], one);
+        }
+
+        return result;
+    }
+
+    [Benchmark]
     public int SpanHelperGeneric_Ip4Address_Sort()
     {
         int result = 0;
@@ -118,19 +151,6 @@ public class SpanHelperGeneric_UnaryOperations
         for (int index = 0; index < this.Count; ++index)
         {
             SpanHelperGeneric.Sort2(this.rangesArray[index]);
-            result ^= this.rangesArray[index][0].GetHashCode(); // Prevent optimization
-        }
-
-        return result;
-    }
-
-    [Benchmark]
-    public int SpanHelperGeneric_Ip4Address_Sort3()
-    {
-        int result = 0;
-        for (int index = 0; index < this.Count; ++index)
-        {
-            this.rangesArray[index].Sort(CustomRangeComparer<Ip4Address>.Instance);
             result ^= this.rangesArray[index][0].GetHashCode(); // Prevent optimization
         }
 
