@@ -16,6 +16,7 @@ public readonly ref struct Ip4RangeArray
     public static Ip4RangeArray Create(scoped ReadOnlySpan<Ip4Range> other)
     {
         Span<Ip4Range> resultBuffer = new Ip4Range[other.Length];
+        other.CopyTo(resultBuffer);
         int length = SpanHelper.MakeNormalizedFromUnsorted(resultBuffer);
         return new Ip4RangeArray(resultBuffer[..length]);
     }
