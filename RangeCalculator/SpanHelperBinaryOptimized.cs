@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace routes.Generic;
+namespace RangeCalculator;
 
 public static class SpanHelperBinaryOptimized
 {
@@ -74,7 +74,7 @@ public static class SpanHelperBinaryOptimized
             default:
                 Debug.Assert(sorted.Length > 3, "sorted.Length > 3");
 
-                if (ascPredicate(sorted[0])) // optional perf optimization? - if first element in sorted asc array >= firstAddress then all elements >= firstAddress
+                if (ascPredicate(sorted[0])) // optional perf optimization? - if first element in sorted asc array >= first then all elements >= first
                 {
                     index = 0;
                     return SearchResult.ElementFound;
@@ -83,7 +83,7 @@ public static class SpanHelperBinaryOptimized
                 if (!ascPredicate(sorted[^1]))
                 {
                     index = default;
-                    return SearchResult.AllElementsNotSatisfiesCondition; // if last element in sorted asc array < firstAddress then all elements < firstAddress
+                    return SearchResult.AllElementsNotSatisfiesCondition; // if last element in sorted asc array < first then all elements < first
                 }
 
                 index = 1 + FindFirst(sorted[1..], ascPredicate);

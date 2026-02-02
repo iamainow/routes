@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using CommunityToolkit.HighPerformance.Buffers;
+using RangeCalculator;
 using routes.Extensions;
-using routes.Generic;
 
 namespace routes.Benchmarks.SpanHelperBenchmark;
 

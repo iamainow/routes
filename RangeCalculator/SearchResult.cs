@@ -1,4 +1,4 @@
-namespace routes.Generic;
+namespace RangeCalculator;
 
 public enum SearchResult
 {

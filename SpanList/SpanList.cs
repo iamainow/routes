@@ -1,24 +1,24 @@
-namespace routes.Generic;
+namespace RangeCalculator;
 
-public ref struct ListStackAlloc<T>
+public ref struct SpanList<T>
 {
     private Span<T> _items;
     private int _size;
 
     /// <summary>
-    /// Initializes a new instance of the ListStackAlloc<T> class using the specified buffer as the underlying storage.
+    /// Initializes a new instance of the SpanList<T> class using the specified buffer as the underlying storage.
     /// </summary>
-    public ListStackAlloc(Span<T> rewritableInternalBuffer)
+    public SpanList(Span<T> rewritableInternalBuffer)
     {
         _items = rewritableInternalBuffer;
         _size = 0;
     }
 
     /// <summary>
-    /// Initializes a new instance of the ListStackAlloc<T> class using the specified buffer as the underlying storage with specified first count of items
+    /// Initializes a new instance of the SpanList<T> class using the specified buffer as the underlying storage with specified first count of items
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public ListStackAlloc(Span<T> rewritableInternalBuffer, int count)
+    public SpanList(Span<T> rewritableInternalBuffer, int count)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, rewritableInternalBuffer.Length);
 
@@ -27,10 +27,10 @@ public ref struct ListStackAlloc<T>
     }
 
     /// <summary>
-    /// Initializes a new instance of the ListStackAlloc<T> class using the specified buffer as the underlying storage and copies the elements into it.
+    /// Initializes a new instance of the SpanList<T> class using the specified buffer as the underlying storage and copies the elements into it.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public ListStackAlloc(Span<T> rewritableInternalBuffer, ReadOnlySpan<T> elements)
+    public SpanList(Span<T> rewritableInternalBuffer, ReadOnlySpan<T> elements)
     {
         elements.CopyTo(rewritableInternalBuffer);
         _items = rewritableInternalBuffer;
@@ -101,7 +101,7 @@ public ref struct ListStackAlloc<T>
     }
 
     /// <exception cref="InvalidOperationException"></exception>
-    public void AddRange(scoped ListStackAlloc<T> items)
+    public void AddRange(scoped SpanList<T> items)
     {
         AddRange(items.AsReadOnlySpan());
     }

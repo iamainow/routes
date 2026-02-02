@@ -1,15 +1,15 @@
-using routes.Generic;
+using RangeCalculator;
 
 namespace routes.Test;
 
-public class ListStackAllocTest
+public class SpanListTest
 {
     [Fact]
     public void Constructor_WithSpanElements_InitializesCorrectly()
     {
         Span<int> buffer = new int[10];
         int[] elements = [1, 2, 3];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         Assert.Equal(3, list.Count);
@@ -24,7 +24,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[10];
         ReadOnlySpan<int> elements = [1, 2, 3];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         Assert.Equal(3, list.Count);
@@ -35,15 +35,15 @@ public class ListStackAllocTest
     }
 
     [Fact]
-    public void Constructor_WithListStackAlloc_InitializesCorrectly()
+    public void Constructor_WithSpanList_InitializesCorrectly()
     {
         Span<int> buffer1 = new int[10];
         int[] elements = [1, 2, 3];
-        var original = new ListStackAlloc<int>(buffer1);
+        var original = new SpanList<int>(buffer1);
         original.AddRange(elements);
 
         Span<int> buffer2 = new int[10];
-        var list = new ListStackAlloc<int>(buffer2);
+        var list = new SpanList<int>(buffer2);
         list.AddRange(original.AsReadOnlySpan());
 
         Assert.Equal(3, list.Count);
@@ -61,7 +61,7 @@ public class ListStackAllocTest
         buffer[1] = 20;
         buffer[2] = 30;
 
-        var list = new ListStackAlloc<int>(buffer, 3);
+        var list = new SpanList<int>(buffer, 3);
 
         Assert.Equal(3, list.Count);
         Assert.Equal(5, list.Capacity);
@@ -75,7 +75,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [10, 20, 30];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         Assert.Equal(10, list[0]);
@@ -89,7 +89,7 @@ public class ListStackAllocTest
         {
             Span<int> buffer = new int[5];
             int[] elements = [10, 20, 30];
-            var list = new ListStackAlloc<int>(buffer);
+            var list = new SpanList<int>(buffer);
             list.AddRange(elements);
             try
             {
@@ -103,7 +103,7 @@ public class ListStackAllocTest
         {
             Span<int> buffer = new int[5];
             int[] elements = [10, 20, 30];
-            var list = new ListStackAlloc<int>(buffer);
+            var list = new SpanList<int>(buffer);
             list.AddRange(elements);
             try
             {
@@ -121,7 +121,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [10, 20, 30, 40];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         var range = list[1..3];
@@ -134,7 +134,7 @@ public class ListStackAllocTest
     public void Add_SingleItem_IncreasesCount()
     {
         Span<int> buffer = new int[5];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
 
         list.Add(100);
         Assert.Equal(1, list.Count);
@@ -145,7 +145,7 @@ public class ListStackAllocTest
     public void Add_ExceedsCapacity_ThrowsInvalidOperationException()
     {
         Span<int> buffer = new int[2];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.Add(1);
         list.Add(2);
         try
@@ -162,7 +162,7 @@ public class ListStackAllocTest
     public void AddRange_Items_IncreasesCount()
     {
         Span<int> buffer = new int[5];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
 
         int[] items = [1, 2];
         list.AddRange(items);
@@ -176,7 +176,7 @@ public class ListStackAllocTest
     public void AddRange_ExceedsCapacity_ThrowsInvalidOperationException()
     {
         Span<int> buffer = new int[3];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.Add(1);
         int[] items = [2, 3, 4];
         try
@@ -194,7 +194,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [1, 2, 3];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         list.RemoveLast();
@@ -207,7 +207,7 @@ public class ListStackAllocTest
     public void RemoveLast_EmptyList_ThrowsInvalidOperationException()
     {
         Span<int> buffer = new int[5];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         try
         {
             list.RemoveLast();
@@ -223,7 +223,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [1, 2, 3, 4];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         list.RemoveLast(2);
@@ -237,7 +237,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [1, 2];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
         try
         {
@@ -254,7 +254,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [1, 2, 3, 4];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         list.RemoveRegion(1, 2);
@@ -268,7 +268,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [1, 2, 3, 4, 5];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         list.RemoveRegion(1..4);
@@ -282,7 +282,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [1, 2, 3];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         var span = list.AsSpan();
@@ -297,7 +297,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [1, 2, 3];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         var span = list.AsReadOnlySpan();
@@ -312,7 +312,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [1, 2, 3];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         var array = list.ToArray();
@@ -327,7 +327,7 @@ public class ListStackAllocTest
     {
         Span<int> buffer = new int[5];
         int[] elements = [1, 2, 3];
-        var list = new ListStackAlloc<int>(buffer);
+        var list = new SpanList<int>(buffer);
         list.AddRange(elements);
 
         Assert.Equal(3, list.Count);

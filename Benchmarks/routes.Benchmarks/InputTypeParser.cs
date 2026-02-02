@@ -1,4 +1,4 @@
-using routes.Generic;
+using RangeCalculator;
 using System.Numerics;
 
 namespace routes.Benchmarks;

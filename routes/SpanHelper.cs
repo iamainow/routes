@@ -1,4 +1,4 @@
-using routes.Generic;
+using RangeCalculator;
 
 namespace routes;
 
@@ -14,7 +14,7 @@ public static class SpanHelper
             return result.Length;
         }
 
-        var resultList = new ListStackAlloc<Ip4Range>(result, 1);
+        var resultList = new SpanList<Ip4Range>(result, 1);
 
         for (int i = 1; i < result.Length; i++)
         {
@@ -76,7 +76,7 @@ public static class SpanHelper
             return MakeNormalizedFromSorted(result);
         }
 
-        ListStackAlloc<Ip4Range> resultList = new ListStackAlloc<Ip4Range>(result);
+        SpanList<Ip4Range> resultList = new(result);
         int index1 = 0;
         int index2 = 0;
 
@@ -180,7 +180,7 @@ public static class SpanHelper
             return normalized1.Length;
         }
 
-        ListStackAlloc<Ip4Range> resultList = new ListStackAlloc<Ip4Range>(result);
+        SpanList<Ip4Range> resultList = new(result);
         int index1 = 0;
         int index2 = 0;
 
@@ -289,7 +289,7 @@ public static class SpanHelper
             return normalized.Length;
         }
 
-        ListStackAlloc<Ip4Range> resultList = new ListStackAlloc<Ip4Range>(result);
+        SpanList<Ip4Range> resultList = new(result);
 
         int i = 0;
         int j = 0;

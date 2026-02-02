@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace routes.Generic;
+namespace RangeCalculator;
 
 // unsorted - unsorted, overlapping/adjacent
 // sorted - sorted but overlapping/adjacent
@@ -30,21 +30,21 @@ public static class SpanHelperGeneric
             return result.Length;
         }
 
-        var resultList = new ListStackAlloc<CustomRange<T>>(result, 1);
+        var resultList = new SpanList<CustomRange<T>>(result, 1);
 
         for (int i = 1; i < result.Length; i++)
         {
             var current = result[i];
             ref var last = ref resultList.Last();
 
-            if (T.MaxValue.Equals(last.LastAddress))
+            if (T.MaxValue.Equals(last.Last))
             {
-                last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
+                last = new CustomRange<T>(last.First, T.MaxValue);
                 return resultList.Count;
             }
-            else if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
+            else if ((last.Last + one).CompareTo(current.First) >= 0)
             {
-                last = new CustomRange<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
+                last = new CustomRange<T>(last.First, Max(last.Last, current.Last));
             }
             else
             {
@@ -63,67 +63,34 @@ public static class SpanHelperGeneric
             return result.Length;
         }
 
-        var resultList = new ListStackAlloc<CustomRange<T>>(result, 1);
+        var resultList = new SpanList<CustomRange<T>>(result, 1);
 
         for (int i = 1; i < result.Length; i++)
         {
             var current = result[i];
             ref var last = ref resultList.Last();
 
-            // current.FirstAddress >= last.FirstAddress due sorting
-            if (last.LastAddress.CompareTo(current.FirstAddress) >= 0)
+            // current.First >= last.First due sorting
+            if (last.Last.CompareTo(current.First) >= 0)
             {
                 // Overlapping - merge
-                last = new CustomRange<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
+                last = new CustomRange<T>(last.First, Max(last.Last, current.Last));
             }
             else
             {
                 // Not overlapping, check adjacency
-                // Safe to increment: last.LastAddress < current.FirstAddress <= MaxValue
-                var nextAfterLast = last.LastAddress;
+                // Safe to increment: last.Last < current.First <= MaxValue
+                var nextAfterLast = last.Last;
                 ++nextAfterLast;
-                if (nextAfterLast.Equals(current.FirstAddress))
+                if (nextAfterLast.Equals(current.First))
                 {
-                    // Adjacent - merge (current.LastAddress > last.LastAddress since not overlapping)
-                    last = new CustomRange<T>(last.FirstAddress, current.LastAddress);
+                    // Adjacent - merge (current.Last > last.Last since not overlapping)
+                    last = new CustomRange<T>(last.First, current.Last);
                 }
                 else
                 {
                     resultList.Add(current);
                 }
-            }
-        }
-
-        return resultList.Count;
-    }
-
-    public static int MakeNormalizedFromSorted3<T>(Span<CustomRange2<T>> result, T one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
-    {
-        if (result.Length <= 1)
-        {
-            return result.Length;
-        }
-
-        var resultList = new ListStackAlloc<CustomRange2<T>>(result, 1);
-
-        for (int i = 1; i < result.Length; i++)
-        {
-            var current = result[i];
-            ref var last = ref resultList.Last();
-
-            if (T.MaxValue.Equals(last.LastAddress))
-            {
-                last = new CustomRange2<T>(last.FirstAddress, T.MaxValue);
-                return resultList.Count;
-            }
-            else if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
-            {
-                last = new CustomRange2<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
-            }
-            else
-            {
-                resultList.Add(current);
             }
         }
 
@@ -144,13 +111,6 @@ public static class SpanHelperGeneric
         return MakeNormalizedFromSorted2(result);
     }
 
-    public static int MakeNormalizedFromUnsorted3<T>(Span<CustomRange2<T>> result, T one)
-        where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
-    {
-        Sort3(result);
-        return MakeNormalizedFromSorted3(result, one);
-    }
-
     public static void Sort<T>(Span<CustomRange<T>> result)
         where T : struct, IEquatable<T>, IComparable<T>
     {
@@ -163,14 +123,6 @@ public static class SpanHelperGeneric
     {
         result.Sort(CustomRangeComparer<T>.Instance);
     }
-
-    public static void Sort3<T>(Span<CustomRange2<T>> result)
-        where T : struct, IEquatable<T>, IComparable<T>
-    {
-        result.Sort(CustomRange2Comparer<T>.Instance);
-    }
-
-
 
     public static int UnionNormalizedNormalized<T>(ReadOnlySpan<CustomRange<T>> normalized1, ReadOnlySpan<CustomRange<T>> normalized2, Span<CustomRange<T>> result, T one)
         where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>
@@ -197,7 +149,7 @@ public static class SpanHelperGeneric
             return normalized1.Length;
         }
 
-        ListStackAlloc<CustomRange<T>> resultList = new ListStackAlloc<CustomRange<T>>(result);
+        SpanList<CustomRange<T>> resultList = new SpanList<CustomRange<T>>(result);
         int index1 = 0;
         int index2 = 0;
 
@@ -205,7 +157,7 @@ public static class SpanHelperGeneric
         {
             var item1 = normalized1[0];
             var item2 = normalized2[0];
-            if (item1.FirstAddress.CompareTo(item2.FirstAddress) <= 0)
+            if (item1.First.CompareTo(item2.First) <= 0)
             {
                 resultList.Add(item1);
                 index1++;
@@ -222,7 +174,7 @@ public static class SpanHelperGeneric
             CustomRange<T> current;
             var item1 = normalized1[index1];
             var item2 = normalized2[index2];
-            if (item1.FirstAddress.CompareTo(item2.FirstAddress) <= 0)
+            if (item1.First.CompareTo(item2.First) <= 0)
             {
                 current = item1;
                 index1++;
@@ -234,16 +186,16 @@ public static class SpanHelperGeneric
             }
 
             ref var last = ref resultList.Last();
-            if (T.MaxValue.Equals(last.LastAddress))
+            if (T.MaxValue.Equals(last.Last))
             {
-                last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
+                last = new CustomRange<T>(last.First, T.MaxValue);
                 return resultList.Count;
             }
             else
             {
-                if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
+                if ((last.Last + one).CompareTo(current.First) >= 0)
                 {
-                    last = new CustomRange<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
+                    last = new CustomRange<T>(last.First, Max(last.Last, current.Last));
                 }
                 else
                 {
@@ -257,16 +209,16 @@ public static class SpanHelperGeneric
             CustomRange<T> current = normalized2[index2];
 
             ref var last = ref resultList.Last();
-            if (T.MaxValue.Equals(last.LastAddress))
+            if (T.MaxValue.Equals(last.Last))
             {
-                last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
+                last = new CustomRange<T>(last.First, T.MaxValue);
                 return resultList.Count;
             }
             else
             {
-                if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
+                if ((last.Last + one).CompareTo(current.First) >= 0)
                 {
-                    last = new CustomRange<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
+                    last = new CustomRange<T>(last.First, Max(last.Last, current.Last));
                     ++index2;
                 }
                 else
@@ -282,16 +234,16 @@ public static class SpanHelperGeneric
             CustomRange<T> current = normalized1[index1];
 
             ref var last = ref resultList.Last();
-            if (T.MaxValue.Equals(last.LastAddress))
+            if (T.MaxValue.Equals(last.Last))
             {
-                last = new CustomRange<T>(last.FirstAddress, T.MaxValue);
+                last = new CustomRange<T>(last.First, T.MaxValue);
                 return resultList.Count;
             }
             else
             {
-                if ((last.LastAddress + one).CompareTo(current.FirstAddress) >= 0)
+                if ((last.Last + one).CompareTo(current.First) >= 0)
                 {
-                    last = new CustomRange<T>(last.FirstAddress, Max(last.LastAddress, current.LastAddress));
+                    last = new CustomRange<T>(last.First, Max(last.Last, current.Last));
                     ++index1;
                 }
                 else
@@ -311,25 +263,25 @@ public static class SpanHelperGeneric
     private static ValueTuple<CustomRange<T>?, CustomRange<T>?> IntersectableExcept<T>(CustomRange<T> range, CustomRange<T> other, T one)
         where T : struct, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
     {
-        bool hasLeftPart = other.FirstAddress.CompareTo(range.FirstAddress) > 0 && !T.MinValue.Equals(other.FirstAddress);
-        bool hasRightPart = other.LastAddress.CompareTo(range.LastAddress) < 0 && !T.MaxValue.Equals(other.LastAddress);
+        bool hasLeftPart = other.First.CompareTo(range.First) > 0 && !T.MinValue.Equals(other.First);
+        bool hasRightPart = other.Last.CompareTo(range.Last) < 0 && !T.MaxValue.Equals(other.Last);
 
         if (hasLeftPart)
         {
             if (hasRightPart)
             {
-                return (new CustomRange<T>(range.FirstAddress, other.FirstAddress - one), new CustomRange<T>(other.LastAddress + one, range.LastAddress));
+                return (new CustomRange<T>(range.First, other.First - one), new CustomRange<T>(other.Last + one, range.Last));
             }
             else
             {
-                return (new CustomRange<T>(range.FirstAddress, other.FirstAddress - one), null);
+                return (new CustomRange<T>(range.First, other.First - one), null);
             }
         }
         else
         {
             if (hasRightPart)
             {
-                return (null, new CustomRange<T>(other.LastAddress + one, range.LastAddress));
+                return (null, new CustomRange<T>(other.Last + one, range.Last));
             }
             else
             {
@@ -362,7 +314,7 @@ public static class SpanHelperGeneric
             return normalized.Length;
         }
 
-        ListStackAlloc<CustomRange<T>> resultList = new ListStackAlloc<CustomRange<T>>(result);
+        SpanList<CustomRange<T>> resultList = new SpanList<CustomRange<T>>(result);
 
         int i = 0;
         int j = 0;
@@ -381,7 +333,7 @@ public static class SpanHelperGeneric
 
             var otherCurr = sorted[j];
 
-            if (currentRange.LastAddress.CompareTo(otherCurr.FirstAddress) < 0)
+            if (currentRange.Last.CompareTo(otherCurr.First) < 0)
             {
                 // Current range is entirely before exclusion range - keep it and move to next
                 resultList.Add(currentRange);
@@ -392,7 +344,7 @@ public static class SpanHelperGeneric
                 }
                 currentRange = normalized[i];
             }
-            else if (currentRange.FirstAddress.CompareTo(otherCurr.LastAddress) > 0)
+            else if (currentRange.First.CompareTo(otherCurr.Last) > 0)
             {
                 // Current range is entirely after exclusion range - move to next exclusion
                 j++;
@@ -454,19 +406,19 @@ public static class SpanHelperGeneric
 
         int maxLength = normalized1.Length + normalized2.Length - 1;
 
-        ListStackAlloc<CustomRange<T>> resultList = new ListStackAlloc<CustomRange<T>>(result);
+        SpanList<CustomRange<T>> resultList = new SpanList<CustomRange<T>>(result);
         int index1 = 0;
         int index2 = 0;
         while (index1 < normalized1.Length && index2 < normalized2.Length)
         {
             var item1 = normalized1[index1];
             var item2 = normalized2[index2];
-            if (item1.LastAddress.CompareTo(item2.FirstAddress) < 0)
+            if (item1.Last.CompareTo(item2.First) < 0)
             {
                 // item1 is before item2
                 index1++;
             }
-            else if (item2.LastAddress.CompareTo(item1.FirstAddress) < 0)
+            else if (item2.Last.CompareTo(item1.First) < 0)
             {
                 // item2 is before item1
                 index2++;
@@ -474,11 +426,11 @@ public static class SpanHelperGeneric
             else
             {
                 // Ranges overlap
-                T start = Max(item1.FirstAddress, item2.FirstAddress);
-                T end = Min(item1.LastAddress, item2.LastAddress);
+                T start = Max(item1.First, item2.First);
+                T end = Min(item1.Last, item2.Last);
                 resultList.Add(new CustomRange<T>(start, end));
 
-                var comparing = item1.LastAddress.CompareTo(item2.LastAddress);
+                var comparing = item1.Last.CompareTo(item2.Last);
                 if (comparing <= 0)
                 {
                     index1++;

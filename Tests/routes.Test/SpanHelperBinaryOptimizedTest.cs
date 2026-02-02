@@ -1,4 +1,4 @@
-using routes.Generic;
+using RangeCalculator;
 
 namespace routes.Test;
 

@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using CommunityToolkit.HighPerformance.Buffers;
 using Ip4Parsers;
-using routes.Generic;
+using RangeCalculator;
 using System.Runtime.InteropServices;
 
 namespace routes.Benchmarks.Ip4RangeArrayBenchmark;
@@ -80,7 +80,7 @@ public class Ip4RangeArrayRealistic
         var ip = new Ip4Address(1, 2, 3, 4).ToIp4Range();
 
         using var subnetListSpanOwner = SpanOwner<Ip4Range>.Allocate(_subnets.Length);
-        ListStackAlloc<Ip4Range> subnetList = new(subnetListSpanOwner.Span);
+        SpanList<Ip4Range> subnetList = new(subnetListSpanOwner.Span);
         foreach (var subnet in _subnets)
         {
             subnetList.Add(subnet.ToIp4Range());

@@ -1,4 +1,4 @@
-﻿using routes.Generic;
+﻿using RangeCalculator;
 
 namespace routes.Extensions;
 
@@ -51,11 +51,11 @@ public static class CustomArrayExtensions
         {
             if (random.NextDouble() < overlappingPercent)
             {
-                var t1 = sortedArray[i].LastAddress;
-                var t2 = sortedArray[i + 1].FirstAddress;
+                var t1 = sortedArray[i].Last;
+                var t2 = sortedArray[i + 1].First;
 
-                sortedArray[i] = new CustomRange<T>(sortedArray[i].FirstAddress, t2);
-                sortedArray[i + 1] = new CustomRange<T>(t1, sortedArray[i + 1].LastAddress);
+                sortedArray[i] = new CustomRange<T>(sortedArray[i].First, t2);
+                sortedArray[i + 1] = new CustomRange<T>(t1, sortedArray[i + 1].Last);
             }
         }
     }

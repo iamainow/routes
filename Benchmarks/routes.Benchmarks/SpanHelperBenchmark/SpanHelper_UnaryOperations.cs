@@ -1,6 +1,5 @@
 
 using BenchmarkDotNet.Attributes;
-using CommunityToolkit.HighPerformance.Buffers;
 using routes.Extensions;
 
 namespace routes.Benchmarks.SpanHelperBenchmark;
@@ -32,9 +31,9 @@ public class SpanHelper_UnaryOperations
 
         Func<Ip4Range[]> generator = InputTypeParser.Parse(input) switch
         {
-            (InputTypeGeneral.Normalized, _) => () => CustomArrayExtensions.GenerateNormalized(size, convert, random).Select(x => new Ip4Range(new Ip4Address(x.FirstAddress), new Ip4Address(x.LastAddress))).ToArray(),
-            (InputTypeGeneral.Sorted, double overlappingPercent) => () => CustomArrayExtensions.GenerateSorted(size, convert, overlappingPercent, random).Select(x => new Ip4Range(new Ip4Address(x.FirstAddress), new Ip4Address(x.LastAddress))).ToArray(),
-            (InputTypeGeneral.Unsorted, double overlappingPercent) => () => CustomArrayExtensions.GenerateUnsorted(size, convert, overlappingPercent, random).Select(x => new Ip4Range(new Ip4Address(x.FirstAddress), new Ip4Address(x.LastAddress))).ToArray(),
+            (InputTypeGeneral.Normalized, _) => () => CustomArrayExtensions.GenerateNormalized(size, convert, random).Select(x => new Ip4Range(new Ip4Address(x.First), new Ip4Address(x.Last))).ToArray(),
+            (InputTypeGeneral.Sorted, double overlappingPercent) => () => CustomArrayExtensions.GenerateSorted(size, convert, overlappingPercent, random).Select(x => new Ip4Range(new Ip4Address(x.First), new Ip4Address(x.Last))).ToArray(),
+            (InputTypeGeneral.Unsorted, double overlappingPercent) => () => CustomArrayExtensions.GenerateUnsorted(size, convert, overlappingPercent, random).Select(x => new Ip4Range(new Ip4Address(x.First), new Ip4Address(x.Last))).ToArray(),
             _ => throw new NotImplementedException($"Input='{input}' is not implemented"),
         };
 

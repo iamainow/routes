@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\RangeCalculator\RangeCalculator.csproj" />
     <ProjectReference Include="..\..\routes\routes.csproj" />
   </ItemGroup>
 

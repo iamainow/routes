@@ -2,7 +2,7 @@ using CommunityToolkit.HighPerformance.Buffers;
 using System.Numerics;
 using System.Text;
 
-namespace routes.Generic;
+namespace RangeCalculator;
 
 public readonly ref struct RangeArrayGeneric<T>
     where T : unmanaged, IEquatable<T>, IComparable<T>, IMinMaxValue<T>, IAdditionOperators<T, T, T>, ISubtractionOperators<T, T, T>
@@ -21,7 +21,7 @@ public readonly ref struct RangeArrayGeneric<T>
         this._items = resultBuffer[..length];
     }
 
-    private readonly ReadOnlySpan<CustomRange<T>> _items; // sorted by FirstAddress, elements not overlapping, elements non-adjacent/disjoint
+    private readonly ReadOnlySpan<CustomRange<T>> _items; // sorted by First, elements not overlapping, elements non-adjacent/disjoint
 
     public readonly ReadOnlySpan<CustomRange<T>> ToReadOnlySpan() => this._items;
 
